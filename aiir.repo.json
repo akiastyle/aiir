@@ -1,0 +1,38 @@
+{
+  "name": "AIIR",
+  "summary": "AI-first runtime with secure AI2AI synchronization via signed packages and explicit trust.",
+  "category": [
+    "ai-runtime",
+    "ai2ai",
+    "security",
+    "runtime-hardening"
+  ],
+  "capabilities": [
+    "signed-package-build",
+    "signed-package-verify",
+    "peer-trust-add",
+    "peer-trust-revoke",
+    "anti-replay-ledger",
+    "signed-time-window",
+    "deny-by-default-policy",
+    "runtime-rate-limit",
+    "runtime-circuit-breaker"
+  ],
+  "entrypoints": {
+    "bootstrap": "/var/www/aiir/ai/bootstrap.sh",
+    "runtime_start": "/var/www/aiir/server/scripts/start-runtime.sh",
+    "smoke_test": "/var/www/aiir/server/scripts/smoke-runtime.sh"
+  },
+  "ai2ai": {
+    "build": "/var/www/aiir/ai/exchange/build-package.run.sh",
+    "apply": "/var/www/aiir/ai/exchange/unpack-package.run.sh",
+    "trust_add": "/var/www/aiir/ai/exchange/trust-add-peer.run.sh",
+    "trust_revoke": "/var/www/aiir/ai/exchange/trust-revoke-peer.run.sh"
+  },
+  "security_defaults": {
+    "allow_db_exec": false,
+    "allow_ops_wildcard": false,
+    "require_signed_package": true,
+    "allow_replay": false
+  }
+}

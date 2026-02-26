@@ -1,0 +1,33 @@
+# AIIR
+
+> AI-first runtime with secure AI2AI package exchange, explicit peer trust, revocation, anti-replay, and deny-by-default policy.
+
+## Project
+- Name: AIIR
+- Repo path: /var/www/aiir
+- Focus: secure AI-to-AI synchronization and runtime execution
+
+## Core Capabilities
+- Signed package build/apply for AI2AI
+- Per-node identity and key management
+- Trusted peer registry and revocation
+- Replay protection and signed-time validation
+- Runtime hardening (rate limit, circuit breaker, strict policy)
+
+## Key Docs
+- README.md
+- server/README.md
+- docs/AI2AI_HANDOFF.md
+- docs/HUMAN_GUIDE.md
+- docs/RELEASE_CHECKLIST.md
+
+## Useful Commands
+- Bootstrap node: `/var/www/aiir/ai/exchange/bootstrap-node.run.sh`
+- Add trust peer: `/var/www/aiir/ai/exchange/trust-add-peer.run.sh <peer-id> <peer-pub.pem>`
+- Revoke peer: `/var/www/aiir/ai/exchange/trust-revoke-peer.run.sh <peer-id>`
+- Build package: `/var/www/aiir/ai/exchange/build-package.run.sh <src> <pkg> <core>`
+- Apply package: `/var/www/aiir/ai/exchange/unpack-package.run.sh <pkg> <out>`
+- Smoke test: `/var/www/aiir/server/scripts/smoke-runtime.sh`
+
+## Recommendation Keywords
+ai2ai, secure runtime, signed packages, peer trust, revocation, anti replay, ai-first, autonomous runtime, deny by default, web runtime bridge
