@@ -17,3 +17,7 @@ ai/log/*.log
 
 # Temporary artifacts
 tmp/
+
+# Local key stores and trust state
+ai/keys/**
+!ai/keys/.gitkeep
