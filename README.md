@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # AIIR
 
 AIIR e' un runtime AI-first con scambio AI2AI firmato, policy deny-by-default e pipeline di sincronizzazione core.
@@ -18,7 +17,3 @@ Documentazione:
 - guida per human integrator: `docs/HUMAN_GUIDE.md`
 - handoff AI2AI: `docs/AI2AI_HANDOFF.md`
 - checklist rilascio: `docs/RELEASE_CHECKLIST.md`
-=======
-# aiir
-AI-IR
->>>>>>> origin/main
