@@ -1,19 +1,19 @@
 # Release Checklist
 
 ## Pre-release
-- [ ] `lockdown-perms.sh` eseguito
+- [ ] `lockdown-perms.sh` executed
 - [ ] `build-native-runtime.sh` OK
 - [ ] `smoke-runtime.sh` OK
 - [ ] `backup-state.sh` OK
-- [ ] documentazione aggiornata
+- [ ] documentation updated
 
 ## Security
-- [ ] peer trust/revoke testati
-- [ ] anti-replay verificato
-- [ ] signed_at window verificata
-- [ ] policy default deny confermata
+- [ ] peer trust/revoke tested
+- [ ] anti-replay verified
+- [ ] signed-time window verified
+- [ ] deny-by-default policy confirmed
 
 ## Publish
-- [ ] commit pulito
-- [ ] tag versione creato
-- [ ] note release scritte (cosa cambia, rischi, rollback)
+- [ ] clean commit state
+- [ ] version tag created
+- [ ] release notes written (changes, risks, rollback)

@@ -1,45 +1,45 @@
 # Human Integrator Guide
 
-## Scopo
-Questa guida serve a chi integra AIIR in un server applicativo senza entrare nel dettaglio interno AI2AI.
+## Purpose
+This guide is for operators integrating AIIR on a server without handling internal AI2AI implementation details.
 
-## Requisiti minimi
+## Minimum Requirements
 - Linux
-- compilatore C (`cc`, `make`)
+- C toolchain (`cc`, `make`)
 - `openssl`, `curl`, `sha256sum`
-- web server opzionale (nginx/apache)
+- optional web server (nginx/apache)
 
-## Bootstrap rapido
+## Quick Bootstrap
 ```bash
 /var/www/aiir/server/scripts/lockdown-perms.sh
 /var/www/aiir/ai/bootstrap.sh
 /var/www/aiir/server/scripts/smoke-runtime.sh
 ```
 
-## Endpoint base runtime
+## Runtime Base Endpoints
 - `GET /health`
 - `GET /ai/meta`
 
-## Policy default (sicure)
-- DB exec disabilitato
-- no op wildcard
-- import solo pacchetti firmati
+## Secure Default Policy
+- DB exec disabled
+- no wildcard ops
+- signed-package import only
 
-## Operazioni quotidiane
-- backup stato:
+## Daily Operations
+- state backup:
 ```bash
 /var/www/aiir/server/scripts/backup-state.sh
 ```
-- restore stato:
+- state restore:
 ```bash
 /var/www/aiir/server/scripts/restore-state.sh <archive.tar.gz>
 ```
-- controllo runtime:
+- runtime probe:
 ```bash
 /var/www/aiir/server/scripts/check-runtime.sh
 ```
 
-## Cosa non fare
-- non copiare chiavi private tra server
-- non abilitare `AI_POLICY_ALLOW_OPS='*'` in produzione
-- non disabilitare firma/replay check in import
+## What Not to Do
+- do not copy private keys between servers
+- do not enable `AI_POLICY_ALLOW_OPS='*'` in production
+- do not disable signature/replay checks on import
