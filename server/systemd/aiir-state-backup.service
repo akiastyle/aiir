@@ -1,0 +1,9 @@
+[Unit]
+Description=AIIR State Backup
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=www-data
+ExecStart=/var/www/aiir/server/scripts/backup-state.sh /var/www/aiir/ai/state /var/backups/aiir-state 14

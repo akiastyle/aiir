@@ -1,0 +1,10 @@
+S1 core-format-native-lib shared       DONE
+S2 remove-js-runtime-live              DONE
+S3 remove-js-toolchain-offline         DONE
+S4 single-binary-selfhost              DONE
+S5 native-policy-engine                DONE
+S6 local-wal-snapshot                  DONE
+S7 native-scheduler-drift              DONE
+S8 static-build-min-container          DONE
+S9 aiir-conformance-fuzz               DONE
+S10 zero-touch-bootstrap               DONE

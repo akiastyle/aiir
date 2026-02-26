@@ -1,0 +1,33 @@
+[Unit]
+Description=AIIR Runtime Server
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/aiir/ai/toolchain-native
+EnvironmentFile=/var/www/aiir/server/env/ai-runtime.env
+ExecStartPre=/usr/bin/test -x /var/www/aiir/ai/toolchain-native/aiird
+ExecStart=/var/www/aiir/ai/toolchain-native/aiird serve
+Restart=always
+RestartSec=2
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+LockPersonality=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+MemoryDenyWriteExecute=true
+ReadOnlyPaths=/var/www/aiir
+ReadWritePaths=/var/www/aiir/ai/state /var/www/aiir/ai/log
+LimitNOFILE=4096
+TasksMax=256
+
+[Install]
+WantedBy=multi-user.target

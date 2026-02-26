@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily AIIR State Backup Timer
+
+[Timer]
+OnCalendar=*-*-* 03:17:00
+Persistent=true
+Unit=aiir-state-backup.service
+
+[Install]
+WantedBy=timers.target

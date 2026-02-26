@@ -1,0 +1,3534 @@
+# MMS2
+
+Struttura riallineata al modello `mms1_temp`.
+
+## Frontend
+- Pagine principali HTML:
+  - `index.html`
+  - `pg.html`
+- Bootstrap:
+  - `main.js`
+- Router:
+  - `js/pages.js`
+- Utility condivise:
+  - `js/commons/utility.js`
+
+## Template pages (come `mms1_temp`)
+- `tmpl/pg/scheda.html`
+- `tmpl/pg/scheda.js`
+- `tmpl/pg/listini.html`
+- `tmpl/pg/listini.js`
+- `tmpl/pg/calendar.html`
+- `tmpl/pg/calendar.js`
+- `tmpl/pg/anagrafiche.html`
+- `tmpl/pg/anagrafiche.js`
+- `tmpl/pg/workflow.html`
+- `tmpl/pg/workflow.js`
+- `tmpl/pg/trasporti.html`
+- `tmpl/pg/trasporti.js`
+- `tmpl/pg/report_mese_trasporti.html`
+- `tmpl/pg/report_mese_trasporti.js`
+
+`pages.js` carica dinamicamente `tmpl/pg/{pagina}.html` e `tmpl/pg/{pagina}.js` in base a hash route (es. `#/pg/scheda`).
+
+## WS
+- Entry unico per `qr(...)`:
+  - `ws/ws.php`
+  - alias: `ws/index.php`
+- Proxy specifici usati internamente:
+  - `ws/card.php`
+  - `ws/listini.php`
+  - `ws/files.php`
+
+`utility.qr(page, action, data)` invia richieste a `ws/ws.php` con payload `page` + `action`.
+
+## Stato
+- Nessuna pagina PHP applicativa.
+- Nessun uso di jQuery nel nuovo stack JS.
+- `tmpl/pg/archivio.html`
+- `tmpl/pg/archivio.js`
+- `tmpl/pg/servizi.html`
+- `tmpl/pg/servizi.js`
+- `tmpl/pg/impostazioni.html`
+- `tmpl/pg/impostazioni.js`
+- `tmpl/pg/schede_lavorazione.html`
+- `tmpl/pg/schede_lavorazione.js`
+- `js/modules/schede-table.js`
+:root {
+  --bg: #f4f7f3;
+  --surface: #ffffff;
+  --line: #d9e2d7;
+  --ink: #17321f;
+  --muted: #4d6655;
+  --accent: #0c8f4f;
+  --accent-2: #f0b429;
+  --danger: #a43b31;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top right, #e7f5eb 0%, transparent 40%),
+    radial-gradient(circle at bottom left, #fff2d6 0%, transparent 30%),
+    var(--bg);
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+}
+
+.app-index {
+  width: min(680px, 100% - 24px);
+  margin: 40px auto;
+}
+
+.m2-login-shell {
+  min-height: 40vh;
+  display: grid;
+  align-content: center;
+}
+
+.m2-login-card {
+  max-width: 520px;
+}
+
+.app-shell {
+  width: min(1280px, 100% - 24px);
+  margin: 12px auto 24px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.topbar h1 {
+  margin: 0;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.top-actions button,
+.m2-actions button {
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.m2-link-btn {
+  display: inline-block;
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+}
+
+.m2-actions button.ghost {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 16px;
+}
+
+.panel h2 {
+  margin-top: 0;
+}
+
+.panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel a {
+  display: block;
+  padding: 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.panel a:hover {
+  background: #ecf7ef;
+}
+
+.panel a.is-active {
+  background: #dff3e5;
+  font-weight: 600;
+}
+
+.content code {
+  background: #eef4ee;
+  border-radius: 6px;
+  padding: 2px 6px;
+}
+
+.m2-card h2 {
+  margin-bottom: 6px;
+}
+
+.m2-muted {
+  margin-top: 0;
+  color: var(--muted);
+}
+
+.m2-headline {
+  margin-bottom: 12px;
+}
+
+.m2-headline h3 {
+  margin: 0;
+}
+
+.m2-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.m2-actions {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+}
+
+.m2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.m2-field {
+  display: grid;
+  gap: 6px;
+}
+
+.m2-field-wide {
+  grid-column: 1 / -1;
+}
+
+.m2-field span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.m2-field input,
+.m2-field textarea,
+.m2-field select,
+.m2-field #portis-slot select,
+.m2-field #navis-slot select,
+.m2-field #prestazionis-slot select,
+.m2-field #professionistis-slot select,
+.m2-field #trasportis-slot select,
+.m2-field #customstatus-slot select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+}
+
+.m2-field textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.m2-field input:focus,
+.m2-field textarea:focus,
+.m2-field select:focus {
+  outline: 2px solid #95d8b0;
+  outline-offset: 1px;
+}
+
+.m2-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.m2-inline input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.m2-block {
+  margin-top: 14px;
+  border-top: 1px dashed var(--line);
+  padding-top: 10px;
+}
+
+.m2-legacy {
+  margin-top: 10px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  overflow-x: auto;
+}
+
+.m2-legacy .a3 {
+  margin-bottom: 8px;
+}
+
+.m2-status {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #f4f9f5;
+}
+
+.m2-status.error {
+  border-color: #efc7c3;
+  background: #fff0ef;
+  color: var(--danger);
+}
+
+.m2-table-wrap {
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.m2-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+}
+
+.m2-table th,
+.m2-table td {
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 10px;
+  vertical-align: middle;
+}
+
+.m2-row-focus {
+  background: #fff4d8;
+}
+
+.m2-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.m2-btn-sm {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  background: var(--accent);
+  color: #fff;
+}
+
+.m2-btn-sm.ghost {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .m2-row {
+    grid-template-columns: 1fr;
+  }
+
+  .m2-actions {
+    flex-wrap: wrap;
+  }
+
+  .m2-grid {
+    grid-template-columns: 1fr;
+  }
+}
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMS2 Login</title>
+  <link rel="stylesheet" href="./assets/css/app.css">
+</head>
+<body>
+  <div class="app-index">
+    <main class="panel content m2-login-shell">
+      <div id="app-main"><h2>Caricamento login...</h2></div>
+    </main>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
+export const u = {
+  gI: (id, ctx = document) => ctx.getElementById(id),
+  q: (sel, ctx = document) => ctx.querySelector(sel),
+  qAll: (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel)),
+  on: (el, ev, fn, opt) => el?.addEventListener(ev, fn, opt),
+  esc: (v = '') => String(v)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+};
+
+export async function qr(page, action, data = {}, options = {}) {
+  const url = options.url || 'ws/ws.php';
+  const timeout = options.timeout || 30000;
+
+  const body = (data instanceof FormData) ? data : new URLSearchParams();
+  if (!(data instanceof FormData)) {
+    for (const [k, v] of Object.entries(data || {})) {
+      if (Array.isArray(v)) {
+        v.forEach((x) => body.append(k, x ?? ''));
+      } else {
+        body.append(k, v ?? '');
+      }
+    }
+  }
+
+  if (body instanceof FormData) {
+    body.append('page', page);
+    body.append('action', action);
+  } else {
+    body.append('page', page);
+    body.append('action', action);
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      body,
+      signal: controller.signal,
+      headers: body instanceof FormData ? undefined : {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': 'application/json'
+      }
+    });
+
+    const raw = await response.text();
+    let json;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      throw new Error(`bad_json ${raw.slice(0, 180)}`);
+    }
+
+    if (!response.ok || !json?.ok) {
+      throw new Error(json?.error || `http_${response.status}`);
+    }
+
+    return json.data;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export function fileUrl(attachmentId, ticketId) {
+  const q = new URLSearchParams({
+    i: String(attachmentId ?? ''),
+    j: String(ticketId ?? '')
+  });
+  return `ws/files.php?${q.toString()}`;
+}
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function stripHtml(v) {
+  return String(v ?? '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function detectTicketId(row) {
+  if (!row || typeof row !== 'object') return '';
+
+  const entries = Object.entries(row);
+  for (const [k, v] of entries) {
+    const key = String(k).toLowerCase();
+    if (key.includes('ticket') || key.includes('cod') || key === 'id' || key.includes('idtkt')) {
+      const txt = stripHtml(v);
+      const num = txt.match(/\d+/)?.[0] || '';
+      if (num) return num;
+    }
+  }
+
+  for (const [, v] of entries) {
+    const txt = stripHtml(v);
+    const num = txt.match(/^\d{1,10}$/)?.[0] || '';
+    if (num) return num;
+  }
+
+  return '';
+}
+
+export function createSchedeTable({ tableEl, pagerEl, pageSize = 15, onOpen = null }) {
+  const state = {
+    rows: [],
+    page: 1,
+    pageSize,
+    columns: [],
+    focusTicket: ''
+  };
+
+  const thead = tableEl.querySelector('thead');
+  const tbody = tableEl.querySelector('tbody');
+
+  function totalPages() {
+    return Math.max(1, Math.ceil(state.rows.length / state.pageSize));
+  }
+
+  function pageRows() {
+    const start = (state.page - 1) * state.pageSize;
+    return state.rows.slice(start, start + state.pageSize);
+  }
+
+  function renderHead() {
+    if (!state.columns.length) {
+      thead.innerHTML = '<tr><th>Risultato</th></tr>';
+      return;
+    }
+
+    const cols = state.columns.map((c) => `<th>${esc(c)}</th>`).join('');
+    thead.innerHTML = `<tr><th style="width:110px">Azioni</th>${cols}</tr>`;
+  }
+
+  function rowClass(ticketId) {
+    return state.focusTicket && ticketId && state.focusTicket === ticketId ? ' class="m2-row-focus"' : '';
+  }
+
+  function renderBody() {
+    if (!state.rows.length) {
+      tbody.innerHTML = '<tr><td colspan="99">Nessun risultato.</td></tr>';
+      return;
+    }
+
+    const rows = pageRows();
+    tbody.innerHTML = rows.map((row) => {
+      const ticketId = detectTicketId(row);
+      const openBtn = ticketId
+        ? `<button type="button" class="m2-btn-sm" data-action="open" data-ticket="${esc(ticketId)}">Apri</button>`
+        : '<span>-</span>';
+
+      const cells = state.columns.map((c) => `<td>${row[c] ?? ''}</td>`).join('');
+      return `<tr data-ticket="${esc(ticketId)}"${rowClass(ticketId)}><td>${openBtn}</td>${cells}</tr>`;
+    }).join('');
+  }
+
+  function renderPager() {
+    const pages = totalPages();
+    state.page = Math.min(Math.max(1, state.page), pages);
+
+    pagerEl.innerHTML = `
+      <div class="m2-pager">
+        <button type="button" class="m2-btn-sm ghost" data-page="prev" ${state.page <= 1 ? 'disabled' : ''}>Prev</button>
+        <span>Pagina ${state.page} / ${pages} - Record ${state.rows.length}</span>
+        <button type="button" class="m2-btn-sm ghost" data-page="next" ${state.page >= pages ? 'disabled' : ''}>Next</button>
+      </div>
+    `;
+  }
+
+  function render() {
+    renderHead();
+    renderBody();
+    renderPager();
+  }
+
+  tableEl.addEventListener('click', (event) => {
+    const btn = event.target instanceof Element ? event.target.closest('[data-action="open"]') : null;
+    if (!btn) return;
+    const ticket = String(btn.getAttribute('data-ticket') || '').trim();
+    if (!ticket) return;
+    if (typeof onOpen === 'function') onOpen(ticket);
+  });
+
+  pagerEl.addEventListener('click', (event) => {
+    const btn = event.target instanceof Element ? event.target.closest('[data-page]') : null;
+    if (!btn) return;
+    const dir = btn.getAttribute('data-page');
+    if (dir === 'prev') state.page -= 1;
+    if (dir === 'next') state.page += 1;
+    render();
+  });
+
+  return {
+    setRows(rows) {
+      state.rows = Array.isArray(rows) ? rows : [];
+      state.columns = state.rows.length ? Object.keys(state.rows[0]) : [];
+      state.page = 1;
+      render();
+    },
+    setFocusTicket(ticket) {
+      state.focusTicket = String(ticket || '').trim();
+      render();
+    }
+  };
+}
+import { u } from './commons/utility.js';
+
+export const pages = {
+  container: null,
+  current: '',
+
+  init() {
+    this.container = u.gI('app-main');
+    if (!this.container) return;
+
+    if (!location.hash) {
+      if (this.isIndexPage()) {
+        location.hash = '#/login';
+      } else {
+        location.hash = '#/pg/scheda';
+      }
+    }
+
+    window.addEventListener('hashchange', () => this.route());
+    this.route();
+  },
+
+  basePath() {
+    const path = location.pathname;
+    if (path.endsWith('/')) return path;
+    if (!path.includes('.')) return `${path}/`;
+    return path.replace(/\/[^/]*$/, '/');
+  },
+
+  isIndexPage() {
+    const path = location.pathname;
+    return path.endsWith('/') || path.endsWith('/index.html');
+  },
+
+  isPgPage() {
+    return location.pathname.endsWith('/pg.html');
+  },
+
+  parseHash() {
+    const h = (location.hash || '#/login').replace(/^#\/?/, '');
+    const parts = h.split('/').filter(Boolean);
+    if (parts[0] === 'login') {
+      return { page: 'login', file: 'login' };
+    }
+    const page = (parts[0] || 'pg').toLowerCase();
+    const file = (parts[1] || (page === 'pg' ? 'scheda' : page)).toLowerCase();
+    return { page, file };
+  },
+
+  async route() {
+    const { page, file } = this.parseHash();
+
+    if (this.isIndexPage() && page !== 'login') {
+      location.replace(`${this.basePath()}pg.html#/${page}/${file}`);
+      return;
+    }
+
+    if (this.isPgPage() && page === 'login') {
+      location.replace(`${this.basePath()}index.html#/login`);
+      return;
+    }
+
+    const loadPath = page === 'login' ? `tmpl/login/${file}` : `tmpl/pg/${file}`;
+
+    try {
+      const htmlRes = await fetch(`${loadPath}.html`, { credentials: 'same-origin' });
+      if (!htmlRes.ok) {
+        this.container.innerHTML = `<h2>Pagina non trovata</h2><p>${u.esc(loadPath)}.html</p>`;
+        return;
+      }
+
+      const html = await htmlRes.text();
+      this.container.innerHTML = html;
+
+      try {
+        const mod = await import(`../${loadPath}.js`);
+        await mod.init?.({ page, file });
+      } catch {
+        // pagina solo html
+      }
+
+      this.markActive(page, file);
+      this.current = `${page}/${file}`;
+    } catch (error) {
+      this.container.innerHTML = `<h2>Errore routing</h2><p>${u.esc(error.message || 'unknown')}</p>`;
+    }
+  },
+
+  markActive(page, file) {
+    const target = `#/${page}/${file}`;
+    u.qAll('[data-route]').forEach((a) => {
+      const href = a.getAttribute('href') || '';
+      a.classList.toggle('is-active', href === target);
+    });
+  }
+};
+import { pages } from './js/pages.js';
+
+document.addEventListener('DOMContentLoaded', () => pages.init());
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MMS2</title>
+  <link rel="stylesheet" href="./assets/css/app.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>MMS2</h1>
+        <p class="subtitle">Struttura SPA template-driven stile mms1_temp</p>
+      </div>
+      <nav class="top-actions">
+        <a class="m2-link-btn" href="#/pg/scheda">Apri Scheda</a>
+      </nav>
+    </header>
+
+    <main class="layout">
+      <aside class="panel">
+        <h2>Moduli</h2>
+        <ul>
+          <li><a href="#/pg/scheda" data-route="scheda">Scheda</a></li>
+          <li><a href="#/pg/schede_lavorazione" data-route="schede_lavorazione">Schede Lavorazione</a></li>
+          <li><a href="#/pg/listini" data-route="listini">Listini</a></li>
+          <li><a href="#/pg/trasporti" data-route="trasporti">Trasporti</a></li>
+          <li><a href="#/pg/report_mese_trasporti" data-route="report_mese_trasporti">Report Mese Trasporti</a></li>
+          <li><a href="#/pg/calendar" data-route="calendar">Calendario</a></li>
+          <li><a href="#/pg/anagrafiche" data-route="anagrafiche">Anagrafiche</a></li>
+          <li><a href="#/pg/archivio" data-route="archivio">Archivio</a></li>
+          <li><a href="#/pg/servizi" data-route="servizi">Servizi</a></li>
+          <li><a href="#/pg/workflow" data-route="workflow">Workflow</a></li>
+          <li><a href="#/pg/impostazioni" data-route="impostazioni">Impostazioni</a></li>
+          <li><a href="#/login" data-route="login">Logout</a></li>
+        </ul>
+      </aside>
+
+      <section class="panel content" id="app-main">
+        <h2>Caricamento</h2>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>
+<section class="m2-card m2-login-card">
+  <h2>Accesso MMS2</h2>
+  <p class="m2-muted">Entry login separata (index.html) come in mms1_temp.</p>
+  <div class="m2-actions">
+    <button type="button" id="go-pg">Entra nell'app</button>
+  </div>
+</section>
+import { u } from '../../js/commons/utility.js';
+
+export async function init() {
+  const btn = u.gI('go-pg');
+  if (!btn) return;
+
+  u.on(btn, 'click', () => {
+    const base = basePath();
+    location.replace(`${base}pg.html#/pg/scheda`);
+  });
+}
+
+function basePath() {
+  const path = location.pathname;
+  if (path.endsWith('/')) return path;
+  if (!path.includes('.')) return `${path}/`;
+  return path.replace(/\/[^/]*$/, '/');
+}
+<section class="m2-card">
+  <h2>Anagrafiche</h2>
+  <p class="m2-muted">Utenti, lingue, archivio e servizi dal backend legacy via API proxy.</p>
+
+  <div class="m2-actions" style="margin-bottom:12px;">
+    <button type="button" data-action="ana-users">Utenti</button>
+    <button type="button" data-action="ana-lang">Lingue</button>
+    <button type="button" data-action="ana-arch-home">Filtri Archivio</button>
+    <button type="button" data-action="ana-serv-home">Filtri Servizi</button>
+  </div>
+
+  <section class="m2-block">
+    <h3>Archivio</h3>
+    <div class="m2-grid" id="ana-arch-filters"></div>
+    <div class="m2-actions" style="margin-top:8px;">
+      <button type="button" data-action="ana-arch-search">Cerca Archivio</button>
+    </div>
+  </section>
+
+  <section class="m2-block">
+    <h3>Servizi</h3>
+    <div class="m2-grid" id="ana-serv-filters"></div>
+    <div class="m2-actions" style="margin-top:8px;">
+      <button type="button" data-action="ana-serv-search">Cerca Servizi</button>
+    </div>
+  </section>
+
+  <div class="m2-legacy" id="ana-html"></div>
+  <div class="m2-table-wrap">
+    <table class="m2-table" id="ana-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="m2-status" id="ana-status"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function setStatus(target, message, isError = false) {
+  target.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  target.innerHTML = esc(message);
+}
+
+function renderTable(table, rows) {
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+
+  if (!Array.isArray(rows) || rows.length === 0) {
+    thead.innerHTML = '<tr><th>Risultato</th></tr>';
+    tbody.innerHTML = '<tr><td>Nessun dato.</td></tr>';
+    return;
+  }
+
+  const cols = Object.keys(rows[0] || {});
+  thead.innerHTML = `<tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
+  tbody.innerHTML = rows
+    .map((row) => `<tr>${cols.map((c) => `<td>${esc(row[c] ?? '')}</td>`).join('')}</tr>`)
+    .join('');
+}
+
+function htmlSelectsFromLegacy(target, map) {
+  target.innerHTML = Object.entries(map)
+    .map(([label, html]) => `<label class="m2-field"><span>${esc(label)}</span>${html || '<select><option>-</option></select>'}</label>`)
+    .join('');
+}
+
+function toLegacyDateRange(start, end) {
+  const conv = (iso) => {
+    const [y, m, d] = String(iso || '').split('-');
+    return y && m && d ? `${d}/${m}/${y}` : '';
+  };
+  return `${conv(start)} - ${conv(end)}`;
+}
+
+async function loadUsers(root) {
+  const status = q('#ana-status', root);
+  const table = q('#ana-table', root);
+  const html = q('#ana-html', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'users', {});
+    renderTable(table, payload?.['@a'] || []);
+    html.innerHTML = '';
+    setStatus(status, 'Utenti caricati.');
+  } catch (error) {
+    setStatus(status, `Errore utenti: ${error.message}`, true);
+  }
+}
+
+async function loadLang(root) {
+  const status = q('#ana-status', root);
+  const table = q('#ana-table', root);
+  const html = q('#ana-html', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'lang', {});
+    table.querySelector('thead').innerHTML = '';
+    table.querySelector('tbody').innerHTML = '';
+    html.innerHTML = payload?.['#a']?.tags || '<p>Nessun contenuto lingua.</p>';
+    setStatus(status, 'Lingue caricate.');
+  } catch (error) {
+    setStatus(status, `Errore lingue: ${error.message}`, true);
+  }
+}
+
+async function loadArchHome(root) {
+  const status = q('#ana-status', root);
+  const area = q('#ana-arch-filters', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'arch_home', {});
+    const b = payload?.['#a'] || {};
+
+    const now = new Date();
+    const end = now.toISOString().slice(0, 10);
+    const startDate = new Date(now);
+    startDate.setDate(now.getDate() - 30);
+    const start = startDate.toISOString().slice(0, 10);
+
+    area.innerHTML = `
+      <label class="m2-field"><span>Dal</span><input type="date" name="arch-start" value="${start}"></label>
+      <label class="m2-field"><span>Al</span><input type="date" name="arch-end" value="${end}"></label>
+      <label class="m2-field"><span>Porto</span>${b.portis || '<select name="port"></select>'}</label>
+      <label class="m2-field"><span>Nave</span>${b.navis || '<select name="boat"></select>'}</label>
+      <label class="m2-field"><span>Prestazione</span>${b.prestazionis || '<select name="activity"></select>'}</label>
+      <label class="m2-field"><span>Trasporto</span>${b.trasportis || '<select name="transport"></select>'}</label>
+    `;
+
+    setStatus(status, 'Filtri archivio caricati.');
+  } catch (error) {
+    setStatus(status, `Errore filtri archivio: ${error.message}`, true);
+  }
+}
+
+async function searchArch(root) {
+  const status = q('#ana-status', root);
+  const table = q('#ana-table', root);
+  const start = q('[name="arch-start"]', root)?.value;
+  const end = q('[name="arch-end"]', root)?.value;
+  const port = q('[name="porti"]', root)?.value || '';
+  const boat = q('[name="navi"]', root)?.value || '';
+  const activity = q('[name="prestazioni"]', root)?.value || '';
+  const transport = q('[name="trasporti"]', root)?.value || '';
+
+  try {
+    const payload = await qr('anagrafiche', 'arch_list', {
+      a: JSON.stringify({
+        from: toLegacyDateRange(start, end),
+        port,
+        boat,
+        activity,
+        transport
+      })
+    });
+
+    renderTable(table, payload?.table || []);
+    setStatus(status, 'Archivio caricato.');
+  } catch (error) {
+    setStatus(status, `Errore ricerca archivio: ${error.message}`, true);
+  }
+}
+
+async function loadServHome(root) {
+  const status = q('#ana-status', root);
+  const area = q('#ana-serv-filters', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'serv_home', {});
+    const b = payload?.['#a'] || {};
+    htmlSelectsFromLegacy(area, {
+      Porto: b.portis,
+      Prestazione: b.prestazionis
+    });
+    setStatus(status, 'Filtri servizi caricati.');
+  } catch (error) {
+    setStatus(status, `Errore filtri servizi: ${error.message}`, true);
+  }
+}
+
+async function searchServ(root) {
+  const status = q('#ana-status', root);
+  const html = q('#ana-html', root);
+  const table = q('#ana-table', root);
+  const por = q('#ana-serv-filters [name="porti"]', root)?.value || '';
+  const pre = q('#ana-serv-filters [name="prestazioni"]', root)?.value || '';
+
+  try {
+    const payload = await qr('anagrafiche', 'serv_list', { a: JSON.stringify({ por, pre }) });
+    table.querySelector('thead').innerHTML = '';
+    table.querySelector('tbody').innerHTML = '';
+    html.innerHTML = payload?.['#a']?.results || '<p>Nessun risultato.</p>';
+    setStatus(status, 'Servizi caricati.');
+  } catch (error) {
+    setStatus(status, `Errore ricerca servizi: ${error.message}`, true);
+  }
+}
+
+export function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  q('[data-action="ana-users"]', root)?.addEventListener('click', () => loadUsers(root));
+  q('[data-action="ana-lang"]', root)?.addEventListener('click', () => loadLang(root));
+  q('[data-action="ana-arch-home"]', root)?.addEventListener('click', () => loadArchHome(root));
+  q('[data-action="ana-arch-search"]', root)?.addEventListener('click', () => searchArch(root));
+  q('[data-action="ana-serv-home"]', root)?.addEventListener('click', () => loadServHome(root));
+  q('[data-action="ana-serv-search"]', root)?.addEventListener('click', () => searchServ(root));
+
+  loadUsers(root);
+  loadArchHome(root);
+  loadServHome(root);
+}
+<section class="m2-card">
+  <h2>Archivio</h2>
+  <p class="m2-muted">Ricerca storico ticket con filtri avanzati.</p>
+
+  <form id="arch-form" class="m2-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+    <label class="m2-field"><span>Dal</span><input type="date" name="start" required></label>
+    <label class="m2-field"><span>Al</span><input type="date" name="end" required></label>
+    <label class="m2-field"><span>Porto</span><div id="arch-port-slot"></div></label>
+    <label class="m2-field"><span>Nave</span><div id="arch-boat-slot"></div></label>
+    <label class="m2-field"><span>Prestazione</span><div id="arch-activity-slot"></div></label>
+    <label class="m2-field"><span>Trasporto</span><div id="arch-transport-slot"></div></label>
+    <div class="m2-actions" style="align-self:end;"><button type="submit">Cerca</button></div>
+  </form>
+
+  <div class="m2-status" id="arch-status"></div>
+
+  <div class="m2-table-wrap" style="margin-top:12px;">
+    <table class="m2-table" id="arch-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+import { createSchedeTable } from '../../js/modules/schede-table.js';
+
+const OPEN_TICKET_KEY = 'mms2_open_ticket';
+const ARCH_FOCUS_TICKET_KEY = 'mms2_arch_focus_ticket';
+const ARCH_FOCUS_DATE_KEY = 'mms2_arch_focus_date';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function setStatus(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function toLegacyDateRange(start, end) {
+  const cv = (iso) => {
+    const [y, m, d] = String(iso || '').split('-');
+    return y && m && d ? `${d}/${m}/${y}` : '';
+  };
+  return `${cv(start)} - ${cv(end)}`;
+}
+
+function defaultRange() {
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(end.getDate() - 30);
+  const toIso = (d) => d.toISOString().slice(0, 10);
+  return { start: toIso(start), end: toIso(end) };
+}
+
+function rangeFromVisitDate(visitDate) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(visitDate || ''))) return null;
+  const base = new Date(`${visitDate}T00:00:00`);
+  if (Number.isNaN(base.getTime())) return null;
+
+  const start = new Date(base);
+  const end = new Date(base);
+  start.setDate(base.getDate() - 20);
+  end.setDate(base.getDate() + 20);
+
+  const toIso = (d) => d.toISOString().slice(0, 10);
+  return { start: toIso(start), end: toIso(end) };
+}
+
+function injectSelect(slot, html, fallbackName) {
+  if (!slot) return;
+  slot.innerHTML = html || `<select name="${fallbackName}"><option value="">-</option></select>`;
+}
+
+async function loadFilters(root, statusBox) {
+  try {
+    const payload = await qr('anagrafiche', 'arch_home', {});
+    const h = payload?.['#a'] || {};
+
+    injectSelect(q('#arch-port-slot', root), h.portis, 'porti');
+    injectSelect(q('#arch-boat-slot', root), h.navis, 'navi');
+    injectSelect(q('#arch-activity-slot', root), h.prestazionis, 'prestazioni');
+    injectSelect(q('#arch-transport-slot', root), h.trasportis, 'trasporti');
+
+    setStatus(statusBox, 'Filtri caricati.');
+  } catch (error) {
+    setStatus(statusBox, `Errore filtri archivio: ${error.message}`, true);
+  }
+}
+
+async function search(root, sharedTable) {
+  const statusBox = q('#arch-status', root);
+
+  const start = q('[name="start"]', root)?.value || '';
+  const end = q('[name="end"]', root)?.value || '';
+  const port = q('[name="porti"]', root)?.value || '';
+  const boat = q('[name="navi"]', root)?.value || '';
+  const activity = q('[name="prestazioni"]', root)?.value || '';
+  const transport = q('[name="trasporti"]', root)?.value || '';
+
+  if (!start || !end) {
+    setStatus(statusBox, 'Seleziona un intervallo date valido.', true);
+    return;
+  }
+
+  setStatus(statusBox, 'Ricerca in corso...');
+
+  try {
+    const payload = await qr('anagrafiche', 'arch_list', {
+      a: JSON.stringify({
+        from: toLegacyDateRange(start, end),
+        port,
+        boat,
+        activity,
+        transport
+      })
+    });
+
+    const rows = payload?.table || [];
+    sharedTable.setRows(rows);
+
+    const focusTicket = sessionStorage.getItem(ARCH_FOCUS_TICKET_KEY) || '';
+    if (focusTicket) {
+      sharedTable.setFocusTicket(focusTicket);
+      sessionStorage.removeItem(ARCH_FOCUS_TICKET_KEY);
+      sessionStorage.removeItem(ARCH_FOCUS_DATE_KEY);
+    }
+
+    setStatus(statusBox, `Record trovati: ${Array.isArray(rows) ? rows.length : 0}`);
+  } catch (error) {
+    setStatus(statusBox, `Errore ricerca archivio: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const statusBox = q('#arch-status', root);
+  const form = q('#arch-form', root);
+
+  const tableEl = q('#arch-table', root);
+  let pagerEl = q('#arch-pager', root);
+  if (!pagerEl) {
+    pagerEl = document.createElement('div');
+    pagerEl.id = 'arch-pager';
+    pagerEl.style.marginTop = '10px';
+    tableEl.closest('.m2-table-wrap')?.after(pagerEl);
+  }
+
+  const sharedTable = createSchedeTable({
+    tableEl,
+    pagerEl,
+    pageSize: 15,
+    onOpen: (ticketId) => {
+      sessionStorage.setItem(OPEN_TICKET_KEY, ticketId);
+      window.location.hash = '#/pg/scheda';
+    }
+  });
+
+  const defaultDates = defaultRange();
+  const focusDate = sessionStorage.getItem(ARCH_FOCUS_DATE_KEY) || '';
+  const focusedRange = rangeFromVisitDate(focusDate);
+  const dates = focusedRange || defaultDates;
+
+  q('[name="start"]', root).value = dates.start;
+  q('[name="end"]', root).value = dates.end;
+
+  await loadFilters(root, statusBox);
+  await search(root, sharedTable);
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await search(root, sharedTable);
+  });
+}
+<section class="m2-card">
+  <h2>Calendario Navi</h2>
+  <p class="m2-muted">Vista moderna in HTML + JS, dati da <code>qr('calendar', ...)</code>.</p>
+
+  <form id="m2-calendar-filter" class="m2-row">
+    <div class="m2-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr)); width:100%;">
+      <label class="m2-field">
+        <span>Dal</span>
+        <input type="date" name="start" required>
+      </label>
+      <label class="m2-field">
+        <span>Al</span>
+        <input type="date" name="end" required>
+      </label>
+      <label class="m2-field">
+        <span>Porto</span>
+        <select name="porto">
+          <option value="0">Tutti</option>
+        </select>
+      </label>
+    </div>
+    <div class="m2-actions">
+      <button type="submit">Carica</button>
+    </div>
+  </form>
+
+  <div class="m2-status" id="m2-calendar-status"></div>
+
+  <div class="m2-table-wrap">
+    <table class="m2-table" id="m2-calendar-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function status(el, msg, isError = false) {
+  if (!el) return;
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function currentMonthRange() {
+  const start = new Date();
+  start.setDate(1);
+  const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+  const toIso = (d) => d.toISOString().slice(0, 10);
+  return { start: toIso(start), end: toIso(end) };
+}
+
+function pickColumns(rows) {
+  if (!rows.length) return [];
+  const preferred = ['day', 'porto', 'nave', 'from', 'to', 'note'];
+  const rowKeys = Object.keys(rows[0]);
+  const ordered = preferred.filter((k) => rowKeys.includes(k));
+  const remaining = rowKeys.filter((k) => !ordered.includes(k));
+  return ordered.concat(remaining);
+}
+
+function renderRows(table, rows) {
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+
+  if (!rows.length) {
+    thead.innerHTML = '<tr><th>Risultato</th></tr>';
+    tbody.innerHTML = '<tr><td>Nessun dato nel periodo selezionato.</td></tr>';
+    return;
+  }
+
+  const cols = pickColumns(rows);
+  thead.innerHTML = `<tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
+  tbody.innerHTML = rows
+    .map((row) => `<tr>${cols.map((c) => `<td>${esc(row[c] ?? '')}</td>`).join('')}</tr>`)
+    .join('');
+}
+
+async function loadPorts(select, statusBox) {
+  try {
+    const data = await qr('calendar', 'ports', {});
+    const html = data?.['#a']?.ports || '';
+    if (!html || typeof html !== 'string') return;
+
+    const wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    const legacySelect = wrap.querySelector('select');
+    if (!legacySelect) return;
+
+    const options = Array.from(legacySelect.options).map((opt) => {
+      const value = String(opt.value || '').trim();
+      const label = String(opt.textContent || '').trim();
+      return { value, label };
+    });
+
+    select.innerHTML = '';
+    for (const opt of options) {
+      const option = document.createElement('option');
+      option.value = opt.value === '' ? '0' : opt.value;
+      option.textContent = opt.label || (opt.value === '0' ? 'Tutti' : opt.value);
+      select.appendChild(option);
+    }
+
+    if (!options.some((o) => o.value === '0')) {
+      const all = document.createElement('option');
+      all.value = '0';
+      all.textContent = 'Tutti';
+      select.prepend(all);
+    }
+  } catch (error) {
+    status(statusBox, `Errore caricamento porti: ${error.message}`, true);
+  }
+}
+
+async function loadRange(form, table, statusBox) {
+  const start = String(form.elements.start.value || '').trim();
+  const end = String(form.elements.end.value || '').trim();
+  const porto = String(form.elements.porto.value || '0').trim() || '0';
+
+  if (!start || !end) {
+    status(statusBox, 'Inserisci un intervallo date valido.', true);
+    return;
+  }
+
+  status(statusBox, 'Caricamento calendario...');
+
+  try {
+    const rows = await qr('calendar', 'range', { start, end, c: porto });
+    const list = Array.isArray(rows) ? rows : [];
+    renderRows(table, list);
+    status(statusBox, `Record caricati: ${list.length}`);
+  } catch (error) {
+    status(statusBox, `Errore calendario: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const form = root.querySelector('#m2-calendar-filter');
+  const table = root.querySelector('#m2-calendar-table');
+  const statusBox = root.querySelector('#m2-calendar-status');
+  const portoSelect = form?.elements?.porto;
+
+  if (!form || !table || !statusBox || !portoSelect) return;
+
+  const { start, end } = currentMonthRange();
+  form.elements.start.value = start;
+  form.elements.end.value = end;
+
+  await loadPorts(portoSelect, statusBox);
+  await loadRange(form, table, statusBox);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await loadRange(form, table, statusBox);
+  });
+}
+<section class="m2-card">
+  <h2>Impostazioni</h2>
+  <p class="m2-muted">Profilo utente e traduzioni base.</p>
+
+  <section class="m2-block">
+    <h3>Profilo Utente</h3>
+    <form id="user-form" class="m2-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));"></form>
+    <div class="m2-actions" style="margin-top:10px;">
+      <button type="button" data-action="user-save">Salva Profilo</button>
+    </div>
+  </section>
+
+  <section class="m2-block">
+    <h3>Traduzioni</h3>
+    <form id="lang-form" class="m2-grid" style="grid-template-columns: 1fr 1fr 1fr auto;">
+      <label class="m2-field"><span>Tag</span><input type="text" name="tag" required></label>
+      <label class="m2-field"><span>IT</span><input type="text" name="valIT" required></label>
+      <label class="m2-field"><span>EN</span><input type="text" name="valEN" required></label>
+      <div class="m2-actions" style="align-self:end;"><button type="submit">Salva Traduzione</button></div>
+    </form>
+    <div class="m2-legacy" id="lang-table" style="margin-top:10px;"></div>
+  </section>
+
+  <div class="m2-status" id="imp-status"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const qAll = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function status(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function field(name, value) {
+  const hidden = ['password_hash', 'salt', 'ITSAMU_Password', 'ITSAMU_Salt'];
+  if (hidden.includes(name)) return '';
+  const type = /password/i.test(name) ? 'password' : 'text';
+  return `<label class="m2-field"><span>${esc(name)}</span><input type="${type}" name="${esc(name)}" value="${esc(value ?? '')}"></label>`;
+}
+
+async function loadUser(root) {
+  const box = q('#user-form', root);
+  const statusBox = q('#imp-status', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'users', {});
+    const row = payload?.['@a']?.[0] || {};
+    const keys = Object.keys(row);
+
+    if (!keys.length) {
+      box.innerHTML = '<p>Nessun dato utente disponibile.</p>';
+      status(statusBox, 'Nessun profilo disponibile.', true);
+      return;
+    }
+
+    box.innerHTML = keys.map((k) => field(k, row[k])).join('');
+    status(statusBox, 'Profilo caricato.');
+  } catch (error) {
+    status(statusBox, `Errore caricamento profilo: ${error.message}`, true);
+  }
+}
+
+async function saveUser(root) {
+  const form = q('#user-form', root);
+  const statusBox = q('#imp-status', root);
+
+  const data = qAll('input[name]', form).map((input) => ({
+    name: input.name,
+    value: input.value
+  }));
+
+  if (!data.length) {
+    status(statusBox, 'Nessun dato da salvare.', true);
+    return;
+  }
+
+  try {
+    const payload = await qr('anagrafiche', 'users_set', { a: JSON.stringify(data) });
+    status(statusBox, payload?.alt || 'Profilo aggiornato.');
+  } catch (error) {
+    status(statusBox, `Errore salvataggio profilo: ${error.message}`, true);
+  }
+}
+
+async function loadLang(root) {
+  const statusBox = q('#imp-status', root);
+  const table = q('#lang-table', root);
+
+  try {
+    const payload = await qr('anagrafiche', 'lang', {});
+    table.innerHTML = payload?.['#a']?.tags || '<p>Nessuna traduzione disponibile.</p>';
+    status(statusBox, 'Traduzioni caricate.');
+  } catch (error) {
+    status(statusBox, `Errore caricamento traduzioni: ${error.message}`, true);
+  }
+}
+
+async function saveLang(root) {
+  const form = q('#lang-form', root);
+  const statusBox = q('#imp-status', root);
+
+  const tag = String(q('[name="tag"]', form)?.value || '').trim();
+  const valIT = String(q('[name="valIT"]', form)?.value || '').trim();
+  const valEN = String(q('[name="valEN"]', form)?.value || '').trim();
+
+  if (!tag || !valIT || !valEN) {
+    status(statusBox, 'Compila tag, IT e EN.', true);
+    return;
+  }
+
+  try {
+    const payload = await qr('anagrafiche', 'lang_set', { a: tag, b: valIT, c: valEN });
+    status(statusBox, payload?.alt || 'Traduzione aggiornata.');
+    await loadLang(root);
+    form.reset();
+  } catch (error) {
+    status(statusBox, `Errore salvataggio traduzione: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  q('[data-action="user-save"]', root)?.addEventListener('click', () => saveUser(root));
+  q('#lang-form', root)?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await saveLang(root);
+  });
+
+  await loadUser(root);
+  await loadLang(root);
+}
+<section>
+  <div id="page-root"></div>
+</section>
+import { qr, u } from '../../js/commons/utility.js';
+
+const qs = (s, r = document) => u.q(s, r);
+const on = (el, ev, fn, opt) => u.on(el, ev, fn, opt);
+
+async function mountListini(root) {
+
+  root.innerHTML = `
+    <section class="m2-card">
+      <h2>Listini (ESM)</h2>
+      <p class="m2-muted">Gestione via <code>qr('listini', ...)</code></p>
+
+      <div class="m2-row">
+        <label class="m2-field">
+          <span>Trasporto</span>
+          <select name="trasp"></select>
+        </label>
+        <div class="m2-actions">
+          <button type="button" data-action="load-listini">Carica Listino</button>
+        </div>
+      </div>
+
+      <form id="m2-listini-add" class="m2-grid m2-listini-add">
+        <label class="m2-field"><span>Descrizione</span><input type="text" name="LI_label" required></label>
+        <label class="m2-field"><span>IVA %</span><input type="number" min="0" step="1" name="LI_iva" value="22" required></label>
+        <label class="m2-field"><span>Prezzo</span><input type="number" min="0" step="0.01" name="LI_value" required></label>
+        <div class="m2-actions"><button type="submit">Aggiungi Voce</button></div>
+      </form>
+
+      <div class="m2-table-wrap">
+        <table class="m2-table" id="m2-listini-table">
+          <thead><tr><th>ID</th><th>Descrizione</th><th>IVA</th><th>Prezzo</th><th>Azioni</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="m2-status" id="m2-listini-status"></div>
+    </section>
+  `;
+
+  const status = qs('#m2-listini-status', root);
+  const select = qs('[name="trasp"]', root);
+  const loadButton = qs('[data-action="load-listini"]', root);
+  const addForm = qs('#m2-listini-add', root);
+  const tbody = qs('#m2-listini-table tbody', root);
+  if (!status || !select || !loadButton || !addForm || !tbody) return;
+
+  await loadTrasporti(select, status);
+
+  on(loadButton, 'click', () => loadListinoRows(select, tbody, status));
+
+  on(addForm, 'submit', async (event) => {
+    event.preventDefault();
+    const traspId = String(select.value || '').trim();
+    const label = String(qs('[name="LI_label"]', addForm)?.value || '').trim();
+    const iva = String(qs('[name="LI_iva"]', addForm)?.value || '').trim();
+    const value = String(qs('[name="LI_value"]', addForm)?.value || '').trim();
+
+    if (!traspId) return setStatus(status, 'Seleziona un trasporto.', true);
+    if (!label || !iva || !value) return setStatus(status, 'Compila tutti i campi.', true);
+
+    try {
+      const rows = asArray(await qr('listini', 'add', { LI_label: label, LI_iva: iva, LI_value: value, LI_trasp_id: traspId }));
+      renderRows(rows, tbody, traspId);
+      addForm.reset();
+      const ivaNode = qs('[name="LI_iva"]', addForm);
+      if (ivaNode) ivaNode.value = '22';
+      setStatus(status, 'Voce listino aggiunta.');
+    } catch (error) {
+      setStatus(status, `Errore aggiunta: ${escapeHtml(error.message)}`, true);
+    }
+  });
+
+  on(tbody, 'click', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const delButton = target.closest('[data-action="delete-listino"]');
+    if (!delButton) return;
+
+    const id = String(delButton.getAttribute('data-id') || '').trim();
+    const traspId = String(select.value || '').trim();
+    if (!id || !traspId) return;
+    if (!window.confirm(`Confermi eliminazione voce #${id}?`)) return;
+
+    try {
+      const rows = asArray(await qr('listini', 'delete', { id, LI_trasp_id: traspId }));
+      renderRows(rows, tbody, traspId);
+      setStatus(status, 'Voce listino eliminata.');
+    } catch (error) {
+      setStatus(status, `Errore eliminazione: ${escapeHtml(error.message)}`, true);
+    }
+  });
+
+  await loadListinoRows(select, tbody, status);
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+  await mountListini(root);
+}
+
+async function loadTrasporti(select, status) {
+  setStatus(status, 'Caricamento trasporti...');
+  try {
+    const list = asArray(await qr('listini', 'trasporti_list', {}));
+    const options = list.map((item) => {
+      const id = pick(item, ['id', 'TR_id', 'LI_trasp_id']);
+      const name = pick(item, ['name', 'TR_nome', 'label']) || `Trasporto ${id}`;
+      return { id: String(id || '').trim(), name: String(name) };
+    }).filter((item) => item.id !== '');
+
+    if (options.length === 0) {
+      select.innerHTML = '<option value="">Nessun trasporto disponibile</option>';
+      return setStatus(status, 'Nessun trasporto disponibile.', true);
+    }
+
+    select.innerHTML = options.map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.name)}</option>`).join('');
+    setStatus(status, 'Trasporti caricati.');
+  } catch (error) {
+    setStatus(status, `Errore trasporti: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+async function loadListinoRows(select, tbody, status) {
+  const traspId = String(select.value || '').trim();
+  if (!traspId) {
+    tbody.innerHTML = '';
+    return setStatus(status, 'Seleziona un trasporto.', true);
+  }
+
+  setStatus(status, 'Caricamento listino...');
+  try {
+    const rows = asArray(await qr('listini', 'list', { id: traspId }));
+    renderRows(rows, tbody, traspId);
+    setStatus(status, `Caricate ${rows.length} voci.`);
+  } catch (error) {
+    setStatus(status, `Errore listino: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+function renderRows(rows, tbody, traspId) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5">Nessuna voce presente.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row) => {
+    const id = pick(row, ['LI_id', 'id']);
+    const label = pick(row, ['LI_label', 'label']) || '';
+    const iva = pick(row, ['LI_iva', 'iva']) || '';
+    const value = pick(row, ['LI_value', 'value']) || '';
+
+    return `<tr>
+      <td>${escapeHtml(id)}</td>
+      <td>${escapeHtml(label)}</td>
+      <td>${escapeHtml(iva)}</td>
+      <td>${escapeHtml(value)}</td>
+      <td><button type="button" class="m2-btn-sm ghost" data-action="delete-listino" data-id="${escapeHtml(id)}" data-trasp="${escapeHtml(traspId)}">Elimina</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function asArray(payload) {
+  return Array.isArray(payload) ? payload : [];
+}
+
+function pick(row, keys) {
+  for (const key of keys) {
+    if (row && row[key] != null && String(row[key]).trim() !== '') return String(row[key]);
+  }
+  return '';
+}
+
+function setStatus(target, message, isError = false) {
+  target.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  target.innerHTML = escapeHtml(message);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+<section class="m2-card">
+  <h2>Report Mese Trasporti</h2>
+  <p class="m2-muted">Report mensile per trasportatore con export CSV.</p>
+
+  <form id="report-form" class="m2-grid" style="grid-template-columns: 1fr 1fr auto auto;">
+    <label class="m2-field">
+      <span>Mese</span>
+      <input type="month" name="month" required>
+    </label>
+    <label class="m2-field">
+      <span>Trasportatore</span>
+      <select name="trasp" required></select>
+    </label>
+    <div class="m2-actions" style="align-self:end;">
+      <button type="submit">Carica report</button>
+    </div>
+    <div class="m2-actions" style="align-self:end;">
+      <button type="button" data-action="export-csv" class="ghost">Export CSV</button>
+    </div>
+  </form>
+
+  <div class="m2-status" id="report-status"></div>
+
+  <div class="m2-table-wrap" style="margin-top:12px;">
+    <table class="m2-table" id="report-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+let lastRows = [];
+
+function status(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function monthRange(monthValue) {
+  const [y, m] = String(monthValue || '').split('-').map((x) => Number(x));
+  if (!y || !m) return null;
+  const pad = (v) => String(v).padStart(2, '0');
+  const start = `${y}-${pad(m)}-01 00:00:00`;
+  const endDay = new Date(y, m, 0).getDate();
+  const end = `${y}-${pad(m)}-${pad(endDay)} 23:59:59`;
+  return { start, end };
+}
+
+function currentMonth() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function render(rows, table) {
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+  const cols = ['#', 'Data', 'Ticket', 'Trasportatore', 'Servizio', 'IVA', 'Prezzo'];
+
+  thead.innerHTML = `<tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="7">Nessun risultato.</td></tr>';
+    return;
+  }
+
+  const fmt = (v) => {
+    if (v == null || v === '-') return '-';
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(2) : String(v);
+  };
+
+  tbody.innerHTML = rows.map((r, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${esc(r.data ?? '')}</td>
+      <td>${esc(r.ticket ?? '')}</td>
+      <td>${esc(r.trasportatore ?? '')}</td>
+      <td>${esc(r.servizio ?? '-')}</td>
+      <td>${esc(r.iva == null ? '-' : `${String(r.iva).replace('%', '')}%`)}</td>
+      <td>${esc(fmt(r.prezzo))}</td>
+    </tr>
+  `).join('');
+}
+
+function toCsv(rows) {
+  const head = ['n', 'data', 'ticket', 'trasportatore', 'servizio', 'iva', 'prezzo'];
+  const body = rows.map((r, i) => [
+    i + 1,
+    r.data ?? '',
+    r.ticket ?? '',
+    r.trasportatore ?? '',
+    r.servizio ?? '-',
+    r.iva ?? '-',
+    r.prezzo ?? '-'
+  ]);
+
+  const all = [head, ...body];
+  return all.map((row) => row.map((v) => `"${String(v).replaceAll('"', '""')}"`).join(';')).join('\n');
+}
+
+function downloadCsv(content, fileName) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+async function loadTrasporti(root, statusBox) {
+  const select = q('[name="trasp"]', root);
+  try {
+    const rows = await qr('listini', 'trasporti_list', {});
+    const options = (Array.isArray(rows) ? rows : [])
+      .map((r) => ({ id: String(r.TR_id ?? '').trim(), name: String(r.TR_nome ?? '').trim() }))
+      .filter((x) => x.id !== '');
+
+    if (!options.length) {
+      select.innerHTML = '<option value="">Nessun trasportatore</option>';
+      status(statusBox, 'Nessun trasportatore disponibile.', true);
+      return;
+    }
+
+    select.innerHTML = options.map((x) => `<option value="${esc(x.id)}">${esc(x.name || x.id)}</option>`).join('');
+  } catch (error) {
+    status(statusBox, `Errore caricamento trasportatori: ${error.message}`, true);
+  }
+}
+
+async function loadReport(root) {
+  const statusBox = q('#report-status', root);
+  const table = q('#report-table', root);
+  const month = String(q('[name="month"]', root)?.value || '').trim();
+  const trasp = String(q('[name="trasp"]', root)?.value || '').trim();
+
+  const range = monthRange(month);
+  if (!range || !trasp) {
+    status(statusBox, 'Seleziona mese e trasportatore.', true);
+    return;
+  }
+
+  status(statusBox, 'Caricamento report...');
+
+  try {
+    const rows = await qr('listini', 'report_mese', {
+      trasp_id: trasp,
+      start: range.start,
+      end: range.end
+    });
+
+    lastRows = Array.isArray(rows) ? rows : [];
+    render(lastRows, table);
+    status(statusBox, `Record caricati: ${lastRows.length}`);
+  } catch (error) {
+    status(statusBox, `Errore report: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const statusBox = q('#report-status', root);
+  const form = q('#report-form', root);
+  const monthInput = q('[name="month"]', root);
+  const exportBtn = q('[data-action="export-csv"]', root);
+
+  monthInput.value = currentMonth();
+  await loadTrasporti(root, statusBox);
+  await loadReport(root);
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await loadReport(root);
+  });
+
+  exportBtn?.addEventListener('click', () => {
+    if (!lastRows.length) {
+      status(statusBox, 'Nessun dato da esportare.', true);
+      return;
+    }
+
+    const month = String(monthInput?.value || currentMonth());
+    downloadCsv(toCsv(lastRows), `report_trasporti_${month}.csv`);
+    status(statusBox, 'CSV esportato.');
+  });
+}
+<section>
+  <div id="page-root"></div>
+</section>
+import { fileUrl, qr, u } from '../../js/commons/utility.js';
+
+const qs = (s, r = document) => u.q(s, r);
+const on = (el, ev, fn, opt) => u.on(el, ev, fn, opt);
+
+const DEFAULT_CARD = {
+  idtkt: '',
+  close: '0',
+  rif: '',
+  name: '',
+  birthdate: '',
+  nationBorn: '',
+  visitdate: '',
+  visittime: '',
+  porti: '',
+  navi: '',
+  prestazioni: '',
+  professionisti: '',
+  trasporti: '',
+  acquisto: '',
+  vendita: '',
+  note: '',
+  richiestaR: ''
+};
+
+const FIELD_NAMES = Object.keys(DEFAULT_CARD);
+const OPEN_TICKET_KEY = 'mms2_open_ticket';
+const ARCH_FOCUS_TICKET_KEY = 'mms2_arch_focus_ticket';
+const ARCH_FOCUS_DATE_KEY = 'mms2_arch_focus_date';
+
+function mountScheda(root) {
+
+  root.innerHTML = `
+    <section class="m2-card">
+      <h2>Scheda (ESM)</h2>
+      <p class="m2-muted">Modulo caricato via <code>pages.js</code> con chiamate <code>qr('card', ...)</code></p>
+
+      <div class="m2-row m2-actions-row">
+        <label class="m2-field">
+          <span>ID Ticket</span>
+          <input type="number" min="1" name="ticketLookup" placeholder="es. 1234">
+        </label>
+        <div class="m2-actions">
+          <button type="button" data-action="load-ticket">Carica</button>
+          <button type="button" data-action="new-ticket" class="ghost">Nuovo</button>
+          <button type="button" data-action="save-ticket">Salva</button>
+          <button type="button" data-action="open-archive" class="ghost">Vai ad Archivio</button>
+        </div>
+      </div>
+
+      <div class="m2-headline" id="m2-nameTK"></div>
+
+      <form id="m2-scheda-form" class="m2-grid">
+        <label class="m2-field"><span>ID Ticket</span><input type="text" name="idtkt" readonly></label>
+        <label class="m2-field"><span>Riferimento</span><input type="text" name="rif"></label>
+        <label class="m2-field"><span>Nome</span><input type="text" name="name" required></label>
+        <label class="m2-field"><span>Data Nascita</span><input type="date" name="birthdate"></label>
+        <label class="m2-field"><span>Nazione Nascita</span><input type="text" name="nationBorn"></label>
+        <label class="m2-field"><span>Data Visita</span><input type="date" name="visitdate"></label>
+        <label class="m2-field"><span>Ora Visita</span><input type="time" name="visittime"></label>
+
+        <label class="m2-field"><span>Porto</span><div id="portis-slot"></div></label>
+        <label class="m2-field"><span>Nave</span><div id="navis-slot"></div></label>
+        <label class="m2-field"><span>Prestazione</span><div id="prestazionis-slot"></div></label>
+        <label class="m2-field"><span>Struttura</span><div id="professionistis-slot"></div></label>
+        <label class="m2-field"><span>Trasporto</span><div id="trasportis-slot"></div></label>
+
+        <label class="m2-field"><span>Prezzo Acquisto</span><input type="text" name="acquisto"></label>
+        <label class="m2-field"><span>Prezzo Vendita</span><input type="text" name="vendita"></label>
+
+        <label class="m2-field m2-field-wide"><span>Note</span><textarea name="note" rows="7"></textarea></label>
+        <label class="m2-field m2-field-wide"><span>Richiesta</span><textarea name="richiestaR" rows="7"></textarea></label>
+
+        <input type="hidden" name="close" value="0">
+      </form>
+
+      <section class="m2-block">
+        <h3>Workflow</h3>
+        <div class="m2-row m2-actions-row">
+          <label class="m2-field m2-field-wide"><span>Nuovo stato</span><div id="customstatus-slot"></div></label>
+          <div class="m2-actions"><button type="button" data-action="workflow-set">Aggiorna Stato</button></div>
+        </div>
+      </section>
+
+      <section class="m2-block">
+        <h3>Allegati Richiesta</h3>
+        <div class="m2-row m2-actions-row">
+          <label class="m2-field m2-field-wide"><span>Carica file</span><input type="file" name="upload" multiple></label>
+          <div class="m2-actions"><button type="button" data-action="upload-r">Upload</button></div>
+        </div>
+        <div id="attR-slot" class="m2-legacy"></div>
+      </section>
+
+      <section class="m2-block">
+        <h3>Agenda</h3>
+        <div class="m2-grid m2-agenda-form">
+          <label class="m2-field"><span>Data</span><input type="date" name="Adate"></label>
+          <label class="m2-field"><span>Dettagli</span><input type="text" name="Atxt" placeholder="Dettagli attività"></label>
+          <label class="m2-field m2-inline"><span>È una visita</span><input type="checkbox" name="Avisit"></label>
+          <label class="m2-field m2-inline"><span>Attività conclusa</span><input type="checkbox" name="Acomplete"></label>
+          <div class="m2-actions"><button type="button" data-action="agenda-add">Aggiungi Agenda</button></div>
+        </div>
+        <div id="agendalist-slot" class="m2-legacy"></div>
+      </section>
+
+      <div class="m2-status" id="m2-status"></div>
+    </section>
+  `;
+
+  const form = qs('#m2-scheda-form', root);
+  const status = qs('#m2-status', root);
+  const lookupInput = qs('[name="ticketLookup"]', root);
+  const headline = qs('#m2-nameTK', root);
+
+  const slots = {
+    portis: qs('#portis-slot', root),
+    navis: qs('#navis-slot', root),
+    prestazionis: qs('#prestazionis-slot', root),
+    professionistis: qs('#professionistis-slot', root),
+    trasportis: qs('#trasportis-slot', root),
+    customstatus: qs('#customstatus-slot', root),
+    attR: qs('#attR-slot', root),
+    agendalist: qs('#agendalist-slot', root)
+  };
+
+  if (!form || !status || !lookupInput || !headline) return;
+
+  setFormValues(form, DEFAULT_CARD);
+  const adate = qs('[name="Adate"]', root);
+  if (adate) adate.value = new Date().toISOString().slice(0, 10);
+
+  bindTopActions(root, form, status, lookupInput, slots, headline);
+  bindWorkflow(root, form, status, slots, headline);
+  bindUpload(root, form, status, slots);
+  bindAgenda(root, form, status, slots);
+
+  (async () => {
+    await loadHomeSelectors(form, status, slots);
+    const pendingTicket = String(sessionStorage.getItem(OPEN_TICKET_KEY) || '').trim();
+    if (pendingTicket) {
+      sessionStorage.removeItem(OPEN_TICKET_KEY);
+      lookupInput.value = pendingTicket;
+      await loadTicket(pendingTicket, form, status, slots, headline, lookupInput);
+    }
+  })();
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+  mountScheda(root);
+}
+
+function bindTopActions(root, form, status, lookupInput, slots, headline) {
+  const loadButton = qs('[data-action="load-ticket"]', root);
+  const newButton = qs('[data-action="new-ticket"]', root);
+  const saveButton = qs('[data-action="save-ticket"]', root);
+  const openArchiveButton = qs('[data-action="open-archive"]', root);
+  const visitDateInput = qs('[name="visitdate"]', form);
+
+  if (visitDateInput) on(visitDateInput, 'change', () => reloadByVisitDate(form, status, slots));
+
+  if (loadButton) {
+    on(loadButton, 'click', async () => {
+      const ticketId = String(lookupInput.value || '').trim();
+      if (!ticketId) return setStatus(status, 'Inserisci un ID ticket.', true);
+      await loadTicket(ticketId, form, status, slots, headline, lookupInput);
+    });
+  }
+
+  if (newButton) {
+    on(newButton, 'click', async () => {
+      setFormValues(form, DEFAULT_CARD);
+      lookupInput.value = '';
+      headline.innerHTML = '';
+      slots.attR.innerHTML = '';
+      slots.agendalist.innerHTML = '';
+      await loadHomeSelectors(form, status, slots);
+      setStatus(status, 'Nuova scheda pronta.');
+    });
+  }
+
+  if (openArchiveButton) {
+    on(openArchiveButton, 'click', () => {
+      const ticketId = String(qs('[name="idtkt"]', form)?.value || lookupInput.value || '').trim();
+      const visitdate = String(qs('[name="visitdate"]', form)?.value || '').trim();
+      if (!ticketId) return setStatus(status, 'Carica prima una scheda da aprire in archivio.', true);
+      sessionStorage.setItem(ARCH_FOCUS_TICKET_KEY, ticketId);
+      if (visitdate) sessionStorage.setItem(ARCH_FOCUS_DATE_KEY, visitdate);
+      window.location.hash = '#/pg/archivio';
+    });
+  }
+
+  if (saveButton) {
+    on(saveButton, 'click', async () => {
+      const card = getFormValues(form);
+      if (!card.name.trim()) return setStatus(status, 'Il campo Nome è obbligatorio.', true);
+
+      try {
+        const response = await qr('card', 'cardset', { a: card.idtkt || '', b: JSON.stringify(card) });
+        const saved = response?.['@a']?.[0] || {};
+        const savedId = String(saved.idtkt || card.idtkt || '').trim();
+        if (savedId) {
+          lookupInput.value = savedId;
+          await loadTicket(savedId, form, status, slots, headline, lookupInput, response?.alt || null);
+        } else {
+          setStatus(status, response?.alt || 'Scheda salvata.');
+        }
+      } catch (error) {
+        setStatus(status, `Errore salvataggio: ${escapeHtml(error.message)}`, true);
+      }
+    });
+  }
+}
+
+async function loadHomeSelectors(form, status, slots) {
+  try {
+    const payload = await qr('card', 'home', {});
+    applySlots(slots, payload?.['#a'] || {}, form);
+    wireDynamicSelectors(form, status, slots);
+  } catch (error) {
+    setStatus(status, `Errore caricamento selettori: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+async function loadTicket(ticketId, form, status, slots, headline, lookupInput, messageOverride = null) {
+  setStatus(status, `Caricamento ticket ${escapeHtml(ticketId)}...`);
+  try {
+    const payload = await qr('card', 'cardget', { a: '', b: '', c: ticketId });
+    const card = payload?.['@a']?.[0] || null;
+    if (!card) return setStatus(status, 'Scheda non trovata o risposta non valida.', true);
+
+    applySlots(slots, payload?.['#a'] || {}, form);
+    wireDynamicSelectors(form, status, slots);
+    setFormValues(form, normalizeCard(card));
+
+    if (headline) headline.innerHTML = payload?.['#a']?.nameTK || '';
+    if (lookupInput) lookupInput.value = String(card.idtkt || ticketId);
+
+    setStatus(status, messageOverride || `Scheda ${escapeHtml(String(card.idtkt || ticketId))} caricata.`);
+  } catch (error) {
+    setStatus(status, `Errore caricamento: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+function wireDynamicSelectors(form, status, slots) {
+  const portSelect = qs('[name="porti"]', form);
+  const serviceSelect = qs('[name="prestazioni"]', form);
+
+  if (portSelect && !portSelect.dataset.m2Bound) {
+    portSelect.dataset.m2Bound = '1';
+    on(portSelect, 'change', () => reloadByPort(form, status, slots));
+  }
+
+  if (serviceSelect && !serviceSelect.dataset.m2Bound) {
+    serviceSelect.dataset.m2Bound = '1';
+    on(serviceSelect, 'change', () => reloadByService(form, status, slots));
+  }
+}
+
+async function reloadByVisitDate(form, status, slots) {
+  try {
+    const payload = await qr('card', 'visitdate', { a: '', b: serializeDependencies(form) });
+    applySlots(slots, payload?.['#a'] || {}, form);
+    wireDynamicSelectors(form, status, slots);
+  } catch (error) {
+    setStatus(status, `Errore update data visita: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+async function reloadByPort(form, status, slots) {
+  try {
+    const payload = await qr('card', 'porti', { a: '', b: serializeDependencies(form) });
+    applySlots(slots, payload?.['#a'] || {}, form);
+    wireDynamicSelectors(form, status, slots);
+  } catch (error) {
+    setStatus(status, `Errore update porto: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+async function reloadByService(form, status, slots) {
+  try {
+    const payload = await qr('card', 'prestazioni', { a: '', b: serializeDependencies(form) });
+    applySlots(slots, payload?.['#a'] || {}, form);
+    wireDynamicSelectors(form, status, slots);
+  } catch (error) {
+    setStatus(status, `Errore update prestazione: ${escapeHtml(error.message)}`, true);
+  }
+}
+
+function bindWorkflow(root, form, status, slots, headline) {
+  const button = qs('[data-action="workflow-set"]', root);
+  if (!button) return;
+
+  on(button, 'click', async () => {
+    const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+    const statusValue = String(qs('[name="customstatus"]', root)?.value || '').trim();
+
+    if (!ticketId) return setStatus(status, 'Carica prima un ticket per aggiornare il workflow.', true);
+    if (!statusValue) return setStatus(status, 'Seleziona uno stato workflow.', true);
+
+    try {
+      const payload = await qr('card', 'workflowset', { a: 'workflowstatusb', b: statusValue, c: ticketId });
+      if (headline && payload?.['#a']?.nameTK) headline.innerHTML = payload['#a'].nameTK;
+      setStatus(status, payload?.alt || 'Workflow aggiornato.');
+    } catch (error) {
+      setStatus(status, `Errore workflow: ${escapeHtml(error.message)}`, true);
+    }
+  });
+}
+
+function bindUpload(root, form, status, slots) {
+  const button = qs('[data-action="upload-r"]', root);
+  const input = qs('[name="upload"]', root);
+  if (!button || !input) return;
+
+  on(button, 'click', async () => {
+    const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+    if (!ticketId) return setStatus(status, 'Carica o salva prima una scheda per caricare allegati.', true);
+    if (!input.files || input.files.length === 0) return setStatus(status, 'Seleziona almeno un file.', true);
+
+    try {
+      const data = new FormData();
+      data.append('idtkt', ticketId);
+      data.append('ftype', 'R');
+      for (const file of input.files) data.append('upload[]', file, file.name);
+
+      const payload = await qr('card', 'upload', data);
+      if (payload?.['#a']?.attR != null) slots.attR.innerHTML = payload['#a'].attR;
+      input.value = '';
+      setStatus(status, payload?.alt || 'Upload completato.');
+    } catch (error) {
+      setStatus(status, `Errore upload: ${escapeHtml(error.message)}`, true);
+    }
+  });
+
+  if (slots.attR?.dataset?.m2Bound) return;
+  if (slots.attR) slots.attR.dataset.m2Bound = '1';
+
+  on(slots.attR, 'click', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const viewBtn = target.closest('.microbtn');
+    if (viewBtn) {
+      event.preventDefault();
+      const id = viewBtn.getAttribute('data-id') || '';
+      const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+      if (id && ticketId) window.open(fileUrl(id, ticketId), '_blank');
+      return;
+    }
+
+    const delBtn = target.closest('.microbtnR, .microbtnRE');
+    if (!delBtn) return;
+
+    event.preventDefault();
+    const id = delBtn.getAttribute('data-id') || '';
+    const fileName = delBtn.getAttribute('data-f') || '';
+    const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+
+    if (!id || !ticketId) return;
+    if (!window.confirm(`Confermi eliminazione allegato ${fileName}?`)) return;
+
+    try {
+      const payload = await qr('card', 'attdel', { a: id, b: ticketId, c: fileName, d: 'R' });
+      if (payload?.['#a']?.attR != null) slots.attR.innerHTML = payload['#a'].attR;
+      setStatus(status, payload?.alt || 'Allegato eliminato.');
+    } catch (error) {
+      setStatus(status, `Errore cancellazione allegato: ${escapeHtml(error.message)}`, true);
+    }
+  });
+}
+
+function bindAgenda(root, form, status, slots) {
+  const addButton = qs('[data-action="agenda-add"]', root);
+  if (addButton) {
+    on(addButton, 'click', async () => {
+      const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+      const date = String(qs('[name="Adate"]', root)?.value || '').trim();
+      const text = String(qs('[name="Atxt"]', root)?.value || '').trim();
+      const visit = qs('[name="Avisit"]', root)?.checked ? 'AV' : 'A';
+      const complete = qs('[name="Acomplete"]', root)?.checked ? 'S' : 'N';
+
+      if (!ticketId) return setStatus(status, 'Carica una scheda prima di inserire agenda.', true);
+      if (!date || !text) return setStatus(status, 'Data e Dettagli agenda sono obbligatori.', true);
+
+      try {
+        const payload = await qr('card', 'agendaset', { a: JSON.stringify({ id: ticketId, date, text, visit, complete }) });
+        if (payload?.['#a']?.agendalist != null) slots.agendalist.innerHTML = payload['#a'].agendalist;
+        const txt = qs('[name="Atxt"]', root);
+        if (txt) txt.value = '';
+        setStatus(status, payload?.alt || 'Voce agenda inserita.');
+      } catch (error) {
+        setStatus(status, `Errore inserimento agenda: ${escapeHtml(error.message)}`, true);
+      }
+    });
+  }
+
+  if (slots.agendalist?.dataset?.m2Bound) return;
+  if (slots.agendalist) slots.agendalist.dataset.m2Bound = '1';
+
+  on(slots.agendalist, 'click', async (event) => {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    const delBtn = target.closest('button[name="agendadel"]');
+    if (!delBtn) return;
+    event.preventDefault();
+
+    const rowId = delBtn.getAttribute('data-d') || '';
+    const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+    if (!rowId || !ticketId) return;
+
+    try {
+      const payload = await qr('card', 'agendadel', { a: JSON.stringify({ a: rowId, b: ticketId }) });
+      if (payload?.['#a']?.agendalist != null) slots.agendalist.innerHTML = payload['#a'].agendalist;
+      setStatus(status, payload?.alt || 'Voce agenda cancellata.');
+    } catch (error) {
+      setStatus(status, `Errore cancellazione agenda: ${escapeHtml(error.message)}`, true);
+    }
+  });
+
+  on(slots.agendalist, 'change', async (event) => {
+    const target = event.target instanceof HTMLInputElement ? event.target : null;
+    if (!target) return;
+    if (target.name !== 'Avisitrow' && target.name !== 'Acompleterow') return;
+
+    const row = target.closest('div.a3');
+    const ticketId = String(qs('[name="idtkt"]', form)?.value || '').trim();
+    if (!row || !ticketId) return;
+
+    const visitNode = qs('[name="Avisitrow"]', row);
+    const completeNode = qs('[name="Acompleterow"]', row);
+    const rowId = target.getAttribute('data-d') || '';
+    if (!rowId || !visitNode || !completeNode) return;
+
+    const type = visitNode.checked ? 'AV' : 'A';
+    const state = completeNode.checked ? 'S' : 'N';
+
+    try {
+      const payload = await qr('card', 'agendaup', { a: type, b: state, c: rowId, d: ticketId });
+      if (payload?.['#a']?.agendalist != null) slots.agendalist.innerHTML = payload['#a'].agendalist;
+      setStatus(status, payload?.alt || 'Agenda aggiornata.');
+    } catch (error) {
+      setStatus(status, `Errore update agenda: ${escapeHtml(error.message)}`, true);
+    }
+  });
+}
+
+function applySlots(slots, hashBlock, form) {
+  const map = {
+    portis: 'portis',
+    navis: 'navis',
+    prestazionis: 'prestazionis',
+    professionistis: 'professionistis',
+    trasportis: 'trasportis',
+    customstatus: 'customstatus',
+    attR: 'attR',
+    agendalist: 'agendalist'
+  };
+
+  const keepValues = {
+    porti: qs('[name="porti"]', form)?.value || '',
+    navi: qs('[name="navi"]', form)?.value || '',
+    prestazioni: qs('[name="prestazioni"]', form)?.value || '',
+    professionisti: qs('[name="professionisti"]', form)?.value || '',
+    trasporti: qs('[name="trasporti"]', form)?.value || ''
+  };
+
+  for (const [slotKey, responseKey] of Object.entries(map)) {
+    if (!slots[slotKey]) continue;
+    if (hashBlock[responseKey] != null) slots[slotKey].innerHTML = String(hashBlock[responseKey]);
+  }
+
+  for (const [name, value] of Object.entries(keepValues)) {
+    if (!value) continue;
+    const node = qs(`[name="${name}"]`, form);
+    if (node) node.value = value;
+  }
+}
+
+function serializeDependencies(form) {
+  const params = new URLSearchParams();
+  const names = ['visitdate', 'porti', 'navi', 'prestazioni', 'professionisti', 'trasporti'];
+  for (const name of names) {
+    const node = qs(`[name="${name}"]`, form);
+    if (!node) continue;
+    params.append(name, String(node.value || ''));
+  }
+  return params.toString();
+}
+
+function setFormValues(form, data) {
+  for (const name of FIELD_NAMES) {
+    const node = qs(`[name="${name}"]`, form);
+    if (!node) continue;
+    node.value = data?.[name] == null ? '' : String(data[name]);
+  }
+}
+
+function getFormValues(form) {
+  const out = {};
+  for (const name of FIELD_NAMES) {
+    const node = qs(`[name="${name}"]`, form);
+    out[name] = node ? String(node.value ?? '') : '';
+  }
+  return out;
+}
+
+function normalizeCard(card) {
+  const out = { ...DEFAULT_CARD };
+  for (const key of Object.keys(out)) {
+    out[key] = card?.[key] == null ? out[key] : String(card[key]);
+  }
+  return out;
+}
+
+function setStatus(target, message, isError = false) {
+  target.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  target.innerHTML = escapeHtml(message);
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+<section class="m2-card">
+  <h2>Schede in Lavorazione</h2>
+  <p class="m2-muted">Base condivisa con Archivio, filtro su schede aperte (home card).</p>
+
+  <div class="m2-actions" style="margin-bottom:12px;">
+    <button type="button" data-action="reload">Ricarica</button>
+  </div>
+
+  <div class="m2-status" id="work-status"></div>
+
+  <div class="m2-table-wrap" style="margin-top:12px;">
+    <table class="m2-table" id="work-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div id="work-pager" style="margin-top:10px;"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+import { createSchedeTable } from '../../js/modules/schede-table.js';
+
+const OPEN_TICKET_KEY = 'mms2_open_ticket';
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function setStatus(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const statusBox = q('#work-status', root);
+  const tableEl = q('#work-table', root);
+  const pagerEl = q('#work-pager', root);
+
+  const table = createSchedeTable({
+    tableEl,
+    pagerEl,
+    pageSize: 15,
+    onOpen: (ticketId) => {
+      sessionStorage.setItem(OPEN_TICKET_KEY, ticketId);
+      window.location.hash = '#/pg/scheda';
+    }
+  });
+
+  const load = async () => {
+    setStatus(statusBox, 'Caricamento schede in lavorazione...');
+    try {
+      const payload = await qr('card', 'home', {});
+      const rows = payload?.table || [];
+      table.setRows(rows);
+      setStatus(statusBox, `Record caricati: ${Array.isArray(rows) ? rows.length : 0}`);
+    } catch (error) {
+      setStatus(statusBox, `Errore caricamento schede: ${error.message}`, true);
+      table.setRows([]);
+    }
+  };
+
+  q('[data-action="reload"]', root)?.addEventListener('click', load);
+
+  await load();
+}
+<section class="m2-card">
+  <h2>Servizi</h2>
+  <p class="m2-muted">Ricerca servizi/strutture con filtro porto e prestazione.</p>
+
+  <form id="serv-form" class="m2-grid" style="grid-template-columns: repeat(3, minmax(0, 1fr));">
+    <label class="m2-field"><span>Porto</span><div id="serv-port-slot"></div></label>
+    <label class="m2-field"><span>Prestazione</span><div id="serv-pre-slot"></div></label>
+    <div class="m2-actions" style="align-self:end;"><button type="submit">Cerca Servizi</button></div>
+  </form>
+
+  <div class="m2-status" id="serv-status"></div>
+  <div class="m2-legacy" id="serv-results" style="margin-top:12px;"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function setStatus(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function injectSelect(slot, html, fallbackName) {
+  if (!slot) return;
+  slot.innerHTML = html || `<select name="${fallbackName}"><option value="">-</option></select>`;
+}
+
+async function loadFilters(root, statusBox) {
+  try {
+    const payload = await qr('anagrafiche', 'serv_home', {});
+    const h = payload?.['#a'] || {};
+
+    injectSelect(q('#serv-port-slot', root), h.portis, 'porti');
+    injectSelect(q('#serv-pre-slot', root), h.prestazionis, 'prestazioni');
+
+    setStatus(statusBox, 'Filtri servizi caricati.');
+  } catch (error) {
+    setStatus(statusBox, `Errore filtri servizi: ${error.message}`, true);
+  }
+}
+
+async function search(root) {
+  const statusBox = q('#serv-status', root);
+  const results = q('#serv-results', root);
+
+  const por = q('[name="porti"]', root)?.value || '';
+  const pre = q('[name="prestazioni"]', root)?.value || '';
+
+  setStatus(statusBox, 'Ricerca servizi in corso...');
+
+  try {
+    const payload = await qr('anagrafiche', 'serv_list', { a: JSON.stringify({ por, pre }) });
+    const html = payload?.['#a']?.results || '<p>Nessun risultato.</p>';
+    results.innerHTML = html;
+    setStatus(statusBox, 'Ricerca completata.');
+  } catch (error) {
+    setStatus(statusBox, `Errore ricerca servizi: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const form = q('#serv-form', root);
+  const statusBox = q('#serv-status', root);
+
+  await loadFilters(root, statusBox);
+  await search(root);
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await search(root);
+  });
+}
+<section class="m2-card">
+  <h2>Trasporti e Listini</h2>
+  <p class="m2-muted">Gestione listini base e override ticket (senza jQuery).</p>
+
+  <div class="m2-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr));">
+    <label class="m2-field">
+      <span>Trasporto</span>
+      <select name="trasp"></select>
+    </label>
+    <label class="m2-field m2-inline" style="align-self:end;">
+      <span>Override ticket</span>
+      <input type="checkbox" name="ticket-mode">
+    </label>
+    <label class="m2-field">
+      <span>ID Ticket</span>
+      <input type="number" min="1" name="ticket" placeholder="solo override">
+    </label>
+    <div class="m2-actions" style="align-self:end;">
+      <button type="button" data-action="trasp-load">Carica</button>
+    </div>
+  </div>
+
+  <form id="trasp-add-form" class="m2-grid" style="margin-top:12px; grid-template-columns: 2fr 1fr 1fr auto;">
+    <label class="m2-field">
+      <span>Descrizione servizio</span>
+      <input type="text" name="label" required>
+    </label>
+    <label class="m2-field">
+      <span>IVA %</span>
+      <input type="number" min="0" step="1" name="iva" value="22" required>
+    </label>
+    <label class="m2-field">
+      <span>Prezzo €</span>
+      <input type="number" min="0" step="0.01" name="value" required>
+    </label>
+    <div class="m2-actions" style="align-self:end;">
+      <button type="submit">Aggiungi</button>
+    </div>
+  </form>
+
+  <div class="m2-table-wrap" style="margin-top:12px;">
+    <table class="m2-table" id="trasp-table">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="m2-status" id="trasp-status"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function status(el, msg, isError = false) {
+  el.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  el.innerHTML = esc(msg);
+}
+
+function rowsFromPayload(payload) {
+  return Array.isArray(payload) ? payload : [];
+}
+
+function mode(root) {
+  const ticketMode = q('[name="ticket-mode"]', root)?.checked;
+  const ticket = String(q('[name="ticket"]', root)?.value || '').trim();
+  return {
+    ticketMode: !!ticketMode,
+    ticket,
+    isTicketValid: ticket !== '' && Number(ticket) > 0
+  };
+}
+
+function render(rows, table, isTicketMode) {
+  const thead = table.querySelector('thead');
+  const tbody = table.querySelector('tbody');
+
+  const cols = isTicketMode
+    ? ['ID Ticket', 'ID Base', 'Servizio', 'IVA', 'Prezzo', 'Azioni']
+    : ['ID', 'Servizio', 'IVA', 'Prezzo', 'Azioni'];
+
+  thead.innerHTML = `<tr>${cols.map((c) => `<th>${esc(c)}</th>`).join('')}</tr>`;
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6">Nessuna voce.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row) => {
+    if (isTicketMode) {
+      const idTicket = row.LI_id_ticket ?? row.LI_id ?? '';
+      const idBase = row.LI_id_base ?? '';
+      const label = row.label ?? row.LI_label ?? '';
+      const iva = row.iva ?? row.LI_iva ?? '';
+      const value = row.value ?? row.LI_value ?? '';
+      return `<tr>
+        <td>${esc(idTicket)}</td>
+        <td>${esc(idBase)}</td>
+        <td>${esc(label)}</td>
+        <td>${esc(iva)}</td>
+        <td>${esc(value)}</td>
+        <td><button type="button" class="m2-btn-sm ghost" data-action="delete" data-id="${esc(idTicket)}">Elimina</button></td>
+      </tr>`;
+    }
+
+    const id = row.LI_id ?? row.id ?? '';
+    const label = row.LI_label ?? row.label ?? '';
+    const iva = row.LI_iva ?? row.iva ?? '';
+    const value = row.LI_value ?? row.value ?? '';
+
+    return `<tr>
+      <td>${esc(id)}</td>
+      <td>${esc(label)}</td>
+      <td>${esc(iva)}</td>
+      <td>${esc(value)}</td>
+      <td><button type="button" class="m2-btn-sm ghost" data-action="delete" data-id="${esc(id)}">Elimina</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function loadTrasporti(root, statusBox) {
+  const select = q('[name="trasp"]', root);
+  try {
+    const rows = rowsFromPayload(await qr('listini', 'trasporti_list', {}));
+    const opts = rows
+      .map((r) => ({ id: String(r.TR_id ?? r.id ?? '').trim(), name: String(r.TR_nome ?? r.name ?? '').trim() }))
+      .filter((x) => x.id !== '');
+
+    select.innerHTML = opts.map((x) => `<option value="${esc(x.id)}">${esc(x.name || x.id)}</option>`).join('');
+
+    if (!opts.length) {
+      select.innerHTML = '<option value="">Nessun trasporto</option>';
+      status(statusBox, 'Nessun trasporto disponibile.', true);
+      return;
+    }
+
+    status(statusBox, 'Trasporti caricati.');
+  } catch (error) {
+    status(statusBox, `Errore trasporti: ${error.message}`, true);
+  }
+}
+
+async function loadList(root) {
+  const statusBox = q('#trasp-status', root);
+  const table = q('#trasp-table', root);
+  const trasp = String(q('[name="trasp"]', root)?.value || '').trim();
+  const m = mode(root);
+
+  if (!trasp) {
+    status(statusBox, 'Seleziona un trasporto.', true);
+    return;
+  }
+
+  if (m.ticketMode && !m.isTicketValid) {
+    status(statusBox, 'Inserisci ID ticket valido per la modalità override.', true);
+    return;
+  }
+
+  try {
+    const action = m.ticketMode ? 'list_ticket' : 'list';
+    const payload = m.ticketMode
+      ? await qr('listini', action, { id: trasp, ticket: m.ticket })
+      : await qr('listini', action, { id: trasp });
+
+    const rows = rowsFromPayload(payload);
+    render(rows, table, m.ticketMode);
+    status(statusBox, `Voci caricate: ${rows.length}`);
+  } catch (error) {
+    status(statusBox, `Errore caricamento listino: ${error.message}`, true);
+  }
+}
+
+async function addRow(root) {
+  const statusBox = q('#trasp-status', root);
+  const trasp = String(q('[name="trasp"]', root)?.value || '').trim();
+  const label = String(q('[name="label"]', root)?.value || '').trim();
+  const iva = String(q('[name="iva"]', root)?.value || '').trim();
+  const value = String(q('[name="value"]', root)?.value || '').trim();
+  const m = mode(root);
+
+  if (!trasp || !label || !iva || !value) {
+    status(statusBox, 'Compila tutti i campi obbligatori.', true);
+    return;
+  }
+
+  try {
+    if (m.ticketMode) {
+      if (!m.isTicketValid) {
+        status(statusBox, 'ID ticket obbligatorio in modalità override.', true);
+        return;
+      }
+      await qr('listini', 'add_ticket', {
+        LI_id: '',
+        LI_label: label,
+        LI_iva: iva,
+        LI_value: value,
+        LI_trasp_id: trasp,
+        LI_ticket: m.ticket,
+        LI_active: 1
+      });
+    } else {
+      await qr('listini', 'add', {
+        LI_label: label,
+        LI_iva: iva,
+        LI_value: value,
+        LI_trasp_id: trasp
+      });
+    }
+
+    q('[name="label"]', root).value = '';
+    q('[name="value"]', root).value = '';
+    status(statusBox, 'Voce aggiunta.');
+    await loadList(root);
+  } catch (error) {
+    status(statusBox, `Errore inserimento voce: ${error.message}`, true);
+  }
+}
+
+async function deleteRow(root, id) {
+  const statusBox = q('#trasp-status', root);
+  const trasp = String(q('[name="trasp"]', root)?.value || '').trim();
+  const m = mode(root);
+
+  if (!id || !trasp) return;
+
+  try {
+    if (m.ticketMode) {
+      await qr('listini', 'delete_ticket', { id, LI_trasp_id: trasp, ticket: m.ticket });
+    } else {
+      await qr('listini', 'delete', { id, LI_trasp_id: trasp });
+    }
+
+    status(statusBox, 'Voce eliminata.');
+    await loadList(root);
+  } catch (error) {
+    status(statusBox, `Errore eliminazione voce: ${error.message}`, true);
+  }
+}
+
+export async function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const statusBox = q('#trasp-status', root);
+  const addForm = q('#trasp-add-form', root);
+  const loadBtn = q('[data-action="trasp-load"]', root);
+  const table = q('#trasp-table', root);
+
+  await loadTrasporti(root, statusBox);
+  await loadList(root);
+
+  loadBtn?.addEventListener('click', () => loadList(root));
+  q('[name="trasp"]', root)?.addEventListener('change', () => loadList(root));
+
+  q('[name="ticket-mode"]', root)?.addEventListener('change', () => {
+    const ticketInput = q('[name="ticket"]', root);
+    if (!ticketInput) return;
+    ticketInput.disabled = !q('[name="ticket-mode"]', root).checked;
+    loadList(root);
+  });
+
+  q('[name="ticket"]', root)?.addEventListener('change', () => loadList(root));
+
+  addForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await addRow(root);
+  });
+
+  table?.addEventListener('click', async (event) => {
+    const t = event.target instanceof Element ? event.target.closest('[data-action="delete"]') : null;
+    if (!t) return;
+    const id = String(t.getAttribute('data-id') || '').trim();
+    if (!id) return;
+    if (!window.confirm(`Eliminare la voce #${id}?`)) return;
+    await deleteRow(root, id);
+  });
+
+  const ticketInput = q('[name="ticket"]', root);
+  if (ticketInput) ticketInput.disabled = true;
+}
+<section class="m2-card">
+  <h2>Workflow Ticket</h2>
+  <p class="m2-muted">Gestione stato workflow senza pagina PHP dedicata.</p>
+
+  <div class="m2-row m2-actions-row">
+    <label class="m2-field">
+      <span>ID Ticket</span>
+      <input type="number" min="1" name="workflow-ticket-id" placeholder="es. 1234">
+    </label>
+    <div class="m2-actions">
+      <button type="button" data-action="workflow-load">Carica</button>
+      <button type="button" data-action="workflow-set">Aggiorna Stato</button>
+    </div>
+  </div>
+
+  <div class="m2-grid" id="workflow-info"></div>
+  <div class="m2-field m2-field-wide" id="workflow-status-slot"></div>
+  <div class="m2-legacy" id="workflow-agenda-slot"></div>
+  <div class="m2-status" id="workflow-status"></div>
+</section>
+import { qr } from '../../js/commons/utility.js';
+
+const q = (s, ctx = document) => ctx.querySelector(s);
+const esc = (v = '') => String(v)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#39;');
+
+function setStatus(target, message, isError = false) {
+  target.className = `m2-status ${isError ? 'error' : 'ok'}`;
+  target.innerHTML = esc(message);
+}
+
+function renderInfo(target, card) {
+  if (!card) {
+    target.innerHTML = '';
+    return;
+  }
+
+  const fields = [
+    ['Ticket', card.idtkt],
+    ['Nome', card.name],
+    ['Riferimento', card.rif],
+    ['Data visita', card.visitdate],
+    ['Ora visita', card.visittime],
+    ['Stato/Close', card.close]
+  ];
+
+  target.innerHTML = fields
+    .map(([k, v]) => `<div class="m2-field"><span>${esc(k)}</span><input type="text" value="${esc(v ?? '')}" readonly></div>`)
+    .join('');
+}
+
+async function loadTicket(root) {
+  const status = q('#workflow-status', root);
+  const info = q('#workflow-info', root);
+  const statusSlot = q('#workflow-status-slot', root);
+  const agenda = q('#workflow-agenda-slot', root);
+  const id = String(q('[name="workflow-ticket-id"]', root)?.value || '').trim();
+
+  if (!id) {
+    setStatus(status, 'Inserisci un ticket.', true);
+    return;
+  }
+
+  setStatus(status, `Caricamento ticket ${id}...`);
+
+  try {
+    const payload = await qr('card', 'cardget', { a: '', b: '', c: id });
+    const card = payload?.['@a']?.[0] || null;
+    if (!card) {
+      setStatus(status, 'Ticket non trovato.', true);
+      renderInfo(info, null);
+      statusSlot.innerHTML = '';
+      agenda.innerHTML = '';
+      return;
+    }
+
+    renderInfo(info, card);
+    statusSlot.innerHTML = payload?.['#a']?.customstatus || '<label class="m2-field"><span>Stato</span><input type="text" value="non disponibile" readonly></label>';
+    agenda.innerHTML = payload?.['#a']?.agendalist || '';
+
+    setStatus(status, `Ticket ${id} caricato.`);
+  } catch (error) {
+    setStatus(status, `Errore caricamento: ${error.message}`, true);
+  }
+}
+
+async function setWorkflow(root) {
+  const status = q('#workflow-status', root);
+  const id = String(q('[name="workflow-ticket-id"]', root)?.value || '').trim();
+  const workflow = String(q('[name="customstatus"]', root)?.value || '').trim();
+
+  if (!id) return setStatus(status, 'Inserisci prima un ticket.', true);
+  if (!workflow) return setStatus(status, 'Seleziona uno stato workflow.', true);
+
+  try {
+    const payload = await qr('card', 'workflowset', { a: 'workflowstatusb', b: workflow, c: id });
+    setStatus(status, payload?.alt || 'Workflow aggiornato.');
+    await loadTicket(root);
+  } catch (error) {
+    setStatus(status, `Errore aggiornamento workflow: ${error.message}`, true);
+  }
+}
+
+export function init() {
+  const root = document.getElementById('page-root') || document.getElementById('app-main');
+  if (!root) return;
+
+  const loadBtn = q('[data-action="workflow-load"]', root);
+  const setBtn = q('[data-action="workflow-set"]', root);
+
+  loadBtn?.addEventListener('click', () => loadTicket(root));
+  setBtn?.addEventListener('click', () => setWorkflow(root));
+}
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    http_response_code(401);
+    echo json_encode(['al' => 'tE', 'alt' => 'Sessione non valida']);
+    exit;
+}
+
+$action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+$allowedActions = ['users', 'users_set', 'lang', 'lang_set', 'arch_home', 'arch_list', 'serv_home', 'serv_list'];
+if ($action === '' || !in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non consentita']);
+    exit;
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+
+$targetMap = [
+    'users' => '/mms1_old/ws/ws2.php?/usr/get',
+    'users_set' => '/mms1_old/ws/ws2.php?/usr/set',
+    'lang' => '/mms1_old/ws/ws2.php?/lang/get',
+    'lang_set' => '/mms1_old/ws/ws2.php?/lang/set',
+    'arch_home' => '/mms1_old/ws/ws2.php?/arch/home',
+    'arch_list' => '/mms1_old/ws/ws2.php?/arch/list',
+    'serv_home' => '/mms1_old/ws/ws2.php?/serv/home',
+    'serv_list' => '/mms1_old/ws/ws2.php?/serv/list'
+];
+
+$targetPath = $targetMap[$action] ?? '';
+if ($targetPath === '') {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non mappata']);
+    exit;
+}
+
+$targetUrl = sprintf('%s://%s%s', $scheme, $host, $targetPath);
+$postData = $_POST;
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    http_response_code(500);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore inizializzazione proxy']);
+    exit;
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $postData,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$curlErr = curl_error($ch);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($raw === false) {
+    http_response_code(502);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore proxy: ' . $curlErr]);
+    exit;
+}
+
+if ($httpCode >= 400) {
+    http_response_code($httpCode);
+}
+
+echo $raw;
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    http_response_code(401);
+    echo json_encode(['al' => 'tE', 'alt' => 'Sessione non valida']);
+    exit;
+}
+
+$action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+$allowedActions = ['range', 'ports'];
+if ($action === '' || !in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non consentita']);
+    exit;
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+
+$targetMap = [
+    'range' => '/mms1_old/ws/ws2.php?/tmp/fcalendar',
+    'ports' => '/mms1_old/ws/ws2.php?/tmp/ports'
+];
+
+$targetPath = $targetMap[$action] ?? '';
+if ($targetPath === '') {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non mappata']);
+    exit;
+}
+
+$targetUrl = sprintf('%s://%s%s', $scheme, $host, $targetPath);
+
+$postData = $_POST;
+if ($action === 'range') {
+    if (!isset($postData['start']) && isset($postData['a'])) {
+        $postData['start'] = $postData['a'];
+    }
+    if (!isset($postData['end']) && isset($postData['b'])) {
+        $postData['end'] = $postData['b'];
+    }
+    if (!isset($postData['c'])) {
+        $postData['c'] = '0';
+    }
+}
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    http_response_code(500);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore inizializzazione proxy']);
+    exit;
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $postData,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$curlErr = curl_error($ch);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($raw === false) {
+    http_response_code(502);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore proxy: ' . $curlErr]);
+    exit;
+}
+
+if ($httpCode >= 400) {
+    http_response_code($httpCode);
+}
+
+echo $raw;
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    http_response_code(401);
+    echo json_encode(['al' => 'tE', 'alt' => 'Sessione non valida']);
+    exit;
+}
+
+$action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+$allowedActions = [
+    'home',
+    'cardget',
+    'cardset',
+    'visitdate',
+    'porti',
+    'prestazioni',
+    'workflowset',
+    'agendaset',
+    'agendaup',
+    'agendadel',
+    'upload',
+    'attdel'
+];
+
+if ($action === '' || !in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non consentita']);
+    exit;
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+$targetUrl = sprintf('%s://%s/mms1_old/ws/ws1.php?/card/%s', $scheme, $host, rawurlencode($action));
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    http_response_code(500);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore inizializzazione proxy']);
+    exit;
+}
+
+$postData = $_POST;
+if (!empty($_FILES)) {
+    foreach ($_FILES as $field => $meta) {
+        if (!isset($meta['name'])) {
+            continue;
+        }
+
+        if (is_array($meta['name'])) {
+            $files = [];
+            foreach ($meta['name'] as $i => $name) {
+                $tmpName = $meta['tmp_name'][$i] ?? '';
+                $type = $meta['type'][$i] ?? 'application/octet-stream';
+                if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+                    continue;
+                }
+                $files[] = new CURLFile($tmpName, $type, (string)$name);
+            }
+            if (!empty($files)) {
+                $postData[$field] = $files;
+            }
+        } else {
+            $tmpName = $meta['tmp_name'] ?? '';
+            $type = $meta['type'] ?? 'application/octet-stream';
+            $name = $meta['name'] ?? 'upload.bin';
+            if ($tmpName !== '' && is_uploaded_file($tmpName)) {
+                $postData[$field] = new CURLFile($tmpName, (string)$type, (string)$name);
+            }
+        }
+    }
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $postData,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$curlErr = curl_error($ch);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($raw === false) {
+    http_response_code(502);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore proxy: ' . $curlErr]);
+    exit;
+}
+
+if ($httpCode >= 400) {
+    http_response_code($httpCode);
+}
+
+echo $raw;
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    http_response_code(401);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Sessione non valida';
+    exit;
+}
+
+$i = isset($_GET['i']) ? trim((string)$_GET['i']) : '';
+$j = isset($_GET['j']) ? trim((string)$_GET['j']) : '';
+
+if ($i === '' || $j === '') {
+    http_response_code(400);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Parametri mancanti';
+    exit;
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+$query = http_build_query(['i' => $i, 'j' => $j]);
+$targetUrl = sprintf('%s://%s/mms1_old/view.php?%s', $scheme, $host, $query);
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    http_response_code(500);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Errore inizializzazione proxy';
+    exit;
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_HEADER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$curlErr = curl_error($ch);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$headerSize = (int)curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+curl_close($ch);
+
+if ($raw === false) {
+    http_response_code(502);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Errore proxy: ' . $curlErr;
+    exit;
+}
+
+$rawHeaders = substr($raw, 0, $headerSize);
+$body = substr($raw, $headerSize);
+
+http_response_code($httpCode > 0 ? $httpCode : 200);
+
+$allowedHeaderPrefixes = [
+    'Content-Type:',
+    'Content-Disposition:',
+    'Content-Length:',
+    'Cache-Control:',
+    'Pragma:',
+    'Expires:'
+];
+
+$lines = preg_split('/\r\n|\n|\r/', $rawHeaders) ?: [];
+foreach ($lines as $line) {
+    $trim = trim($line);
+    if ($trim === '' || stripos($trim, 'HTTP/') === 0) {
+        continue;
+    }
+
+    foreach ($allowedHeaderPrefixes as $prefix) {
+        if (stripos($trim, $prefix) === 0) {
+            header($trim, false);
+            break;
+        }
+    }
+}
+
+echo $body;
+<?php
+require __DIR__ . '/ws.php';
+<?php
+declare(strict_types=1);
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+header('Content-Type: application/json; charset=UTF-8');
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    http_response_code(401);
+    echo json_encode(['al' => 'tE', 'alt' => 'Sessione non valida']);
+    exit;
+}
+
+$action = isset($_GET['action']) ? (string)$_GET['action'] : '';
+$allowedActions = [
+    'list',
+    'add',
+    'delete',
+    'list_ticket',
+    'add_ticket',
+    'delete_ticket',
+    'trasporti_list',
+    'report_mese'
+];
+
+if ($action === '' || !in_array($action, $allowedActions, true)) {
+    http_response_code(400);
+    echo json_encode(['al' => 'tE', 'alt' => 'Azione non consentita']);
+    exit;
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+$targetUrl = sprintf('%s://%s/mms1_old/ws/ws5.php/%s', $scheme, $host, rawurlencode($action));
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    http_response_code(500);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore inizializzazione proxy']);
+    exit;
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $_POST,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$curlErr = curl_error($ch);
+$httpCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($raw === false) {
+    http_response_code(502);
+    echo json_encode(['al' => 'tE', 'alt' => 'Errore proxy: ' . $curlErr]);
+    exit;
+}
+
+if ($httpCode >= 400) {
+    http_response_code($httpCode);
+}
+
+echo $raw;
+<?php
+declare(strict_types=1);
+
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Methods: POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, X-CSRF-Token');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+function sendResponse(bool $ok, $data = [], string $message = '', string $error = ''): void
+{
+    echo json_encode([
+        'ok' => $ok,
+        'data' => $data,
+        'message' => $message,
+        'error' => $error
+    ]);
+    exit;
+}
+
+if (!isset($_SESSION['ITSAMU_id'])) {
+    sendResponse(false, [], '', 'session_invalid');
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    sendResponse(false, [], '', 'method_not_allowed');
+}
+
+$page = (string)($_POST['page'] ?? '');
+$action = (string)($_POST['action'] ?? '');
+if ($page === '' || $action === '') {
+    sendResponse(false, [], '', 'missing_page_or_action');
+}
+
+$routes = [
+    'card' => [
+        'file' => __DIR__ . '/card.php',
+        'actions' => ['home', 'cardget', 'cardset', 'visitdate', 'porti', 'prestazioni', 'workflowset', 'agendaset', 'agendaup', 'agendadel', 'upload', 'attdel']
+    ],
+    'listini' => [
+        'file' => __DIR__ . '/listini.php',
+        'actions' => ['list', 'add', 'delete', 'list_ticket', 'add_ticket', 'delete_ticket', 'trasporti_list', 'report_mese']
+    ],
+    'calendar' => [
+        'file' => __DIR__ . '/calendar.php',
+        'actions' => ['range', 'ports']
+    ],
+    'anagrafiche' => [
+        'file' => __DIR__ . '/anagrafiche.php',
+        'actions' => ['users', 'users_set', 'lang', 'lang_set', 'arch_home', 'arch_list', 'serv_home', 'serv_list']
+    ]
+];
+
+if (!isset($routes[$page])) {
+    sendResponse(false, [], '', 'unknown_page');
+}
+if (!in_array($action, $routes[$page]['actions'], true)) {
+    sendResponse(false, [], '', 'unknown_action');
+}
+
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = (string)($_SERVER['HTTP_HOST'] ?? 'localhost');
+$targetPath = str_replace(realpath(__DIR__ . '/..'), '', realpath($routes[$page]['file']) ?: $routes[$page]['file']);
+$targetPath = str_replace('\\', '/', $targetPath);
+$targetUrl = sprintf('%s://%s%s?action=%s', $scheme, $host, $targetPath, rawurlencode($action));
+
+$postData = $_POST;
+unset($postData['page'], $postData['action']);
+
+if (!empty($_FILES)) {
+    foreach ($_FILES as $field => $meta) {
+        if (!isset($meta['name'])) continue;
+
+        if (is_array($meta['name'])) {
+            $files = [];
+            foreach ($meta['name'] as $i => $name) {
+                $tmpName = $meta['tmp_name'][$i] ?? '';
+                if ($tmpName === '' || !is_uploaded_file($tmpName)) continue;
+                $type = $meta['type'][$i] ?? 'application/octet-stream';
+                $files[] = new CURLFile($tmpName, (string)$type, (string)$name);
+            }
+            if (!empty($files)) {
+                $postData[$field] = $files;
+            }
+        } else {
+            $tmpName = $meta['tmp_name'] ?? '';
+            if ($tmpName !== '' && is_uploaded_file($tmpName)) {
+                $type = $meta['type'] ?? 'application/octet-stream';
+                $name = $meta['name'] ?? 'upload.bin';
+                $postData[$field] = new CURLFile($tmpName, (string)$type, (string)$name);
+            }
+        }
+    }
+}
+
+$ch = curl_init($targetUrl);
+if ($ch === false) {
+    sendResponse(false, [], '', 'proxy_init_failed');
+}
+
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => $postData,
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CONNECTTIMEOUT => 10,
+    CURLOPT_TIMEOUT => 60,
+    CURLOPT_COOKIE => session_name() . '=' . session_id(),
+]);
+
+$raw = curl_exec($ch);
+$err = curl_error($ch);
+$code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($raw === false) {
+    sendResponse(false, [], '', 'proxy_failed:' . $err);
+}
+if ($code >= 400) {
+    sendResponse(false, [], '', 'upstream_http_' . $code);
+}
+
+$decoded = json_decode((string)$raw, true);
+if (json_last_error() === JSON_ERROR_NONE) {
+    sendResponse(true, $decoded, 'ok');
+}
+
+sendResponse(true, ['raw' => $raw], 'ok_raw');
+  

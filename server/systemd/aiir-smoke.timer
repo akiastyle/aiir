@@ -1,0 +1,10 @@
+[Unit]
+Description=Twice Daily AIIR Smoke Test Timer
+
+[Timer]
+OnCalendar=*-*-* 06,18:00:00
+Persistent=true
+Unit=aiir-smoke.service
+
+[Install]
+WantedBy=timers.target

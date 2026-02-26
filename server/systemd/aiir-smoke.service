@@ -1,0 +1,9 @@
+[Unit]
+Description=AIIR Runtime Smoke Test
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+Group=www-data
+ExecStart=/var/www/aiir/server/scripts/smoke-runtime.sh

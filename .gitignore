@@ -1,0 +1,19 @@
+# Keys (never publish private material)
+ai/keys/local/*/signing_priv.pem
+
+# Runtime state
+ai/state/*.wal
+ai/state/import-ledger.log
+ai/state/revoked.peers
+ai/state/node.id
+ai/state/peer.mode
+ai/state/onboarding/
+
+# Backups
+*.tar.gz
+
+# Logs
+ai/log/*.log
+
+# Temporary artifacts
+tmp/
