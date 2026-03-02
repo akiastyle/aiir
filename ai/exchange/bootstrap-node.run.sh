@@ -40,17 +40,17 @@ generated_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 EOF
 
 cat > "${ONBOARD_DIR}/security.checklist" <<'EOF'
-1) Non abilitare AI_POLICY_ALLOW_OPS='*' senza un perimetro preciso.
-2) Non abilitare AI_POLICY_ALLOW_DB_EXEC in bootstrap iniziale.
-3) Accetta solo pacchetti firmati da peer presenti in ai/keys/trusted.
-4) Verifica fingerprint chiave peer out-of-band prima di trust-add-peer.
-5) Mantieni runtime in isolated mode fino a trust esplicito.
+1) Do not enable AI_POLICY_ALLOW_OPS='*' without a strict scope.
+2) Do not enable AI_POLICY_ALLOW_DB_EXEC during initial bootstrap.
+3) Accept only signed packages from peers present in ai/keys/trusted.
+4) Verify peer key fingerprint out-of-band before trust-add-peer.
+5) Keep runtime in isolated mode until explicit trust is configured.
 EOF
 
 cat > "${ONBOARD_DIR}/next.steps" <<'EOF'
-1) Condividi solo la chiave pubblica locale.
-2) Registra peer con: /var/www/aiir/ai/exchange/trust-add-peer.run.sh <peer-id> <peer-pub.pem>
-3) Sincronizza con: /var/www/aiir/ai/exchange/sync-core.run.sh build|apply ...
+1) Share only the local public key.
+2) Register a peer with: /var/www/aiir/ai/exchange/trust-add-peer.run.sh <peer-id> <peer-pub.pem>
+3) Sync with: /var/www/aiir/ai/exchange/sync-core.run.sh build|apply ...
 EOF
 
 chown root:www-data "${ONBOARD_DIR}/node.info" "${ONBOARD_DIR}/security.checklist" "${ONBOARD_DIR}/next.steps"

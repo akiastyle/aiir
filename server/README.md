@@ -106,7 +106,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/ai/exchange/build-package.run.sh <src-dir> <package-dir> <core-dir>`
 - Verify + unpack signed package:
   - `/var/www/aiir/ai/exchange/unpack-package.run.sh <package-dir> <out-dir>`
-  - verifica firma su `package.sig.payload` (metadata + digest di `package.sha256`)
+  - verifies signature on `package.sig.payload` (metadata + digest of `package.sha256`)
 - Sync wrapper:
   - `/var/www/aiir/ai/exchange/sync-core.run.sh build <src-dir> <package-dir> [core-dir]`
   - `/var/www/aiir/ai/exchange/sync-core.run.sh apply <package-dir> <out-dir>`
