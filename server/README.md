@@ -129,6 +129,11 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Provision helper (project + DB + env + policy + domain web conf):
   - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
   - optional system install/reload: `AIIR_PROVISION_APPLY=1`
+- File versioning index and changelog generator:
+  - `/var/www/aiir/server/scripts/update-file-version-index.sh`
+  - outputs:
+    - `/var/www/aiir/docs/FILE_VERSION_INDEX.csv`
+    - `/var/www/aiir/docs/CHANGELOG_AIIR.md`
 
 ## State backup (rotation)
 - Manual backup:

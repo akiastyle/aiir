@@ -16,6 +16,7 @@
 - [ ] gateway human-indirect DB mode verified (`ai-gateway.env`)
 - [ ] gateway project/db flow verified (`smoke-gateway.sh`)
 - [ ] project auto-provision script verified (`provision-project-domain.sh`)
+- [ ] file version index/changelog refreshed (`update-file-version-index.sh`)
 
 ## Publish
 - [ ] clean commit state
