@@ -8,5 +8,7 @@ curl -fsS "http://${HOST}:${PORT}/health"
 echo
 curl -fsS "http://${HOST}:${PORT}/ai/meta"
 echo
+curl -fsS "http://${HOST}:${PORT}/openapi.json"
+echo
 curl -fsS "http://${HOST}:${PORT}/metrics"
 echo

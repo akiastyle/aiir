@@ -41,10 +41,16 @@ done
 
 curl -fsS "http://${HOST}:${PORT}/health" >"$TMPDIR/health.json"
 curl -fsS "http://${HOST}:${PORT}/ai/meta" >"$TMPDIR/meta.json"
+curl -fsS "http://${HOST}:${PORT}/openapi.json" >"$TMPDIR/openapi.json"
 curl -fsS "http://${HOST}:${PORT}/metrics" >"$TMPDIR/metrics.txt"
 if ! rg -q '^aiir_runtime_requests_total ' "$TMPDIR/metrics.txt"; then
   echo "smoke-failed: missing metrics payload" >&2
   cat "$TMPDIR/metrics.txt" >&2 || true
+  exit 1
+fi
+if ! rg -q '"openapi":"3\.0\.3"' "$TMPDIR/openapi.json"; then
+  echo "smoke-failed: missing openapi payload" >&2
+  cat "$TMPDIR/openapi.json" >&2 || true
   exit 1
 fi
 
@@ -61,5 +67,7 @@ echo "smoke-ok"
 cat "$TMPDIR/health.json"
 echo
 cat "$TMPDIR/meta.json"
+echo
+cat "$TMPDIR/openapi.json"
 echo
 cat "$TMPDIR/metrics.txt"

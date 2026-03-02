@@ -30,6 +30,7 @@ AI_CAP_REQUIRE="1" \
 AI_CAP_SECRET="$CAP_SECRET" \
 AI_CAP_MAX_FUTURE_SEC="120" \
 AI_AUDIT_LOG_PATH="$TMPDIR/runtime_audit.log" \
+AI_LOG_REQUESTS="1" \
 AI_WAL_PATH="$TMPDIR/ai.wal" \
 AI_SNAPSHOT_PATH="$TMPDIR/snapshot.json" \
 "$RUNTIME_BIN" serve >"$TMPDIR/runtime.log" 2>&1 &

@@ -28,6 +28,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `AI_CAP_MAX_FUTURE_SEC=120` (max allowed token future skew)
 - Structured runtime audit log:
   - `AI_AUDIT_LOG_PATH=/var/www/aiir/ai/log/runtime_audit.log`
+- Structured request logging toggle:
+  - `AI_LOG_REQUESTS=1` (default on)
 - To enable DB exec explicitly:
   - `AI_POLICY_ALLOW_DB_EXEC=1`
   - `AI_POLICY_ALLOW_OPS='*'` or explicit allowlist like `AI_POLICY_ALLOW_OPS='1001,2001'`
@@ -46,6 +48,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `aiir_runtime_rate_limited_total`, `aiir_runtime_circuit_open_total`
   - `aiir_runtime_db_exec_allow_total`, `aiir_runtime_db_exec_deny_total`
   - `aiir_runtime_capability_deny_total`
+- `/openapi.json` reports a minimal OpenAPI 3.0 schema for runtime endpoints.
 
 ## DB exec capability headers (when `AI_CAP_REQUIRE=1`)
 - `X-AIIR-Cap-Op`: operation id (`opId`)
