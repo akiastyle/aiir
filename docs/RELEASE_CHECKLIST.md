@@ -13,6 +13,7 @@
 - [ ] signed-time window verified
 - [ ] deny-by-default policy confirmed
 - [ ] capability token checks verified (`smoke-capability.sh`)
+- [ ] gateway human-indirect DB mode verified (`ai-gateway.env`)
 
 ## Publish
 - [ ] clean commit state

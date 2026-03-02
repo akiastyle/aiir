@@ -20,6 +20,13 @@ This guide is for operators integrating AIIR on a server without handling intern
 - `GET /health`
 - `GET /ai/meta`
 
+## Human DB Mode (Indirect)
+- You do not manage DB users/passwords.
+- You request project/data actions, AIIR handles DB provisioning and execution in background.
+- References like `project_ref` and `db_ref` are returned to you; credentials remain internal.
+- Contract:
+  - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
+
 ## Secure Default Policy
 - DB exec disabled
 - no wildcard ops

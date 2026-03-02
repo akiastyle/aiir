@@ -6,6 +6,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Single native binary: `/var/www/aiir/ai/toolchain-native/aiird`
 - Default bind: `127.0.0.1:7788`
 - Env file: `/var/www/aiir/server/env/ai-runtime.env`
+- Gateway env file (project/db contracts):
+  - `/var/www/aiir/server/env/ai-gateway.env`
 - Build script:
   - `/var/www/aiir/server/scripts/build-native-runtime.sh`
 - Native AIIR toolchain:
@@ -110,6 +112,15 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/smoke-runtime.sh`
 - Run capability smoke (allow + replay deny + expired deny):
   - `/var/www/aiir/server/scripts/smoke-capability.sh`
+
+## AIIR Gateway v1 (project/db orchestration)
+- Contract document:
+  - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
+- Main endpoints:
+  - `POST /aiir/project/create` (auto-provision DB by default)
+  - `POST /aiir/db/exec` (AI-managed DB operation)
+- Human mode:
+  - indirect DB usage only (no direct credentials exposed)
 
 ## State backup (rotation)
 - Manual backup:
