@@ -37,8 +37,15 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `driftCount`, `checks`
   - `policy.allowDbExec`, `policy.allowAllOps`
   - `capability.required`, `capability.maxFutureSec`
+  - `metrics.requestsTotal`, `metrics.responses2xx`, `metrics.responses4xx`, `metrics.responses5xx`
   - `audit.path`
   - `state.walPath`, `state.walExists`, `state.snapshotPath`, `state.snapshotExists`
+- `/metrics` reports Prometheus-compatible runtime counters:
+  - `aiir_runtime_requests_total`
+  - `aiir_runtime_responses_2xx_total`, `_4xx_total`, `_5xx_total`
+  - `aiir_runtime_rate_limited_total`, `aiir_runtime_circuit_open_total`
+  - `aiir_runtime_db_exec_allow_total`, `aiir_runtime_db_exec_deny_total`
+  - `aiir_runtime_capability_deny_total`
 
 ## DB exec capability headers (when `AI_CAP_REQUIRE=1`)
 - `X-AIIR-Cap-Op`: operation id (`opId`)

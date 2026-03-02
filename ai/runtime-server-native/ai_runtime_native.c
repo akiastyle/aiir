@@ -93,6 +93,16 @@ typedef struct {
   size_t cap_nonce_next;
   char audit_path[384];
   FILE *audit_fp;
+
+  uint64_t metric_requests_total;
+  uint64_t metric_responses_2xx;
+  uint64_t metric_responses_4xx;
+  uint64_t metric_responses_5xx;
+  uint64_t metric_rate_limited_total;
+  uint64_t metric_circuit_open_total;
+  uint64_t metric_db_exec_allow_total;
+  uint64_t metric_db_exec_deny_total;
+  uint64_t metric_capability_deny_total;
 } Runtime;
 
 static size_t parse_env_size(const char *name, size_t defv, size_t minv, size_t maxv);
@@ -476,6 +486,41 @@ static int json_response(int fd, int code, const char *body) {
   return 0;
 }
 
+static void metric_track_status(Runtime *rt, int code) {
+  if (code >= 200 && code < 300) rt->metric_responses_2xx++;
+  else if (code >= 400 && code < 500) rt->metric_responses_4xx++;
+  else if (code >= 500 && code < 600) rt->metric_responses_5xx++;
+}
+
+static int json_response_tr(Runtime *rt, int fd, int code, const char *body) {
+  metric_track_status(rt, code);
+  return json_response(fd, code, body);
+}
+
+static int text_response_tr(Runtime *rt, int fd, int code, const char *body) {
+  metric_track_status(rt, code);
+  const char *msg =
+      (code == 200) ? "OK" :
+      (code == 400) ? "Bad Request" :
+      (code == 404) ? "Not Found" :
+      (code == 429) ? "Too Many Requests" :
+      (code == 503) ? "Service Unavailable" :
+      "Error";
+  char hdr[512];
+  int bl = (int)strlen(body);
+  int n = snprintf(hdr, sizeof(hdr),
+                   "HTTP/1.1 %d %s\r\n"
+                   "Content-Type: text/plain; version=0.0.4; charset=utf-8\r\n"
+                   "Cache-Control: no-store\r\n"
+                   "Content-Length: %d\r\n"
+                   "Connection: close\r\n\r\n",
+                   code, msg, bl);
+  if (n < 0) return -1;
+  if (write(fd, hdr, (size_t)n) < 0) return -1;
+  if (write(fd, body, (size_t)bl) < 0) return -1;
+  return 0;
+}
+
 static bool get_packet_by_id(const Runtime *rt, uint32_t id, const uint32_t **pkt, uint32_t *pkt_len) {
   uint32_t files = (uint32_t)(rt->lite_table.len / 3u);
   if (id >= files) return false;
@@ -731,11 +776,50 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
   ssize_t got = read(cfd, req, req_cap);
   if (got <= 0) { free(req); return -1; }
   req[got] = '\0';
+  rt->metric_requests_total++;
 
   char method[16], path[2048];
   if (!parse_method_path(req, method, sizeof(method), path, sizeof(path))) {
-    json_response(cfd, 400, "{\"ok\":0,\"err\":\"request\"}");
+    json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"request\"}");
     audit_log(rt, peer, "-", "-", 400, "request-parse", 0u, "request");
+    free(req);
+    return 0;
+  }
+
+  if (strcmp(method, "GET") == 0 && strcmp(path, "/metrics") == 0) {
+    char body[2048];
+    int n = snprintf(body, sizeof(body),
+                     "# TYPE aiir_runtime_requests_total counter\n"
+                     "aiir_runtime_requests_total %llu\n"
+                     "# TYPE aiir_runtime_responses_2xx_total counter\n"
+                     "aiir_runtime_responses_2xx_total %llu\n"
+                     "# TYPE aiir_runtime_responses_4xx_total counter\n"
+                     "aiir_runtime_responses_4xx_total %llu\n"
+                     "# TYPE aiir_runtime_responses_5xx_total counter\n"
+                     "aiir_runtime_responses_5xx_total %llu\n"
+                     "# TYPE aiir_runtime_rate_limited_total counter\n"
+                     "aiir_runtime_rate_limited_total %llu\n"
+                     "# TYPE aiir_runtime_circuit_open_total counter\n"
+                     "aiir_runtime_circuit_open_total %llu\n"
+                     "# TYPE aiir_runtime_db_exec_allow_total counter\n"
+                     "aiir_runtime_db_exec_allow_total %llu\n"
+                     "# TYPE aiir_runtime_db_exec_deny_total counter\n"
+                     "aiir_runtime_db_exec_deny_total %llu\n"
+                     "# TYPE aiir_runtime_capability_deny_total counter\n"
+                     "aiir_runtime_capability_deny_total %llu\n",
+                     (unsigned long long)rt->metric_requests_total,
+                     (unsigned long long)rt->metric_responses_2xx,
+                     (unsigned long long)rt->metric_responses_4xx,
+                     (unsigned long long)rt->metric_responses_5xx,
+                     (unsigned long long)rt->metric_rate_limited_total,
+                     (unsigned long long)rt->metric_circuit_open_total,
+                     (unsigned long long)rt->metric_db_exec_allow_total,
+                     (unsigned long long)rt->metric_db_exec_deny_total,
+                     (unsigned long long)rt->metric_capability_deny_total);
+    if (n < 0) n = 0;
+    if ((size_t)n >= sizeof(body)) n = (int)(sizeof(body) - 1u);
+    body[n] = '\0';
+    text_response_tr(rt, cfd, 200, body);
     free(req);
     return 0;
   }
@@ -748,6 +832,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              "{\"ok\":1,\"service\":\"ai-ir-runtime-native\",\"dbMode\":\"%.64s\","
              "\"driftCount\":%u,\"checks\":%u,\"policy\":{\"allowDbExec\":%s,\"allowAllOps\":%s},"
              "\"capability\":{\"required\":%s,\"maxFutureSec\":%zu},"
+             "\"metrics\":{\"requestsTotal\":%llu,\"responses2xx\":%llu,\"responses4xx\":%llu,\"responses5xx\":%llu},"
              "\"audit\":{\"path\":\"%.256s\"},"
              "\"state\":{\"walPath\":\"%.384s\",\"walExists\":%d,\"snapshotPath\":\"%.384s\",\"snapshotExists\":%d}}",
              db_mode,
@@ -757,12 +842,16 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              rt->policy.allow_all_ops ? "true" : "false",
              rt->cap_required ? "true" : "false",
              rt->cap_max_future_sec,
+             (unsigned long long)rt->metric_requests_total,
+             (unsigned long long)rt->metric_responses_2xx,
+             (unsigned long long)rt->metric_responses_4xx,
+             (unsigned long long)rt->metric_responses_5xx,
              rt->audit_path,
              rt->state.wal_path,
              wal_exists,
              rt->state.snapshot_path,
              snap_exists);
-    json_response(cfd, 200, body);
+    json_response_tr(rt, cfd, 200, body);
     free(req);
     return 0;
   }
@@ -773,7 +862,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     snprintf(body, sizeof(body),
              "{\"files\":%u,\"liteBlobWords\":%zu,\"sourceAdaptRows\":%zu,\"sourceAdaptWords\":%zu,\"dbPacketWords\":%zu}",
              files, rt->lite_blob.len, rt->adapt_table.len / 3u, rt->adapt_blob.len, rt->db_packet.len);
-    json_response(cfd, 200, body);
+    json_response_tr(rt, cfd, 200, body);
     free(req);
     return 0;
   }
@@ -782,21 +871,21 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     char *end = NULL;
     long idl = strtol(path + 11, &end, 10);
     if (!end || *end != '\0' || idl < 0) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"id\"}");
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"id\"}");
       free(req);
       return 0;
     }
     const uint32_t *pkt = NULL;
     uint32_t pkt_len = 0;
     if (!get_packet_by_id(rt, (uint32_t)idl, &pkt, &pkt_len)) {
-      json_response(cfd, 404, "{\"ok\":0,\"err\":\"file-id\"}");
+      json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"file-id\"}");
       free(req);
       return 0;
     }
 
     uint32_t cr = 0, sr = 0, mr = 0;
     if (!parse_a2a_summary(pkt, pkt_len, &cr, &sr, &mr)) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"packet\"}");
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"packet\"}");
       free(req);
       return 0;
     }
@@ -805,7 +894,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     uint32_t fallback_len = 0;
     bool ok_preview = build_source_preview(rt, (uint32_t)idl, preview, sizeof(preview), &fallback_len);
     if (!ok_preview) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"adapt\"}");
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"adapt\"}");
       free(req);
       return 0;
     }
@@ -814,28 +903,31 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     snprintf(body, sizeof(body),
              "{\"ok\":1,\"render\":{\"fileId\":%ld,\"codeRecords\":%u,\"slotRecords\":%u,\"metaRecords\":%u,\"hasSourceFallback\":%s,\"sourceFallbackLen\":%u,\"sourcePreview\":\"%s\"}}",
              idl, cr, sr, mr, (fallback_len > 0 ? "true" : "false"), fallback_len, preview);
-    json_response(cfd, 200, body);
+    json_response_tr(rt, cfd, 200, body);
     free(req);
     return 0;
   }
 
   if (strcmp(method, "POST") == 0 && strcmp(path, "/ai/db/exec") == 0) {
     if (!rt->policy.allow_db_exec) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"policy-db-exec\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"policy-db-exec\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "policy-db-exec");
       free(req);
       return 0;
     }
     size_t hdr_end = 0;
     if (!find_header_end(req, (size_t)got, &hdr_end)) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"headers\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"headers\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "headers");
       free(req);
       return 0;
     }
     long cl = parse_content_length(req);
     if (cl < 0 || cl > (long)body_cap) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"content-length\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"content-length\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "content-length");
       free(req);
       return 0;
@@ -844,7 +936,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     const char *bodyp = req + hdr_end;
     long have = (long)got - (long)hdr_end;
     if (have < cl) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"body-short\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"body-short\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "body-short");
       free(req);
       return 0;
@@ -852,7 +945,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
 
     long long op_lli = 0;
     if (!parse_json_int(bodyp, "\"opId\"", &op_lli) || op_lli < 0 || op_lli > 0xffffffffLL) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"opId\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"opId\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "opId");
       free(req);
       return 0;
@@ -861,21 +955,25 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
 
     char cap_deny[64];
     if (!validate_capability(rt, req, op_id, cap_deny, sizeof(cap_deny))) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"capability\"}");
+      rt->metric_db_exec_deny_total++;
+      rt->metric_capability_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"capability\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, cap_deny);
       free(req);
       return 0;
     }
 
     if (!aiir_policy_allow_op(&rt->policy, op_id)) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"policy-op\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"policy-op\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "policy-op");
       free(req);
       return 0;
     }
     const DbOp *op = find_op(rt, op_id);
     if (!op) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"op\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"op\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "op");
       free(req);
       return 0;
@@ -884,7 +982,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     JsonVal *args = NULL;
     size_t argc = 0;
     if (!parse_json_args(bodyp, &args, &argc)) {
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"args\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"args\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "args");
       free(req);
       return 0;
@@ -893,7 +992,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     if (argc < op->min_args || argc > op->max_args) {
       for (size_t i = 0; i < argc; i++) free(args[i].s);
       free(args);
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"argc\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"argc\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "argc");
       free(req);
       return 0;
@@ -903,7 +1003,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     if (sigc != argc) {
       for (size_t i = 0; i < argc; i++) free(args[i].s);
       free(args);
-      json_response(cfd, 400, "{\"ok\":0,\"err\":\"sig-arity\"}");
+      rt->metric_db_exec_deny_total++;
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"sig-arity\"}");
       audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "sig-arity");
       free(req);
       return 0;
@@ -914,7 +1015,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
       if (!sg || !type_check(sg->type_id, &args[i])) {
         for (size_t k = 0; k < argc; k++) free(args[k].s);
         free(args);
-        json_response(cfd, 400, "{\"ok\":0,\"err\":\"type\"}");
+        rt->metric_db_exec_deny_total++;
+        json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"type\"}");
         audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "type");
         free(req);
         return 0;
@@ -929,13 +1031,14 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              "{\"ok\":1,\"result\":{\"ok\":1,\"mode\":\"dry-run\",\"opId\":%u,\"procId\":%u,\"argsCount\":%zu}}",
              op->op_id, op->proc_id, argc);
     aiir_state_log_dbexec(&rt->state, op->op_id, op->proc_id, argc);
-    json_response(cfd, 200, body);
+    rt->metric_db_exec_allow_total++;
+    json_response_tr(rt, cfd, 200, body);
     audit_log(rt, peer, method, path, 200, "db-exec-allow", op_id, "ok");
     free(req);
     return 0;
   }
 
-  json_response(cfd, 404, "{\"ok\":0,\"err\":\"route\"}");
+  json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"route\"}");
   free(req);
   return 0;
 }
@@ -1035,7 +1138,8 @@ int ai_runtime_native_main(int argc, char **argv) {
     (void)setsockopt(cfd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
     time_t now = time(NULL);
     if (cb_open_until > now) {
-      json_response(cfd, 503, "{\"ok\":0,\"err\":\"circuit-open\"}");
+      rt.metric_circuit_open_total++;
+      json_response_tr(&rt, cfd, 503, "{\"ok\":0,\"err\":\"circuit-open\"}");
       audit_log(&rt, peer, "-", "-", 503, "runtime-deny", 0u, "circuit-open");
       close(cfd);
       continue;
@@ -1045,7 +1149,8 @@ int ai_runtime_native_main(int argc, char **argv) {
       rl_count = 0;
     }
     if (rl_count >= rate_limit_rps) {
-      json_response(cfd, 429, "{\"ok\":0,\"err\":\"rate-limit\"}");
+      rt.metric_rate_limited_total++;
+      json_response_tr(&rt, cfd, 429, "{\"ok\":0,\"err\":\"rate-limit\"}");
       audit_log(&rt, peer, "-", "-", 429, "runtime-deny", 0u, "rate-limit");
       close(cfd);
       continue;

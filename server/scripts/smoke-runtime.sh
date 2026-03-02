@@ -41,6 +41,12 @@ done
 
 curl -fsS "http://${HOST}:${PORT}/health" >"$TMPDIR/health.json"
 curl -fsS "http://${HOST}:${PORT}/ai/meta" >"$TMPDIR/meta.json"
+curl -fsS "http://${HOST}:${PORT}/metrics" >"$TMPDIR/metrics.txt"
+if ! rg -q '^aiir_runtime_requests_total ' "$TMPDIR/metrics.txt"; then
+  echo "smoke-failed: missing metrics payload" >&2
+  cat "$TMPDIR/metrics.txt" >&2 || true
+  exit 1
+fi
 
 DB_HTTP="$(curl -sS -o "$TMPDIR/db.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/ai/db/exec" \
   -H "Content-Type: application/json" \
@@ -55,3 +61,5 @@ echo "smoke-ok"
 cat "$TMPDIR/health.json"
 echo
 cat "$TMPDIR/meta.json"
+echo
+cat "$TMPDIR/metrics.txt"
