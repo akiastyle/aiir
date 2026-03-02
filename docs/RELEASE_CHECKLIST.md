@@ -14,6 +14,7 @@
 - [ ] deny-by-default policy confirmed
 - [ ] capability token checks verified (`smoke-capability.sh`)
 - [ ] gateway human-indirect DB mode verified (`ai-gateway.env`)
+- [ ] gateway project/db flow verified (`smoke-gateway.sh`)
 
 ## Publish
 - [ ] clean commit state

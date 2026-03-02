@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOST="${AI_RUNTIME_HOST:-127.0.0.1}"
+PORT="${AI_RUNTIME_PORT:-7791}"
+CORE_DIR="${AI_CORE_DIR:-/var/www/aiir/ai/core}"
+RUNTIME_BIN="/var/www/aiir/ai/toolchain-native/aiird"
+
+/var/www/aiir/server/scripts/build-native-runtime.sh >/dev/null
+
+TMPDIR="$(mktemp -d)"
+cleanup() {
+  if [[ -n "${PID:-}" ]]; then
+    kill "$PID" >/dev/null 2>&1 || true
+    wait "$PID" >/dev/null 2>&1 || true
+  fi
+  rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
+
+AI_RUNTIME_HOST="$HOST" \
+AI_RUNTIME_PORT="$PORT" \
+AI_CORE_DIR="$CORE_DIR" \
+AI_DB_EXEC_MODE="dry-run" \
+AI_POLICY_ALLOW_DB_EXEC="0" \
+AI_POLICY_ALLOW_OPS="" \
+AIIR_GATEWAY_ENABLE="1" \
+AIIR_HUMAN_DB_MODE="indirect" \
+AIIR_DB_PROVIDER="default" \
+AIIR_DB_DEFAULT_PROFILE="default" \
+AIIR_DB_REGION="local" \
+AIIR_DB_RETENTION_DAYS="30" \
+AIIR_PROJECTS_FILE="$TMPDIR/projects.ndjson" \
+AI_WAL_PATH="$TMPDIR/ai.wal" \
+AI_SNAPSHOT_PATH="$TMPDIR/snapshot.json" \
+"$RUNTIME_BIN" serve >"$TMPDIR/runtime.log" 2>&1 &
+PID=$!
+
+for _ in $(seq 1 40); do
+  if curl -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 0.2
+done
+
+CREATE_HTTP="$(curl -sS -o "$TMPDIR/create.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/project/create" \
+  -H "Content-Type: application/json" \
+  -d '{"project_name":"smoke-proj","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-001"}')"
+if [[ "$CREATE_HTTP" != "202" ]]; then
+  echo "gateway-smoke-failed: create expected 202, got ${CREATE_HTTP}" >&2
+  cat "$TMPDIR/create.json" >&2 || true
+  exit 1
+fi
+
+PROJECT_REF="$(sed -n 's/.*"project_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create.json" | head -n1)"
+DB_REF="$(sed -n 's/.*"db_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create.json" | head -n1)"
+[[ -n "$PROJECT_REF" && -n "$DB_REF" ]] || { echo "gateway-smoke-failed: missing refs"; cat "$TMPDIR/create.json"; exit 1; }
+
+EXEC_HTTP="$(curl -sS -o "$TMPDIR/exec.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/db/exec" \
+  -H "Content-Type: application/json" \
+  -d "{\"project_ref\":\"$PROJECT_REF\",\"db_ref\":\"$DB_REF\",\"op_id\":\"entity.upsert\",\"payload\":{\"collection\":\"x\"},\"req_id\":\"smoke-req-1\"}")"
+if [[ "$EXEC_HTTP" != "200" ]]; then
+  echo "gateway-smoke-failed: exec expected 200, got ${EXEC_HTTP}" >&2
+  cat "$TMPDIR/exec.json" >&2 || true
+  exit 1
+fi
+if ! rg -q '"status":"queued"' "$TMPDIR/exec.json"; then
+  echo "gateway-smoke-failed: exec response mismatch" >&2
+  cat "$TMPDIR/exec.json" >&2 || true
+  exit 1
+fi
+
+echo "gateway-smoke-ok"
+cat "$TMPDIR/create.json"
+echo
+cat "$TMPDIR/exec.json"

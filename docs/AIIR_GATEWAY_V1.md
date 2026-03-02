@@ -7,6 +7,7 @@ Core rule:
 - human never receives DB user/password
 - AIIR provisions and manages DB in background
 - DB access is only through AIIR contracts
+- multiple projects and multiple dedicated DBs can run on the same server host
 
 ## Endpoint: `POST /aiir/project/create`
 
@@ -35,6 +36,7 @@ Response `202`:
 ```
 
 Final status (`ready`) is delivered via events.
+Each call creates a new `project_ref` and `db_ref` pair that can coexist with other projects on the same host.
 
 ## Endpoint: `POST /aiir/db/exec`
 
@@ -84,6 +86,7 @@ Response `200`:
 - all operations audited
 - secret storage and rotation are internal to AIIR
 - direct DB credentials are disabled for human mode
+- gateway behavior is independent from Apache/Nginx; it is a runtime contract concern
 
 ## Human vs AI Responsibilities
 

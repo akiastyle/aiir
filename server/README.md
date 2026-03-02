@@ -121,6 +121,10 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `POST /aiir/db/exec` (AI-managed DB operation)
 - Human mode:
   - indirect DB usage only (no direct credentials exposed)
+- Multi-project mode:
+  - each project gets a dedicated `db_ref`; multiple projects/DBs can coexist on the same server
+- Gateway smoke:
+  - `/var/www/aiir/server/scripts/smoke-gateway.sh`
 
 ## State backup (rotation)
 - Manual backup:

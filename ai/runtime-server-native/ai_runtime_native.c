@@ -104,6 +104,17 @@ typedef struct {
   uint64_t metric_db_exec_deny_total;
   uint64_t metric_capability_deny_total;
   bool log_requests;
+
+  bool gateway_enable;
+  bool gateway_human_indirect;
+  bool gateway_require_capability;
+  bool gateway_allow_direct_credentials;
+  char gateway_projects_file[384];
+  char gateway_db_provider[64];
+  char gateway_db_default_profile[64];
+  char gateway_db_region[64];
+  size_t gateway_db_retention_days;
+  uint64_t gateway_seq;
 } Runtime;
 
 static size_t parse_env_size(const char *name, size_t defv, size_t minv, size_t maxv);
@@ -580,6 +591,33 @@ static bool load_runtime(const char *core_dir, Runtime *rt) {
   rt->audit_path[sizeof(rt->audit_path) - 1u] = '\0';
   rt->audit_fp = fopen(rt->audit_path, "a");
   rt->log_requests = parse_env_bool("AI_LOG_REQUESTS", true);
+
+  rt->gateway_enable = parse_env_bool("AIIR_GATEWAY_ENABLE", false);
+  const char *hm = getenv("AIIR_HUMAN_DB_MODE");
+  rt->gateway_human_indirect = (!hm || !*hm || strcasecmp(hm, "indirect") == 0);
+  rt->gateway_require_capability = parse_env_bool("AIIR_DB_REQUIRE_CAPABILITY", true);
+  rt->gateway_allow_direct_credentials = parse_env_bool("AIIR_DB_ALLOW_DIRECT_CREDENTIALS", false);
+
+  const char *pf = getenv("AIIR_PROJECTS_FILE");
+  if (!pf || !*pf) pf = "/var/www/aiir/ai/state/projects.ndjson";
+  strncpy(rt->gateway_projects_file, pf, sizeof(rt->gateway_projects_file) - 1u);
+  rt->gateway_projects_file[sizeof(rt->gateway_projects_file) - 1u] = '\0';
+
+  const char *prov = getenv("AIIR_DB_PROVIDER");
+  if (!prov || !*prov) prov = "default";
+  strncpy(rt->gateway_db_provider, prov, sizeof(rt->gateway_db_provider) - 1u);
+  rt->gateway_db_provider[sizeof(rt->gateway_db_provider) - 1u] = '\0';
+
+  const char *profile = getenv("AIIR_DB_DEFAULT_PROFILE");
+  if (!profile || !*profile) profile = "default";
+  strncpy(rt->gateway_db_default_profile, profile, sizeof(rt->gateway_db_default_profile) - 1u);
+  rt->gateway_db_default_profile[sizeof(rt->gateway_db_default_profile) - 1u] = '\0';
+
+  const char *region = getenv("AIIR_DB_REGION");
+  if (!region || !*region) region = "local";
+  strncpy(rt->gateway_db_region, region, sizeof(rt->gateway_db_region) - 1u);
+  rt->gateway_db_region[sizeof(rt->gateway_db_region) - 1u] = '\0';
+  rt->gateway_db_retention_days = parse_env_size("AIIR_DB_RETENTION_DAYS", 30u, 1u, 3650u);
   return true;
 }
 
@@ -598,6 +636,7 @@ static void free_runtime(Runtime *rt) {
 static int json_response(int fd, int code, const char *body) {
   const char *msg =
       (code == 200) ? "OK" :
+      (code == 202) ? "Accepted" :
       (code == 400) ? "Bad Request" :
       (code == 404) ? "Not Found" :
       (code == 429) ? "Too Many Requests" :
@@ -752,6 +791,64 @@ static bool parse_json_int(const char *s, const char *key, long long *out) {
   if (end == p) return false;
   *out = v;
   return true;
+}
+
+static const char *skip_ws(const char *p);
+static bool parse_json_string(const char **pp, char **out_s);
+
+static bool parse_json_string_key(const char *s, const char *key, char *out, size_t out_cap) {
+  const char *p = strstr(s, key);
+  if (!p) return false;
+  p += strlen(key);
+  while (*p && *p != ':') p++;
+  if (*p != ':') return false;
+  p++;
+  p = skip_ws(p);
+  char *tmp = NULL;
+  if (!parse_json_string(&p, &tmp) || !tmp) return false;
+  size_t n = strlen(tmp);
+  if (n + 1u > out_cap) {
+    free(tmp);
+    return false;
+  }
+  memcpy(out, tmp, n + 1u);
+  free(tmp);
+  return true;
+}
+
+static void gen_ref(char *out, size_t out_cap, const char *prefix, Runtime *rt) {
+  uint64_t t = (uint64_t)time(NULL);
+  rt->gateway_seq++;
+  snprintf(out, out_cap, "%s_%llx%llx", prefix, (unsigned long long)t, (unsigned long long)rt->gateway_seq);
+}
+
+static bool gateway_store_project(Runtime *rt, const char *project_ref, const char *db_ref, const char *project_name,
+                                  const char *db_profile, const char *region, size_t retention_days, const char *idempotency_key) {
+  FILE *fp = fopen(rt->gateway_projects_file, "a");
+  if (!fp) return false;
+  fprintf(fp,
+          "{\"ts\":%llu,\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"project_name\":\"%s\",\"db_profile\":\"%s\",\"region\":\"%s\",\"retention_days\":%zu,\"idempotency_key\":\"%s\"}\n",
+          (unsigned long long)time(NULL), project_ref, db_ref, project_name, db_profile, region, retention_days,
+          idempotency_key ? idempotency_key : "");
+  fclose(fp);
+  return true;
+}
+
+static bool gateway_project_db_exists(Runtime *rt, const char *project_ref, const char *db_ref) {
+  FILE *fp = fopen(rt->gateway_projects_file, "r");
+  if (!fp) return false;
+  char pr[160], dr[160], line[2048];
+  snprintf(pr, sizeof(pr), "\"project_ref\":\"%s\"", project_ref);
+  snprintf(dr, sizeof(dr), "\"db_ref\":\"%s\"", db_ref);
+  bool ok = false;
+  while (fgets(line, sizeof(line), fp)) {
+    if (strstr(line, pr) && strstr(line, dr)) {
+      ok = true;
+      break;
+    }
+  }
+  fclose(fp);
+  return ok;
 }
 
 static const char *skip_ws(const char *p) {
@@ -967,6 +1064,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
       "\"/metrics\":{\"get\":{\"responses\":{\"200\":{\"description\":\"Prometheus metrics\"}}}},"
       "\"/openapi.json\":{\"get\":{\"responses\":{\"200\":{\"description\":\"OpenAPI document\"}}}},"
       "\"/ai/meta\":{\"get\":{\"responses\":{\"200\":{\"description\":\"Core metadata\"}}}},"
+      "\"/aiir/project/create\":{\"post\":{\"responses\":{\"202\":{\"description\":\"Project accepted and DB provisioning started\"}}}},"
+      "\"/aiir/db/exec\":{\"post\":{\"responses\":{\"200\":{\"description\":\"AI-managed DB operation accepted\"}}}},"
       "\"/ai/render/{id}\":{\"get\":{\"parameters\":[{\"name\":\"id\",\"in\":\"path\",\"required\":true,\"schema\":{\"type\":\"integer\"}}],\"responses\":{\"200\":{\"description\":\"Render packet summary\"}}}},"
       "\"/ai/db/exec\":{\"post\":{\"requestBody\":{\"required\":true,\"content\":{\"application/json\":{\"schema\":{\"type\":\"object\",\"required\":[\"opId\"],\"properties\":{\"opId\":{\"type\":\"integer\",\"minimum\":0},\"args\":{\"type\":\"array\"}}}}}},"
       "\"parameters\":[{\"name\":\"X-AIIR-Cap-Op\",\"in\":\"header\",\"required\":false,\"schema\":{\"type\":\"string\"}},{\"name\":\"X-AIIR-Cap-Exp\",\"in\":\"header\",\"required\":false,\"schema\":{\"type\":\"string\"}},{\"name\":\"X-AIIR-Cap-Nonce\",\"in\":\"header\",\"required\":false,\"schema\":{\"type\":\"string\"}},{\"name\":\"X-AIIR-Cap-Sig\",\"in\":\"header\",\"required\":false,\"schema\":{\"type\":\"string\"}}],"
@@ -985,6 +1084,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              "{\"ok\":1,\"service\":\"ai-ir-runtime-native\",\"dbMode\":\"%.64s\","
              "\"driftCount\":%u,\"checks\":%u,\"policy\":{\"allowDbExec\":%s,\"allowAllOps\":%s},"
              "\"capability\":{\"required\":%s,\"maxFutureSec\":%zu},"
+             "\"gateway\":{\"enabled\":%s,\"humanIndirect\":%s},"
              "\"metrics\":{\"requestsTotal\":%llu,\"responses2xx\":%llu,\"responses4xx\":%llu,\"responses5xx\":%llu},"
              "\"audit\":{\"path\":\"%.256s\"},"
              "\"state\":{\"walPath\":\"%.384s\",\"walExists\":%d,\"snapshotPath\":\"%.384s\",\"snapshotExists\":%d}}",
@@ -995,6 +1095,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              rt->policy.allow_all_ops ? "true" : "false",
              rt->cap_required ? "true" : "false",
              rt->cap_max_future_sec,
+             rt->gateway_enable ? "true" : "false",
+             rt->gateway_human_indirect ? "true" : "false",
              (unsigned long long)rt->metric_requests_total,
              (unsigned long long)rt->metric_responses_2xx,
              (unsigned long long)rt->metric_responses_4xx,
@@ -1064,6 +1166,152 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
              idl, cr, sr, mr, (fallback_len > 0 ? "true" : "false"), fallback_len, preview);
     json_response_tr(rt, cfd, 200, body);
     request_log(rt, peer, method, path, 200, "render", start_ms);
+    free(req);
+    return 0;
+  }
+
+  if (strcmp(method, "POST") == 0 && strcmp(path, "/aiir/project/create") == 0) {
+    if (!rt->gateway_enable) {
+      json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"gateway-disabled\"}");
+      request_log(rt, peer, method, path, 404, "gateway-disabled", start_ms);
+      free(req);
+      return 0;
+    }
+    size_t hdr_end = 0;
+    if (!find_header_end(req, (size_t)got, &hdr_end)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"headers\"}");
+      request_log(rt, peer, method, path, 400, "headers", start_ms);
+      free(req);
+      return 0;
+    }
+    long cl = parse_content_length(req);
+    if (cl < 0 || cl > (long)body_cap) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"content-length\"}");
+      request_log(rt, peer, method, path, 400, "content-length", start_ms);
+      free(req);
+      return 0;
+    }
+    const char *bodyp = req + hdr_end;
+    long have = (long)got - (long)hdr_end;
+    if (have < cl) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"body-short\"}");
+      request_log(rt, peer, method, path, 400, "body-short", start_ms);
+      free(req);
+      return 0;
+    }
+
+    char project_name[96], db_profile[64], region[64], idem[96];
+    if (!parse_json_string_key(bodyp, "\"project_name\"", project_name, sizeof(project_name))) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_name\"}");
+      request_log(rt, peer, method, path, 400, "project_name", start_ms);
+      free(req);
+      return 0;
+    }
+    strncpy(db_profile, rt->gateway_db_default_profile, sizeof(db_profile) - 1u);
+    db_profile[sizeof(db_profile) - 1u] = '\0';
+    strncpy(region, rt->gateway_db_region, sizeof(region) - 1u);
+    region[sizeof(region) - 1u] = '\0';
+    idem[0] = '\0';
+    (void)parse_json_string_key(bodyp, "\"db_profile\"", db_profile, sizeof(db_profile));
+    (void)parse_json_string_key(bodyp, "\"region\"", region, sizeof(region));
+    (void)parse_json_string_key(bodyp, "\"idempotency_key\"", idem, sizeof(idem));
+    long long retention_lli = (long long)rt->gateway_db_retention_days;
+    long long parsed_ret = 0;
+    if (parse_json_int(bodyp, "\"retention_days\"", &parsed_ret) && parsed_ret > 0 && parsed_ret <= 3650) {
+      retention_lli = parsed_ret;
+    }
+
+    char project_ref[64], db_ref[64], channel[96];
+    gen_ref(project_ref, sizeof(project_ref), "prj", rt);
+    gen_ref(db_ref, sizeof(db_ref), "db", rt);
+    snprintf(channel, sizeof(channel), "aiir.ev.project.%s", project_ref);
+
+    if (!gateway_store_project(rt, project_ref, db_ref, project_name, db_profile, region, (size_t)retention_lli, idem)) {
+      json_response_tr(rt, cfd, 503, "{\"ok\":0,\"err\":\"store\"}");
+      request_log(rt, peer, method, path, 503, "store", start_ms);
+      free(req);
+      return 0;
+    }
+
+    char out[1024];
+    snprintf(out, sizeof(out),
+             "{\"ok\":1,\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"status\":\"provisioning\",\"events_channel\":\"%s\"}",
+             project_ref, db_ref, channel);
+    json_response_tr(rt, cfd, 202, out);
+    audit_log(rt, peer, method, path, 202, "gateway-project-create", 0u, project_name);
+    request_log(rt, peer, method, path, 202, "project-create", start_ms);
+    free(req);
+    return 0;
+  }
+
+  if (strcmp(method, "POST") == 0 && strcmp(path, "/aiir/db/exec") == 0) {
+    if (!rt->gateway_enable) {
+      json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"gateway-disabled\"}");
+      request_log(rt, peer, method, path, 404, "gateway-disabled", start_ms);
+      free(req);
+      return 0;
+    }
+    size_t hdr_end = 0;
+    if (!find_header_end(req, (size_t)got, &hdr_end)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"headers\"}");
+      request_log(rt, peer, method, path, 400, "headers", start_ms);
+      free(req);
+      return 0;
+    }
+    long cl = parse_content_length(req);
+    if (cl < 0 || cl > (long)body_cap) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"content-length\"}");
+      request_log(rt, peer, method, path, 400, "content-length", start_ms);
+      free(req);
+      return 0;
+    }
+    const char *bodyp = req + hdr_end;
+    long have = (long)got - (long)hdr_end;
+    if (have < cl) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"body-short\"}");
+      request_log(rt, peer, method, path, 400, "body-short", start_ms);
+      free(req);
+      return 0;
+    }
+
+    char project_ref[64], db_ref[64], op_id[64], req_id[64];
+    if (!parse_json_string_key(bodyp, "\"project_ref\"", project_ref, sizeof(project_ref))) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_ref\"}");
+      request_log(rt, peer, method, path, 400, "project_ref", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!parse_json_string_key(bodyp, "\"db_ref\"", db_ref, sizeof(db_ref))) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"db_ref\"}");
+      request_log(rt, peer, method, path, 400, "db_ref", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!parse_json_string_key(bodyp, "\"op_id\"", op_id, sizeof(op_id))) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"op_id\"}");
+      request_log(rt, peer, method, path, 400, "op_id", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!parse_json_string_key(bodyp, "\"req_id\"", req_id, sizeof(req_id))) {
+      gen_ref(req_id, sizeof(req_id), "req", rt);
+    }
+    if (!gateway_project_db_exists(rt, project_ref, db_ref)) {
+      json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"db_ref\"}");
+      request_log(rt, peer, method, path, 404, "db_ref-missing", start_ms);
+      free(req);
+      return 0;
+    }
+    if (rt->gateway_human_indirect && !rt->gateway_allow_direct_credentials) {
+      /* Human mode is indirect by design; execution stays AI-managed. */
+    }
+    char out[1024];
+    snprintf(out, sizeof(out),
+             "{\"ok\":1,\"req_id\":\"%s\",\"result\":{\"status\":\"queued\",\"provider\":\"%s\",\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"op_id\":\"%s\"}}",
+             req_id, rt->gateway_db_provider, project_ref, db_ref, op_id);
+    json_response_tr(rt, cfd, 200, out);
+    audit_log(rt, peer, method, path, 200, "gateway-db-exec", 0u, op_id);
+    request_log(rt, peer, method, path, 200, "gateway-db-exec", start_ms);
     free(req);
     return 0;
   }

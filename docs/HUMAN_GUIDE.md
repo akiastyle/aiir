@@ -24,6 +24,7 @@ This guide is for operators integrating AIIR on a server without handling intern
 - You do not manage DB users/passwords.
 - You request project/data actions, AIIR handles DB provisioning and execution in background.
 - References like `project_ref` and `db_ref` are returned to you; credentials remain internal.
+- Multiple projects can run on the same server, each with a dedicated `db_ref`.
 - Contract:
   - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
 
