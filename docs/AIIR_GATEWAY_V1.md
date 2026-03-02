@@ -98,3 +98,14 @@ Response `200`:
   - manages schema/index/retention/backup
   - applies optimization and recovery flows
   - enforces policy and security controls
+
+## Provision Automation Script
+
+For end-to-end project bootstrap (project create + DB refs + policy/env + Apache/Nginx conf generation):
+
+- `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
+- default behavior:
+  - generates project env and policy files
+  - generates web server conf under `/var/www/aiir/server/generated/`
+- optional direct install/reload of system web server conf:
+  - `AIIR_PROVISION_APPLY=1 /var/www/aiir/server/scripts/provision-project-domain.sh ...`

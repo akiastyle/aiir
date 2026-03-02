@@ -125,6 +125,9 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - each project gets a dedicated `db_ref`; multiple projects/DBs can coexist on the same server
 - Gateway smoke:
   - `/var/www/aiir/server/scripts/smoke-gateway.sh`
+- Provision helper (project + DB + env + policy + domain web conf):
+  - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
+  - optional system install/reload: `AIIR_PROVISION_APPLY=1`
 
 ## State backup (rotation)
 - Manual backup:
