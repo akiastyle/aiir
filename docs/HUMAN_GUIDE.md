@@ -27,6 +27,13 @@ This guide is for operators integrating AIIR on a server without handling intern
 - Multiple projects can run on the same server, each with a dedicated `db_ref`.
 - Contract:
   - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
+  - `/var/www/aiir/docs/HUMAN_ACTIONS_V1.md`
+
+## HAL v1 (Intent -> Contract)
+- `create_project` -> `POST /aiir/project/create`
+- `save_data` -> `POST /aiir/db/exec` (write op)
+- `read_data` -> `POST /aiir/db/exec` (read op)
+- `project_status` -> `GET /health` + project refs/status
 
 ## Secure Default Policy
 - DB exec disabled

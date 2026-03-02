@@ -116,6 +116,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
 ## AIIR Gateway v1 (project/db orchestration)
 - Contract document:
   - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
+  - `/var/www/aiir/docs/HUMAN_ACTIONS_V1.md`
 - Main endpoints:
   - `POST /aiir/project/create` (auto-provision DB by default)
   - `POST /aiir/db/exec` (AI-managed DB operation)
