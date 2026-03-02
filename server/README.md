@@ -54,7 +54,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - `X-AIIR-Cap-Op`: operation id (`opId`)
 - `X-AIIR-Cap-Exp`: unix timestamp expiry (seconds)
 - `X-AIIR-Cap-Nonce`: one-time nonce (anti-replay, in-memory ring)
-- `X-AIIR-Cap-Sig`: hex signature over `secret|op|exp|nonce`
+- `X-AIIR-Cap-Sig`: HMAC-SHA256 hex signature over message `op|exp|nonce` with shared secret key
 - Signature helper command:
   - `/var/www/aiir/ai/toolchain-native/aiird cap-sign <secret> <op-id> <exp-ts> <nonce>`
 
