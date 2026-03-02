@@ -52,6 +52,32 @@ typedef struct {
   size_t c;
 } ContentVec;
 
+static uint64_t fnv1a64_bytes(const uint8_t *buf, size_t n, uint64_t h) {
+  for (size_t i = 0; i < n; i++) {
+    h ^= (uint64_t)buf[i];
+    h *= 1099511628211ULL;
+  }
+  return h;
+}
+
+static int cmd_cap_sign(const char *secret, const char *op_id_s, const char *exp_s, const char *nonce) {
+  char *end = NULL;
+  unsigned long op_ul = strtoul(op_id_s, &end, 10);
+  if (end == op_id_s || *end != '\0' || op_ul > 0xffffffffu) return 1;
+  long long exp_ll = strtoll(exp_s, &end, 10);
+  if (end == exp_s || *end != '\0' || exp_ll <= 0) return 1;
+
+  char msg[512];
+  int n = snprintf(msg, sizeof(msg), "%s|%lu|%lld|%s", secret, op_ul, exp_ll, nonce);
+  if (n < 0) return 1;
+  if ((size_t)n >= sizeof(msg)) n = (int)(sizeof(msg) - 1u);
+
+  uint64_t h = 1469598103934665603ULL;
+  h = fnv1a64_bytes((const uint8_t *)msg, (size_t)n, h);
+  printf("%016llx\n", (unsigned long long)h);
+  return 0;
+}
+
 static char *str_dup_local(const char *s) {
   size_t n = strlen(s);
   char *p = (char *)malloc(n + 1);
@@ -889,10 +915,11 @@ static void usage(const char *argv0) {
           "  %s rebuild-all <git-root> <core-dir>\n"
           "  %s build-package <src-dir> <out-dir> <core-dir>\n"
           "  %s unpack-package <package-dir> <out-dir>\n"
+          "  %s cap-sign <secret> <op-id> <exp-ts> <nonce>\n"
           "  %s serve\n"
           "  %s bootstrap <git-root> <core-dir> [serve]\n"
           "  %s conformance <core-dir> [iters]\n",
-          argv0, argv0, argv0, argv0, argv0, argv0, argv0, argv0);
+          argv0, argv0, argv0, argv0, argv0, argv0, argv0, argv0, argv0);
 }
 
 int main(int argc, char **argv) {
@@ -917,6 +944,10 @@ int main(int argc, char **argv) {
   if (strcmp(argv[1], "unpack-package") == 0) {
     if (argc != 4) { usage(argv[0]); return 1; }
     return cmd_unpack_package(argv[2], argv[3]);
+  }
+  if (strcmp(argv[1], "cap-sign") == 0) {
+    if (argc != 6) { usage(argv[0]); return 1; }
+    return cmd_cap_sign(argv[2], argv[3], argv[4], argv[5]);
   }
   if (strcmp(argv[1], "serve") == 0) {
     return ai_runtime_native_main(argc - 1, argv + 1);

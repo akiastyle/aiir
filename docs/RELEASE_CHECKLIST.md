@@ -12,6 +12,7 @@
 - [ ] anti-replay verified
 - [ ] signed-time window verified
 - [ ] deny-by-default policy confirmed
+- [ ] capability token checks verified (`smoke-capability.sh`)
 
 ## Publish
 - [ ] clean commit state

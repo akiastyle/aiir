@@ -29,6 +29,8 @@
 
 #define REQ_BUF_MAX_HARD (1024 * 1024)
 #define RESP_BUF_MAX (1024 * 1024)
+#define CAP_NONCE_RING_MAX 512u
+#define CAP_NONCE_MAX_LEN 64u
 
 typedef struct {
   uint32_t file_id;
@@ -82,7 +84,18 @@ typedef struct {
   size_t ops_count;
   DbSig *sigs;
   size_t sig_count;
+
+  bool cap_required;
+  char cap_secret[256];
+  size_t cap_max_future_sec;
+  char cap_nonce_ring[CAP_NONCE_RING_MAX][CAP_NONCE_MAX_LEN + 1u];
+  size_t cap_nonce_count;
+  size_t cap_nonce_next;
+  char audit_path[384];
+  FILE *audit_fp;
 } Runtime;
+
+static size_t parse_env_size(const char *name, size_t defv, size_t minv, size_t maxv);
 
 static bool json_escape_copy(const char *src, size_t src_len, char *dst, size_t dst_cap, size_t *dst_len) {
   size_t w = 0;
@@ -125,6 +138,14 @@ static bool find_header_end(const char *req, size_t n, size_t *header_end) {
   return false;
 }
 
+static bool parse_env_bool(const char *name, bool defv) {
+  const char *s = getenv(name);
+  if (!s || !*s) return defv;
+  if (strcmp(s, "1") == 0 || strcasecmp(s, "true") == 0 || strcasecmp(s, "yes") == 0 || strcasecmp(s, "on") == 0) return true;
+  if (strcmp(s, "0") == 0 || strcasecmp(s, "false") == 0 || strcasecmp(s, "no") == 0 || strcasecmp(s, "off") == 0) return false;
+  return defv;
+}
+
 static bool parse_method_path(const char *req, char *method, size_t method_cap, char *path, size_t path_cap) {
   const char *sp1 = strchr(req, ' ');
   if (!sp1) return false;
@@ -155,6 +176,165 @@ static long parse_content_length(const char *headers) {
     p = nl + 2;
   }
   return 0;
+}
+
+static bool get_header_value(const char *req, const char *name, char *out, size_t out_cap) {
+  size_t name_len = strlen(name);
+  const char *p = req;
+  while (*p) {
+    const char *line_end = strstr(p, "\r\n");
+    if (!line_end) break;
+    if (line_end == p) break;
+    if (strncasecmp(p, name, name_len) == 0 && p[name_len] == ':') {
+      const char *v = p + name_len + 1;
+      while (v < line_end && (*v == ' ' || *v == '\t')) v++;
+      size_t n = (size_t)(line_end - v);
+      if (n + 1u > out_cap) return false;
+      memcpy(out, v, n);
+      out[n] = '\0';
+      return true;
+    }
+    p = line_end + 2;
+  }
+  return false;
+}
+
+static bool is_valid_nonce(const char *nonce) {
+  size_t n = strlen(nonce);
+  if (n < 8u || n > CAP_NONCE_MAX_LEN) return false;
+  for (size_t i = 0; i < n; i++) {
+    char c = nonce[i];
+    if (!(isalnum((unsigned char)c) || c == '-' || c == '_' || c == '.')) return false;
+  }
+  return true;
+}
+
+static bool cap_nonce_seen(const Runtime *rt, const char *nonce) {
+  for (size_t i = 0; i < rt->cap_nonce_count; i++) {
+    if (strcmp(rt->cap_nonce_ring[i], nonce) == 0) return true;
+  }
+  return false;
+}
+
+static void cap_nonce_add(Runtime *rt, const char *nonce) {
+  size_t n = strlen(nonce);
+  if (n > CAP_NONCE_MAX_LEN) n = CAP_NONCE_MAX_LEN;
+  memcpy(rt->cap_nonce_ring[rt->cap_nonce_next], nonce, n);
+  rt->cap_nonce_ring[rt->cap_nonce_next][n] = '\0';
+  rt->cap_nonce_next = (rt->cap_nonce_next + 1u) % CAP_NONCE_RING_MAX;
+  if (rt->cap_nonce_count < CAP_NONCE_RING_MAX) rt->cap_nonce_count++;
+}
+
+static uint64_t fnv1a64(const unsigned char *data, size_t n, uint64_t h) {
+  for (size_t i = 0; i < n; i++) {
+    h ^= (uint64_t)data[i];
+    h *= 1099511628211ULL;
+  }
+  return h;
+}
+
+static void cap_sig_hex(const Runtime *rt, uint32_t op_id, long long exp_ts, const char *nonce, char out_hex[17]) {
+  char msg[512];
+  int n = snprintf(msg, sizeof(msg), "%s|%u|%lld|%s", rt->cap_secret, op_id, exp_ts, nonce);
+  if (n < 0) n = 0;
+  if ((size_t)n >= sizeof(msg)) n = (int)(sizeof(msg) - 1u);
+  uint64_t h = 1469598103934665603ULL;
+  h = fnv1a64((const unsigned char *)msg, (size_t)n, h);
+  snprintf(out_hex, 17, "%016llx", (unsigned long long)h);
+}
+
+static bool constant_time_eq_hex(const char *a, const char *b) {
+  size_t la = strlen(a), lb = strlen(b);
+  if (la != lb) return false;
+  unsigned char diff = 0;
+  for (size_t i = 0; i < la; i++) {
+    unsigned char ca = (unsigned char)tolower((unsigned char)a[i]);
+    unsigned char cb = (unsigned char)tolower((unsigned char)b[i]);
+    diff |= (unsigned char)(ca ^ cb);
+  }
+  return diff == 0;
+}
+
+static void audit_log(Runtime *rt, const char *peer, const char *method, const char *path, int status, const char *event, uint32_t op_id, const char *reason) {
+  char ts[32];
+  time_t now = time(NULL);
+  struct tm tmv;
+  memset(&tmv, 0, sizeof(tmv));
+  struct tm *ptm = gmtime(&now);
+  if (ptm) tmv = *ptm;
+  strftime(ts, sizeof(ts), "%Y-%m-%dT%H:%M:%SZ", &tmv);
+
+  char peer_e[256], method_e[64], path_e[512], event_e[96], reason_e[192];
+  size_t out_len = 0;
+  (void)json_escape_copy(peer ? peer : "-", strlen(peer ? peer : "-"), peer_e, sizeof(peer_e), &out_len);
+  (void)json_escape_copy(method ? method : "-", strlen(method ? method : "-"), method_e, sizeof(method_e), &out_len);
+  (void)json_escape_copy(path ? path : "-", strlen(path ? path : "-"), path_e, sizeof(path_e), &out_len);
+  (void)json_escape_copy(event ? event : "-", strlen(event ? event : "-"), event_e, sizeof(event_e), &out_len);
+  (void)json_escape_copy(reason ? reason : "-", strlen(reason ? reason : "-"), reason_e, sizeof(reason_e), &out_len);
+
+  char line[1400];
+  snprintf(line, sizeof(line),
+           "{\"ts\":\"%s\",\"event\":\"%s\",\"status\":%d,\"peer\":\"%s\",\"method\":\"%s\",\"path\":\"%s\",\"opId\":%u,\"reason\":\"%s\"}",
+           ts, event_e, status, peer_e, method_e, path_e, op_id, reason_e);
+
+  fprintf(stderr, "%s\n", line);
+  if (rt->audit_fp) {
+    fprintf(rt->audit_fp, "%s\n", line);
+    fflush(rt->audit_fp);
+  }
+}
+
+static bool validate_capability(Runtime *rt, const char *req, uint32_t op_id, char *deny_reason, size_t deny_reason_cap) {
+  if (!rt->cap_required) return true;
+  char h_op[64], h_exp[64], h_nonce[128], h_sig[128];
+  if (!get_header_value(req, "X-AIIR-Cap-Op", h_op, sizeof(h_op)) ||
+      !get_header_value(req, "X-AIIR-Cap-Exp", h_exp, sizeof(h_exp)) ||
+      !get_header_value(req, "X-AIIR-Cap-Nonce", h_nonce, sizeof(h_nonce)) ||
+      !get_header_value(req, "X-AIIR-Cap-Sig", h_sig, sizeof(h_sig))) {
+    snprintf(deny_reason, deny_reason_cap, "cap-missing");
+    return false;
+  }
+
+  char *end = NULL;
+  unsigned long op_hdr = strtoul(h_op, &end, 10);
+  if (end == h_op || *end != '\0' || op_hdr > 0xffffffffu || (uint32_t)op_hdr != op_id) {
+    snprintf(deny_reason, deny_reason_cap, "cap-op");
+    return false;
+  }
+
+  long long exp_ts = strtoll(h_exp, &end, 10);
+  if (end == h_exp || *end != '\0' || exp_ts <= 0) {
+    snprintf(deny_reason, deny_reason_cap, "cap-exp");
+    return false;
+  }
+  time_t now = time(NULL);
+  if (exp_ts < (long long)now) {
+    snprintf(deny_reason, deny_reason_cap, "cap-expired");
+    return false;
+  }
+  if ((long long)(exp_ts - (long long)now) > (long long)rt->cap_max_future_sec) {
+    snprintf(deny_reason, deny_reason_cap, "cap-future");
+    return false;
+  }
+
+  if (!is_valid_nonce(h_nonce)) {
+    snprintf(deny_reason, deny_reason_cap, "cap-nonce");
+    return false;
+  }
+  if (cap_nonce_seen(rt, h_nonce)) {
+    snprintf(deny_reason, deny_reason_cap, "cap-replay");
+    return false;
+  }
+
+  char expected_sig[17];
+  cap_sig_hex(rt, op_id, exp_ts, h_nonce, expected_sig);
+  if (!constant_time_eq_hex(h_sig, expected_sig)) {
+    snprintf(deny_reason, deny_reason_cap, "cap-sig");
+    return false;
+  }
+
+  cap_nonce_add(rt, h_nonce);
+  return true;
 }
 
 static const DbOp *find_op(const Runtime *rt, uint32_t op_id) {
@@ -241,6 +421,23 @@ static bool load_runtime(const char *core_dir, Runtime *rt) {
     if (v > 0 && v <= 1000000u) check_every = (uint32_t)v;
   }
   if (!aiir_drift_init(&rt->drift, core_dir, check_every)) return false;
+
+  rt->cap_required = parse_env_bool("AI_CAP_REQUIRE", false);
+  const char *cap_secret = getenv("AI_CAP_SECRET");
+  if (cap_secret && *cap_secret) {
+    strncpy(rt->cap_secret, cap_secret, sizeof(rt->cap_secret) - 1u);
+    rt->cap_secret[sizeof(rt->cap_secret) - 1u] = '\0';
+  } else {
+    rt->cap_secret[0] = '\0';
+  }
+  if (rt->cap_required && rt->cap_secret[0] == '\0') return false;
+  rt->cap_max_future_sec = parse_env_size("AI_CAP_MAX_FUTURE_SEC", 120u, 1u, 86400u);
+
+  const char *audit_path = getenv("AI_AUDIT_LOG_PATH");
+  if (!audit_path || !*audit_path) audit_path = "/var/www/aiir/ai/log/runtime_audit.log";
+  strncpy(rt->audit_path, audit_path, sizeof(rt->audit_path) - 1u);
+  rt->audit_path[sizeof(rt->audit_path) - 1u] = '\0';
+  rt->audit_fp = fopen(rt->audit_path, "a");
   return true;
 }
 
@@ -251,6 +448,7 @@ static void free_runtime(Runtime *rt) {
   aiir_u32_free(&rt->adapt_blob);
   aiir_u32_free(&rt->db_packet);
   aiir_policy_free(&rt->policy);
+  if (rt->audit_fp) fclose(rt->audit_fp);
   free(rt->ops);
   free(rt->sigs);
 }
@@ -527,7 +725,7 @@ static size_t parse_env_size(const char *name, size_t defv, size_t minv, size_t 
   return (size_t)v;
 }
 
-static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_cap, size_t body_cap) {
+static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db_mode, size_t req_cap, size_t body_cap) {
   char *req = (char *)malloc(req_cap + 1);
   if (!req) return -1;
   ssize_t got = read(cfd, req, req_cap);
@@ -537,6 +735,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
   char method[16], path[2048];
   if (!parse_method_path(req, method, sizeof(method), path, sizeof(path))) {
     json_response(cfd, 400, "{\"ok\":0,\"err\":\"request\"}");
+    audit_log(rt, peer, "-", "-", 400, "request-parse", 0u, "request");
     free(req);
     return 0;
   }
@@ -548,12 +747,17 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
     snprintf(body, sizeof(body),
              "{\"ok\":1,\"service\":\"ai-ir-runtime-native\",\"dbMode\":\"%.64s\","
              "\"driftCount\":%u,\"checks\":%u,\"policy\":{\"allowDbExec\":%s,\"allowAllOps\":%s},"
+             "\"capability\":{\"required\":%s,\"maxFutureSec\":%zu},"
+             "\"audit\":{\"path\":\"%.256s\"},"
              "\"state\":{\"walPath\":\"%.384s\",\"walExists\":%d,\"snapshotPath\":\"%.384s\",\"snapshotExists\":%d}}",
              db_mode,
              rt->drift.drift_count,
              rt->drift.checks,
              rt->policy.allow_db_exec ? "true" : "false",
              rt->policy.allow_all_ops ? "true" : "false",
+             rt->cap_required ? "true" : "false",
+             rt->cap_max_future_sec,
+             rt->audit_path,
              rt->state.wal_path,
              wal_exists,
              rt->state.snapshot_path,
@@ -618,18 +822,21 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
   if (strcmp(method, "POST") == 0 && strcmp(path, "/ai/db/exec") == 0) {
     if (!rt->policy.allow_db_exec) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"policy-db-exec\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "policy-db-exec");
       free(req);
       return 0;
     }
     size_t hdr_end = 0;
     if (!find_header_end(req, (size_t)got, &hdr_end)) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"headers\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "headers");
       free(req);
       return 0;
     }
     long cl = parse_content_length(req);
     if (cl < 0 || cl > (long)body_cap) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"content-length\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "content-length");
       free(req);
       return 0;
     }
@@ -638,6 +845,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
     long have = (long)got - (long)hdr_end;
     if (have < cl) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"body-short\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "body-short");
       free(req);
       return 0;
     }
@@ -645,18 +853,30 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
     long long op_lli = 0;
     if (!parse_json_int(bodyp, "\"opId\"", &op_lli) || op_lli < 0 || op_lli > 0xffffffffLL) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"opId\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", 0u, "opId");
       free(req);
       return 0;
     }
     uint32_t op_id = (uint32_t)op_lli;
+
+    char cap_deny[64];
+    if (!validate_capability(rt, req, op_id, cap_deny, sizeof(cap_deny))) {
+      json_response(cfd, 400, "{\"ok\":0,\"err\":\"capability\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, cap_deny);
+      free(req);
+      return 0;
+    }
+
     if (!aiir_policy_allow_op(&rt->policy, op_id)) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"policy-op\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "policy-op");
       free(req);
       return 0;
     }
     const DbOp *op = find_op(rt, op_id);
     if (!op) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"op\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "op");
       free(req);
       return 0;
     }
@@ -665,6 +885,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
     size_t argc = 0;
     if (!parse_json_args(bodyp, &args, &argc)) {
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"args\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "args");
       free(req);
       return 0;
     }
@@ -673,6 +894,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
       for (size_t i = 0; i < argc; i++) free(args[i].s);
       free(args);
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"argc\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "argc");
       free(req);
       return 0;
     }
@@ -682,6 +904,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
       for (size_t i = 0; i < argc; i++) free(args[i].s);
       free(args);
       json_response(cfd, 400, "{\"ok\":0,\"err\":\"sig-arity\"}");
+      audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "sig-arity");
       free(req);
       return 0;
     }
@@ -692,6 +915,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
         for (size_t k = 0; k < argc; k++) free(args[k].s);
         free(args);
         json_response(cfd, 400, "{\"ok\":0,\"err\":\"type\"}");
+        audit_log(rt, peer, method, path, 400, "db-exec-deny", op_id, "type");
         free(req);
         return 0;
       }
@@ -706,6 +930,7 @@ static int handle_request(Runtime *rt, int cfd, const char *db_mode, size_t req_
              op->op_id, op->proc_id, argc);
     aiir_state_log_dbexec(&rt->state, op->op_id, op->proc_id, argc);
     json_response(cfd, 200, body);
+    audit_log(rt, peer, method, path, 200, "db-exec-allow", op_id, "ok");
     free(req);
     return 0;
   }
@@ -783,12 +1008,26 @@ int ai_runtime_native_main(int argc, char **argv) {
   time_t cb_open_until = 0;
 
   while (1) {
-    int cfd = accept(sfd, NULL, NULL);
+    struct sockaddr_storage peer_addr;
+    socklen_t peer_len = sizeof(peer_addr);
+    int cfd = accept(sfd, (struct sockaddr *)&peer_addr, &peer_len);
     if (cfd < 0) {
       if (errno == EINTR) continue;
       perror("accept");
       break;
     }
+    char peer[128];
+    peer[0] = '\0';
+    if (peer_addr.ss_family == AF_INET) {
+      struct sockaddr_in *a4 = (struct sockaddr_in *)&peer_addr;
+      char ip[64];
+      if (inet_ntop(AF_INET, &a4->sin_addr, ip, sizeof(ip))) {
+        snprintf(peer, sizeof(peer), "%s:%u", ip, (unsigned)ntohs(a4->sin_port));
+      }
+    } else if (peer_addr.ss_family == AF_INET6) {
+      snprintf(peer, sizeof(peer), "ipv6");
+    }
+    if (peer[0] == '\0') strncpy(peer, "unknown", sizeof(peer) - 1u);
     struct timeval tv;
     tv.tv_sec = (time_t)(timeout_ms / 1000u);
     tv.tv_usec = (suseconds_t)((timeout_ms % 1000u) * 1000u);
@@ -797,6 +1036,7 @@ int ai_runtime_native_main(int argc, char **argv) {
     time_t now = time(NULL);
     if (cb_open_until > now) {
       json_response(cfd, 503, "{\"ok\":0,\"err\":\"circuit-open\"}");
+      audit_log(&rt, peer, "-", "-", 503, "runtime-deny", 0u, "circuit-open");
       close(cfd);
       continue;
     }
@@ -806,12 +1046,13 @@ int ai_runtime_native_main(int argc, char **argv) {
     }
     if (rl_count >= rate_limit_rps) {
       json_response(cfd, 429, "{\"ok\":0,\"err\":\"rate-limit\"}");
+      audit_log(&rt, peer, "-", "-", 429, "runtime-deny", 0u, "rate-limit");
       close(cfd);
       continue;
     }
     rl_count++;
     aiir_drift_tick(&rt.drift);
-    int rc = handle_request(&rt, cfd, db_mode, req_cap, body_cap);
+    int rc = handle_request(&rt, cfd, peer, db_mode, req_cap, body_cap);
     if (rc < 0) {
       consecutive_fail++;
       if (consecutive_fail >= cb_fail_threshold) {

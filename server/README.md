@@ -22,6 +22,12 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - `AI_IO_TIMEOUT_MS` caps read/write socket time per request
 - `AI_RATE_LIMIT_RPS` caps requests per second
 - `AI_CB_FAIL_THRESHOLD` and `AI_CB_COOLDOWN_SEC` enable circuit breaker on repeated runtime failures
+- Optional AIIR capability enforcement for `/ai/db/exec`:
+  - `AI_CAP_REQUIRE=1`
+  - `AI_CAP_SECRET=<shared-secret>`
+  - `AI_CAP_MAX_FUTURE_SEC=120` (max allowed token future skew)
+- Structured runtime audit log:
+  - `AI_AUDIT_LOG_PATH=/var/www/aiir/ai/log/runtime_audit.log`
 - To enable DB exec explicitly:
   - `AI_POLICY_ALLOW_DB_EXEC=1`
   - `AI_POLICY_ALLOW_OPS='*'` or explicit allowlist like `AI_POLICY_ALLOW_OPS='1001,2001'`
@@ -30,7 +36,17 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - `/health` reports:
   - `driftCount`, `checks`
   - `policy.allowDbExec`, `policy.allowAllOps`
+  - `capability.required`, `capability.maxFutureSec`
+  - `audit.path`
   - `state.walPath`, `state.walExists`, `state.snapshotPath`, `state.snapshotExists`
+
+## DB exec capability headers (when `AI_CAP_REQUIRE=1`)
+- `X-AIIR-Cap-Op`: operation id (`opId`)
+- `X-AIIR-Cap-Exp`: unix timestamp expiry (seconds)
+- `X-AIIR-Cap-Nonce`: one-time nonce (anti-replay, in-memory ring)
+- `X-AIIR-Cap-Sig`: hex signature over `secret|op|exp|nonce`
+- Signature helper command:
+  - `/var/www/aiir/ai/toolchain-native/aiird cap-sign <secret> <op-id> <exp-ts> <nonce>`
 
 ## systemd
 1. Copy unit:
@@ -82,6 +98,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/check-runtime.sh`
 - Run smoke suite:
   - `/var/www/aiir/server/scripts/smoke-runtime.sh`
+- Run capability smoke (allow + replay deny + expired deny):
+  - `/var/www/aiir/server/scripts/smoke-capability.sh`
 
 ## State backup (rotation)
 - Manual backup:

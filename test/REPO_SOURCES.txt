@@ -1,0 +1,8 @@
+# One Git URL per line. Lines starting with # are ignored.
+https://github.com/psf/requests.git
+https://github.com/pallets/flask.git
+https://github.com/jqlang/jq.git
+https://github.com/tiangolo/fastapi.git
+https://github.com/expressjs/express.git
+https://github.com/gin-gonic/gin.git
+https://github.com/go-chi/chi.git
