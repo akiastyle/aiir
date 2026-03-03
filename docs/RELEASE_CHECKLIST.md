@@ -17,6 +17,8 @@
 - [ ] gateway project/db flow verified (`smoke-gateway.sh`)
 - [ ] project auto-provision script verified (`provision-project-domain.sh`)
 - [ ] file version index/changelog refreshed (`update-file-version-index.sh`)
+- [ ] browser access code workflow verified (`generate-browser-access-code.sh`)
+- [ ] i18n AI policy validated (locale + RTL/LTR behavior)
 
 ## Publish
 - [ ] clean commit state

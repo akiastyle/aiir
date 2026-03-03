@@ -8,6 +8,8 @@ ai/state/revoked.peers
 ai/state/node.id
 ai/state/peer.mode
 ai/state/onboarding/
+ai/state/browser-access-codes.ndjson
+ai/state/projects.ndjson
 
 # Backups
 *.tar.gz

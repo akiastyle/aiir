@@ -117,6 +117,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Contract document:
   - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
   - `/var/www/aiir/docs/HUMAN_ACTIONS_V1.md`
+  - `/var/www/aiir/docs/HUMAN_BROWSER_ACCESS_V1.md`
+  - `/var/www/aiir/docs/I18N_AI_POLICY_V1.md`
 - Main endpoints:
   - `POST /aiir/project/create` (auto-provision DB by default)
   - `POST /aiir/db/exec` (AI-managed DB operation)
@@ -129,6 +131,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Provision helper (project + DB + env + policy + domain web conf):
   - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
   - optional system install/reload: `AIIR_PROVISION_APPLY=1`
+- Browser access code generator (default 30d):
+  - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:
   - `/var/www/aiir/server/scripts/update-file-version-index.sh`
   - outputs:

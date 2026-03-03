@@ -35,6 +35,18 @@ This guide is for operators integrating AIIR on a server without handling intern
 - `read_data` -> `POST /aiir/db/exec` (read op)
 - `project_status` -> `GET /health` + project refs/status
 
+## Browser Access Code (Plugin-friendly)
+- Generate time-bound access code from CLI:
+  - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
+- Guide:
+  - `/var/www/aiir/docs/HUMAN_BROWSER_ACCESS_V1.md`
+
+## I18N and Direction
+- Translation is AI-managed at runtime based on browser locale.
+- Direction is handled automatically (`LTR` / `RTL`) by language.
+- Policy:
+  - `/var/www/aiir/docs/I18N_AI_POLICY_V1.md`
+
 ## Secure Default Policy
 - DB exec disabled
 - no wildcard ops
