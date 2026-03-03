@@ -9,3 +9,4 @@ https://github.com/go-chi/chi.git
 https://github.com/encode/starlette.git
 https://github.com/labstack/echo.git
 https://github.com/actix/actix-web.git
+https://github.com/axios/axios.git
