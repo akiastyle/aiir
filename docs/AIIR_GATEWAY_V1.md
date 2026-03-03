@@ -126,6 +126,10 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 
 - Single bootstrap command:
   - `/var/www/aiir/server/scripts/aiir-up.sh`
+- Stop command:
+  - `/var/www/aiir/server/scripts/aiir-down.sh`
+- Diagnostic command:
+  - `/var/www/aiir/server/scripts/aiir-doctor.sh`
 - Optional bootstrap + project creation in one step:
   - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>]`
 - Chat-style operational entrypoint:
