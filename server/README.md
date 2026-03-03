@@ -131,6 +131,13 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Provision helper (project + DB + env + policy + domain web conf):
   - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
   - optional system install/reload: `AIIR_PROVISION_APPLY=1`
+- Zero-conf bootstrap (AI-first):
+  - `/var/www/aiir/server/scripts/aiir-up.sh`
+  - optional project bootstrap:
+    - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>] [--apply-web]`
+- Operational chat CLI (human talks only to AI layer):
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto crm-alpha tipo webapp dominio crm.local"`
 - Browser access code generator (default 30d):
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:

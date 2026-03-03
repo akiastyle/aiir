@@ -121,3 +121,13 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
   - generates web server conf under `/var/www/aiir/server/generated/`
 - optional direct install/reload of system web server conf:
   - `AIIR_PROVISION_APPLY=1 /var/www/aiir/server/scripts/provision-project-domain.sh ...`
+
+## Zero-Conf AI Operations
+
+- Single bootstrap command:
+  - `/var/www/aiir/server/scripts/aiir-up.sh`
+- Optional bootstrap + project creation in one step:
+  - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>]`
+- Chat-style operational entrypoint:
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto <name> tipo <type> dominio <domain>"`
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
