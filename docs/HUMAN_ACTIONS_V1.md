@@ -10,6 +10,21 @@ Core principle:
 
 ## Actions
 
+### 0) `create_project_typed` (human convenience)
+
+Intent:
+- choose business project type (website/ecommerce/webapp/etc.)
+- avoid low-level DB profile selection in human flow
+
+Mapping:
+- human adapter command:
+  - `/var/www/aiir/human/create-project-by-type.sh <project-name> <project-type> [domain]`
+- internally translates to `create_project` contract (`POST /aiir/project/create`)
+
+Output:
+- same result as `create_project`:
+  - `project_ref`, `db_ref`, `status`
+
 ### 1) `create_project`
 
 Intent:

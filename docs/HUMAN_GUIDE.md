@@ -35,6 +35,15 @@ This guide is for operators integrating AIIR on a server without handling intern
 - `read_data` -> `POST /aiir/db/exec` (read op)
 - `project_status` -> `GET /health` + project refs/status
 
+## Project Type Adapter (Human-Only)
+- Keep runtime generic: select project type only in `human` layer.
+- Type catalog:
+  - `/var/www/aiir/human/PROJECT_TYPES_V1.md`
+- CLI adapter:
+  - `/var/www/aiir/human/create-project-by-type.sh <project-name> <project-type> [domain]`
+- Adapter maps `project_type` to default DB profile/retention and calls:
+  - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
+
 ## Browser Access Code (Plugin-friendly)
 - Generate time-bound access code from CLI:
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`

@@ -27,6 +27,7 @@ owner_scope_for_path() {
 change_tag_for_path() {
   local p="$1"
   case "$p" in
+    human/*) echo "human" ;;
     ai/runtime-server-native/*|server/env/*|server/systemd/*) echo "runtime" ;;
     ai/exchange/*|ai/keys/*|ai/state/*|ai/native-core/*) echo "security" ;;
     docs/*) echo "docs" ;;
