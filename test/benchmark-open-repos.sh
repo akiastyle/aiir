@@ -8,6 +8,7 @@ SRC_ROOT="${WORK_ROOT}/src"
 PKG_ROOT="${WORK_ROOT}/pkg"
 LOG_FILE="${TEST_BASE}/OPEN_REPO_TEST_LOG.csv"
 REPORT_FILE="${TEST_BASE}/OPEN_REPO_TESTS.md"
+LATEST_FILE="${TEST_BASE}/OPEN_REPO_TEST_LATEST.csv"
 REPO_LIST_FILE="${TEST_BASE}/REPO_SOURCES.txt"
 CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -100,6 +101,21 @@ for repo in "${repos[@]}"; do
   echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},ok" >> "${LOG_FILE}"
 done
 
+TMP_LATEST="${WORK_ROOT}/latest.csv"
+{
+  echo "${CSV_HEADER}"
+  awk -F, 'NR>1 {
+    key=$2 FS $4;
+    if (!(key in seen_ts) || $1 > seen_ts[key]) {
+      seen_ts[key]=$1;
+      seen_row[key]=$0;
+    }
+  } END {
+    for (k in seen_row) print seen_row[k];
+  }' "${LOG_FILE}" | sort -t, -k1,1 -k2,2
+} > "${TMP_LATEST}"
+cp "${TMP_LATEST}" "${LATEST_FILE}"
+
 {
   echo "# Open Repo Benchmarks (AIIR)"
   echo
@@ -109,11 +125,16 @@ done
   echo
   echo "| Repo | Commit | Date (UTC) | Original MB | AIIR Net MB | Reduction | Note |"
   echo "|---|---|---:|---:|---:|---:|---|"
-  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s | %s%% | %s |\n", $2, $4, $1, $6, $12, $13, $14}' "${LOG_FILE}" | tail -n 50
+  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s | %s%% | %s |\n", $2, $4, $1, $6, $12, $13, $14}' "${TMP_LATEST}" | tail -n 50
+  echo
+  avg_red="$(awk -F, 'NR>1 {sum+=$13; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "${TMP_LATEST}")"
+  p50_red="$(awk -F, 'NR>1 {print $13}' "${TMP_LATEST}" | sort -n | awk '{a[NR]=$1} END {if(NR==0){print "0.00"} else if(NR%2==1){printf "%.2f", a[(NR+1)/2]} else {printf "%.2f", (a[NR/2]+a[NR/2+1])/2}}')"
+  echo "Reduction summary (latest per repo+commit): avg=${avg_red}% p50=${p50_red}%"
   echo
   echo "Notes:"
   echo "- Download, conversion and logs are executed under \`${TEST_BASE}\`."
   echo "- AIIR net size = total AIIR package size - base package overhead."
+  echo "- Latest view file: \`${LATEST_FILE}\` (deduplicated by repo+commit, most recent run kept)."
   echo "- Cleanup keeps only CSV/report/repo-list/scripts in \`${TEST_BASE}\`; temporary repos/packages are removed."
 } > "${REPORT_FILE}"
 

@@ -45,7 +45,7 @@ done
 
 CREATE_HTTP="$(curl -sS -o "$TMPDIR/create.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/project/create" \
   -H "Content-Type: application/json" \
-  -d '{"project_name":"smoke-proj","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-001"}')"
+  -d '{"contract_version":"hal.v1","intent":"create_project","project_name":"smoke-proj","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-001"}')"
 if [[ "$CREATE_HTTP" != "202" ]]; then
   echo "gateway-smoke-failed: create expected 202, got ${CREATE_HTTP}" >&2
   cat "$TMPDIR/create.json" >&2 || true
@@ -56,9 +56,31 @@ PROJECT_REF="$(sed -n 's/.*"project_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create.jso
 DB_REF="$(sed -n 's/.*"db_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create.json" | head -n1)"
 [[ -n "$PROJECT_REF" && -n "$DB_REF" ]] || { echo "gateway-smoke-failed: missing refs"; cat "$TMPDIR/create.json"; exit 1; }
 
+CREATE2_HTTP="$(curl -sS -o "$TMPDIR/create2.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/project/create" \
+  -H "Content-Type: application/json" \
+  -d '{"contract_version":"hal.v1","intent":"create_project","project_name":"smoke-proj","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-001"}')"
+if [[ "$CREATE2_HTTP" != "202" ]]; then
+  echo "gateway-smoke-failed: idempotent create expected 202, got ${CREATE2_HTTP}" >&2
+  cat "$TMPDIR/create2.json" >&2 || true
+  exit 1
+fi
+PROJECT_REF2="$(sed -n 's/.*"project_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create2.json" | head -n1)"
+DB_REF2="$(sed -n 's/.*"db_ref":"\([^"]*\)".*/\1/p' "$TMPDIR/create2.json" | head -n1)"
+if [[ "$PROJECT_REF2" != "$PROJECT_REF" || "$DB_REF2" != "$DB_REF" ]]; then
+  echo "gateway-smoke-failed: idempotent refs mismatch" >&2
+  cat "$TMPDIR/create.json" >&2 || true
+  cat "$TMPDIR/create2.json" >&2 || true
+  exit 1
+fi
+if ! rg -q '"idempotent":1' "$TMPDIR/create2.json"; then
+  echo "gateway-smoke-failed: idempotent flag missing" >&2
+  cat "$TMPDIR/create2.json" >&2 || true
+  exit 1
+fi
+
 EXEC_HTTP="$(curl -sS -o "$TMPDIR/exec.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/db/exec" \
   -H "Content-Type: application/json" \
-  -d "{\"project_ref\":\"$PROJECT_REF\",\"db_ref\":\"$DB_REF\",\"op_id\":\"entity.upsert\",\"payload\":{\"collection\":\"x\"},\"req_id\":\"smoke-req-1\"}")"
+  -d "{\"contract_version\":\"hal.v1\",\"intent\":\"save_data\",\"project_ref\":\"$PROJECT_REF\",\"db_ref\":\"$DB_REF\",\"op_id\":\"entity.upsert\",\"payload\":{\"collection\":\"x\"},\"req_id\":\"smoke-req-1\"}")"
 if [[ "$EXEC_HTTP" != "200" ]]; then
   echo "gateway-smoke-failed: exec expected 200, got ${EXEC_HTTP}" >&2
   cat "$TMPDIR/exec.json" >&2 || true
@@ -72,5 +94,7 @@ fi
 
 echo "gateway-smoke-ok"
 cat "$TMPDIR/create.json"
+echo
+cat "$TMPDIR/create2.json"
 echo
 cat "$TMPDIR/exec.json"

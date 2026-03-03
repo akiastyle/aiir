@@ -38,6 +38,8 @@ Mapping:
 Input:
 ```json
 {
+  "contract_version": "hal.v1",
+  "intent": "create_project",
   "project_name": "crm-alpha",
   "db_profile": "default",
   "region": "local",
@@ -67,6 +69,8 @@ Mapping:
 Input:
 ```json
 {
+  "contract_version": "hal.v1",
+  "intent": "save_data",
   "project_ref": "prj_...",
   "db_ref": "db_...",
   "op_id": "entity.upsert",
@@ -98,6 +102,8 @@ Mapping:
 Input:
 ```json
 {
+  "contract_version": "hal.v1",
+  "intent": "read_data",
   "project_ref": "prj_...",
   "db_ref": "db_...",
   "op_id": "entity.query",

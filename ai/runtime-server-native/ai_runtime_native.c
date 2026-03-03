@@ -118,6 +118,10 @@ typedef struct {
 } Runtime;
 
 static size_t parse_env_size(const char *name, size_t defv, size_t minv, size_t maxv);
+static bool is_ascii_token(const char *s, size_t min_len, size_t max_len, const char *extra_allowed);
+static bool is_known_contract_version(const char *v);
+static bool is_known_create_intent(const char *intent);
+static bool is_known_db_exec_intent(const char *intent);
 
 static bool json_escape_copy(const char *src, size_t src_len, char *dst, size_t dst_cap, size_t *dst_len) {
   size_t w = 0;
@@ -618,6 +622,15 @@ static bool load_runtime(const char *core_dir, Runtime *rt) {
   strncpy(rt->gateway_db_region, region, sizeof(rt->gateway_db_region) - 1u);
   rt->gateway_db_region[sizeof(rt->gateway_db_region) - 1u] = '\0';
   rt->gateway_db_retention_days = parse_env_size("AIIR_DB_RETENTION_DAYS", 30u, 1u, 3650u);
+
+  if (!is_ascii_token(rt->gateway_db_provider, 1u, 63u, "._-")) return false;
+  if (!is_ascii_token(rt->gateway_db_default_profile, 1u, 63u, "._-")) return false;
+  if (!is_ascii_token(rt->gateway_db_region, 1u, 63u, "._-")) return false;
+  if (rt->gateway_enable) {
+    FILE *pfp = fopen(rt->gateway_projects_file, "a");
+    if (!pfp) return false;
+    fclose(pfp);
+  }
   return true;
 }
 
@@ -816,20 +829,69 @@ static bool parse_json_string_key(const char *s, const char *key, char *out, siz
   return true;
 }
 
+static bool is_ascii_token(const char *s, size_t min_len, size_t max_len, const char *extra_allowed) {
+  if (!s) return false;
+  size_t n = strlen(s);
+  if (n < min_len || n > max_len) return false;
+  for (size_t i = 0; i < n; i++) {
+    unsigned char c = (unsigned char)s[i];
+    if (isalnum(c)) continue;
+    if (strchr(extra_allowed, (int)c) != NULL) continue;
+    return false;
+  }
+  return true;
+}
+
+static bool is_known_contract_version(const char *v) {
+  return strcmp(v, "hal.v1") == 0;
+}
+
+static bool is_known_create_intent(const char *intent) {
+  return strcmp(intent, "create_project") == 0 || strcmp(intent, "create_project_typed") == 0;
+}
+
+static bool is_known_db_exec_intent(const char *intent) {
+  return strcmp(intent, "save_data") == 0 || strcmp(intent, "read_data") == 0;
+}
+
 static void gen_ref(char *out, size_t out_cap, const char *prefix, Runtime *rt) {
   uint64_t t = (uint64_t)time(NULL);
   rt->gateway_seq++;
   snprintf(out, out_cap, "%s_%llx%llx", prefix, (unsigned long long)t, (unsigned long long)rt->gateway_seq);
 }
 
+static bool gateway_find_project_by_idempotency(Runtime *rt, const char *idempotency_key,
+                                                char *project_ref, size_t project_ref_cap,
+                                                char *db_ref, size_t db_ref_cap) {
+  if (!idempotency_key || !*idempotency_key) return false;
+  FILE *fp = fopen(rt->gateway_projects_file, "r");
+  if (!fp) return false;
+  char line[4096];
+  bool ok = false;
+  while (fgets(line, sizeof(line), fp)) {
+    char idem[128];
+    if (!parse_json_string_key(line, "\"idempotency_key\"", idem, sizeof(idem))) continue;
+    if (strcmp(idem, idempotency_key) != 0) continue;
+    if (!parse_json_string_key(line, "\"project_ref\"", project_ref, project_ref_cap)) continue;
+    if (!parse_json_string_key(line, "\"db_ref\"", db_ref, db_ref_cap)) continue;
+    ok = true;
+    break;
+  }
+  fclose(fp);
+  return ok;
+}
+
 static bool gateway_store_project(Runtime *rt, const char *project_ref, const char *db_ref, const char *project_name,
-                                  const char *db_profile, const char *region, size_t retention_days, const char *idempotency_key) {
+                                  const char *db_profile, const char *region, size_t retention_days, const char *idempotency_key,
+                                  const char *contract_version, const char *intent) {
   FILE *fp = fopen(rt->gateway_projects_file, "a");
   if (!fp) return false;
   fprintf(fp,
-          "{\"ts\":%llu,\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"project_name\":\"%s\",\"db_profile\":\"%s\",\"region\":\"%s\",\"retention_days\":%zu,\"idempotency_key\":\"%s\"}\n",
+          "{\"ts\":%llu,\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"project_name\":\"%s\",\"db_profile\":\"%s\",\"region\":\"%s\",\"retention_days\":%zu,\"idempotency_key\":\"%s\",\"contract_version\":\"%s\",\"intent\":\"%s\"}\n",
           (unsigned long long)time(NULL), project_ref, db_ref, project_name, db_profile, region, retention_days,
-          idempotency_key ? idempotency_key : "");
+          idempotency_key ? idempotency_key : "",
+          contract_version ? contract_version : "hal.v1",
+          intent ? intent : "create_project");
   fclose(fp);
   return true;
 }
@@ -1200,7 +1262,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
       return 0;
     }
 
-    char project_name[96], db_profile[64], region[64], idem[96];
+    char project_name[96], db_profile[64], region[64], idem[96], contract_version[24], intent[40];
     if (!parse_json_string_key(bodyp, "\"project_name\"", project_name, sizeof(project_name))) {
       json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_name\"}");
       request_log(rt, peer, method, path, 400, "project_name", start_ms);
@@ -1215,10 +1277,70 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     (void)parse_json_string_key(bodyp, "\"db_profile\"", db_profile, sizeof(db_profile));
     (void)parse_json_string_key(bodyp, "\"region\"", region, sizeof(region));
     (void)parse_json_string_key(bodyp, "\"idempotency_key\"", idem, sizeof(idem));
+    strncpy(contract_version, "hal.v1", sizeof(contract_version) - 1u);
+    contract_version[sizeof(contract_version) - 1u] = '\0';
+    strncpy(intent, "create_project", sizeof(intent) - 1u);
+    intent[sizeof(intent) - 1u] = '\0';
+    (void)parse_json_string_key(bodyp, "\"contract_version\"", contract_version, sizeof(contract_version));
+    (void)parse_json_string_key(bodyp, "\"intent\"", intent, sizeof(intent));
     long long retention_lli = (long long)rt->gateway_db_retention_days;
     long long parsed_ret = 0;
     if (parse_json_int(bodyp, "\"retention_days\"", &parsed_ret) && parsed_ret > 0 && parsed_ret <= 3650) {
       retention_lli = parsed_ret;
+    }
+
+    if (!is_ascii_token(project_name, 2u, 95u, "._-")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_name\"}");
+      request_log(rt, peer, method, path, 400, "project_name-invalid", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_ascii_token(db_profile, 1u, 63u, "._-")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"db_profile\"}");
+      request_log(rt, peer, method, path, 400, "db_profile", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_ascii_token(region, 1u, 63u, "._-")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"region\"}");
+      request_log(rt, peer, method, path, 400, "region", start_ms);
+      free(req);
+      return 0;
+    }
+    if (idem[0] != '\0' && !is_ascii_token(idem, 8u, 95u, "._-:")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"idempotency_key\"}");
+      request_log(rt, peer, method, path, 400, "idempotency_key", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_known_contract_version(contract_version)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"contract_version\"}");
+      request_log(rt, peer, method, path, 400, "contract_version", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_known_create_intent(intent)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"intent\"}");
+      request_log(rt, peer, method, path, 400, "intent", start_ms);
+      free(req);
+      return 0;
+    }
+
+    if (idem[0] != '\0') {
+      char existing_project_ref[64], existing_db_ref[64];
+      if (gateway_find_project_by_idempotency(rt, idem, existing_project_ref, sizeof(existing_project_ref),
+                                              existing_db_ref, sizeof(existing_db_ref))) {
+        char existing_channel[96];
+        snprintf(existing_channel, sizeof(existing_channel), "aiir.ev.project.%s", existing_project_ref);
+        char out_existing[1024];
+        snprintf(out_existing, sizeof(out_existing),
+                 "{\"ok\":1,\"project_ref\":\"%s\",\"db_ref\":\"%s\",\"status\":\"provisioning\",\"events_channel\":\"%s\",\"idempotent\":1}",
+                 existing_project_ref, existing_db_ref, existing_channel);
+        json_response_tr(rt, cfd, 202, out_existing);
+        request_log(rt, peer, method, path, 202, "project-create-idempotent", start_ms);
+        free(req);
+        return 0;
+      }
     }
 
     char project_ref[64], db_ref[64], channel[96];
@@ -1226,7 +1348,8 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     gen_ref(db_ref, sizeof(db_ref), "db", rt);
     snprintf(channel, sizeof(channel), "aiir.ev.project.%s", project_ref);
 
-    if (!gateway_store_project(rt, project_ref, db_ref, project_name, db_profile, region, (size_t)retention_lli, idem)) {
+    if (!gateway_store_project(rt, project_ref, db_ref, project_name, db_profile, region, (size_t)retention_lli,
+                               idem, contract_version, intent)) {
       json_response_tr(rt, cfd, 503, "{\"ok\":0,\"err\":\"store\"}");
       request_log(rt, peer, method, path, 503, "store", start_ms);
       free(req);
@@ -1274,7 +1397,7 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
       return 0;
     }
 
-    char project_ref[64], db_ref[64], op_id[64], req_id[64];
+    char project_ref[64], db_ref[64], op_id[64], req_id[64], contract_version[24], intent[32];
     if (!parse_json_string_key(bodyp, "\"project_ref\"", project_ref, sizeof(project_ref))) {
       json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_ref\"}");
       request_log(rt, peer, method, path, 400, "project_ref", start_ms);
@@ -1295,6 +1418,54 @@ static int handle_request(Runtime *rt, int cfd, const char *peer, const char *db
     }
     if (!parse_json_string_key(bodyp, "\"req_id\"", req_id, sizeof(req_id))) {
       gen_ref(req_id, sizeof(req_id), "req", rt);
+    }
+    strncpy(contract_version, "hal.v1", sizeof(contract_version) - 1u);
+    contract_version[sizeof(contract_version) - 1u] = '\0';
+    intent[0] = '\0';
+    (void)parse_json_string_key(bodyp, "\"contract_version\"", contract_version, sizeof(contract_version));
+    (void)parse_json_string_key(bodyp, "\"intent\"", intent, sizeof(intent));
+
+    if (!is_ascii_token(project_ref, 8u, 63u, "._-")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"project_ref\"}");
+      request_log(rt, peer, method, path, 400, "project_ref-invalid", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_ascii_token(db_ref, 6u, 63u, "._-")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"db_ref\"}");
+      request_log(rt, peer, method, path, 400, "db_ref-invalid", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_ascii_token(op_id, 3u, 63u, "._-:")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"op_id\"}");
+      request_log(rt, peer, method, path, 400, "op_id-invalid", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_ascii_token(req_id, 3u, 63u, "._-:")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"req_id\"}");
+      request_log(rt, peer, method, path, 400, "req_id-invalid", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!is_known_contract_version(contract_version)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"contract_version\"}");
+      request_log(rt, peer, method, path, 400, "contract_version", start_ms);
+      free(req);
+      return 0;
+    }
+    if (intent[0] != '\0' && !is_known_db_exec_intent(intent)) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"intent\"}");
+      request_log(rt, peer, method, path, 400, "intent", start_ms);
+      free(req);
+      return 0;
+    }
+    if (!strstr(bodyp, "\"payload\"")) {
+      json_response_tr(rt, cfd, 400, "{\"ok\":0,\"err\":\"payload\"}");
+      request_log(rt, peer, method, path, 400, "payload", start_ms);
+      free(req);
+      return 0;
     }
     if (!gateway_project_db_exists(rt, project_ref, db_ref)) {
       json_response_tr(rt, cfd, 404, "{\"ok\":0,\"err\":\"db_ref\"}");

@@ -16,6 +16,8 @@ Creates a project and provisions a default DB automatically.
 Request:
 ```json
 {
+  "contract_version": "hal.v1",
+  "intent": "create_project",
   "project_name": "crm-alpha",
   "db_profile": "default",
   "region": "eu-central",
@@ -36,7 +38,8 @@ Response `202`:
 ```
 
 Final status (`ready`) is delivered via events.
-Each call creates a new `project_ref` and `db_ref` pair that can coexist with other projects on the same host.
+With a new `idempotency_key`, a new `project_ref` and `db_ref` pair is created.
+If the same `idempotency_key` is reused, gateway returns the same refs (`idempotent: 1`) to prevent duplicate provisioning.
 
 ## Endpoint: `POST /aiir/db/exec`
 
@@ -45,6 +48,8 @@ AIIR-managed DB operation bound to `db_ref`; credentials are internal and never 
 Request:
 ```json
 {
+  "contract_version": "hal.v1",
+  "intent": "save_data",
   "project_ref": "prj_01J...",
   "db_ref": "db_01J...",
   "op_id": "entity.upsert",
@@ -58,6 +63,13 @@ Request:
   "req_id": "req_01J..."
 }
 ```
+
+Validation notes:
+- `contract_version` currently supports `hal.v1`.
+- `intent` accepted values:
+  - create endpoint: `create_project`, `create_project_typed`
+  - db exec endpoint: `save_data`, `read_data`
+- token-like fields (`project_name`, `project_ref`, `db_ref`, `op_id`, `req_id`, `db_profile`, `region`, `idempotency_key`) are validated for safe ASCII patterns.
 
 Response `200`:
 ```json
