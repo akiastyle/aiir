@@ -1,8 +1,11 @@
 # AIIR Changelog (Tracked)
 
-Updated at (UTC): `2026-03-02T19:08:38Z`
+Updated at (UTC): `2026-03-03T07:12:26Z`
 
 ## Recent Commits
+- `a4a5127` 2026-03-03T08:12:20Z human: add typed project adapter and docs boundary
+- `df030bd` 2026-03-03T08:03:13Z human: add browser access code flow and AI-managed i18n policy
+- `2802080` 2026-03-02T20:08:55Z ops: add per-file version index and generated changelog
 - `db1ec61` 2026-03-02T20:05:29Z docs: add HAL v1 intent-to-contract model for human operations
 - `01f0f71` 2026-03-02T19:51:31Z ops: add project+domain provisioning helper with AI-managed security defaults
 - `063dc8d` 2026-03-02T19:37:17Z runtime: add gateway v1 endpoints for multi-project DB orchestration
