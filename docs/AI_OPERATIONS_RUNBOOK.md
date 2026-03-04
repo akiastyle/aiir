@@ -15,6 +15,7 @@ AI-first runtime operations with minimal human interaction.
 2. Operate via chat intents only:
 ```bash
 /var/www/aiir/server/scripts/aiir chat "stato"
+/var/www/aiir/server/scripts/aiir chat "help"
 /var/www/aiir/server/scripts/aiir chat "lista progetti"
 /var/www/aiir/server/scripts/aiir chat "stato progetto crm-alpha"
 /var/www/aiir/server/scripts/aiir chat "ottimizza progetto crm-alpha"
@@ -43,10 +44,15 @@ AI-first runtime operations with minimal human interaction.
 - `confirmation_required`
 - `project_not_found`
 - `type_map_missing`
+- `projects_lib_missing`
 
 ## Notes
 - Destructive intents are blocked unless `conferma/confirm` is present.
 - Project type mapping is centralized in:
   - `/var/www/aiir/server/scripts/project-type-map.sh`
+- Project metadata parsing is centralized in:
+  - `/var/www/aiir/server/scripts/projects-ndjson-lib.sh`
+- Local write operations use a shared lock file:
+  - `/var/www/aiir/ai/state/.ops.lock`
 - Legacy human adapter is still available for compatibility, but deprecated:
   - `/var/www/aiir/human/create-project-by-type.sh`

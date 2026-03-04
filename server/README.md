@@ -143,6 +143,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - strict mode (non-zero on warnings/failures):
     - `/var/www/aiir/server/scripts/aiir-doctor.sh --strict`
 - Operational chat CLI (human talks only to AI layer):
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "help"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto crm-alpha tipo webapp dominio crm.local"`
 - Official unified CLI (recommended):

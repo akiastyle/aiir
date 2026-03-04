@@ -6,6 +6,7 @@ PROVISION_SCRIPT="${ROOT}/server/scripts/provision-project-domain.sh"
 OPTIMIZE_SCRIPT="${ROOT}/server/scripts/aiir-optimize-project.sh"
 DOWN_SCRIPT="${ROOT}/server/scripts/aiir-down.sh"
 TYPE_MAP_SCRIPT="${ROOT}/server/scripts/project-type-map.sh"
+PROJECTS_LIB="${ROOT}/server/scripts/projects-ndjson-lib.sh"
 
 : "${AI_RUNTIME_HOST:=127.0.0.1}"
 : "${AI_RUNTIME_PORT:=7788}"
@@ -65,15 +66,15 @@ if [[ ! -f "$TYPE_MAP_SCRIPT" ]]; then
 fi
 # shellcheck disable=SC1090
 source "$TYPE_MAP_SCRIPT"
+if [[ ! -f "$PROJECTS_LIB" ]]; then
+  json_err "projects_lib_missing" "$PROJECTS_LIB"
+  exit 1
+fi
+# shellcheck disable=SC1090
+source "$PROJECTS_LIB"
 
 msg="$*"
 shopt -s nocasematch
-
-extract_project_field() {
-  local line="$1"
-  local field="$2"
-  printf '%s' "$line" | sed -n "s/.*\"${field}\":\"\([^\"]*\)\".*/\1/p" | head -n1
-}
 
 find_project_line() {
   local ident="$1"
@@ -81,9 +82,9 @@ find_project_line() {
     return 1
   fi
   if [[ "$ident" =~ ^prj_[a-z0-9]+$ ]]; then
-    rg '"project_ref":"'"${ident}"'"' "$AIIR_PROJECTS_FILE" | tail -n 1
+    aiir_project_line_latest "$AIIR_PROJECTS_FILE" "ref" "$ident"
   else
-    rg '"project_name":"'"${ident}"'"' "$AIIR_PROJECTS_FILE" | tail -n 1
+    aiir_project_line_latest "$AIIR_PROJECTS_FILE" "name" "$ident"
   fi
 }
 
@@ -92,27 +93,16 @@ list_projects_json() {
     echo '{"ok":1,"count":0,"projects":[]}'
     return 0
   fi
-  mapfile -t lines < <(
-    awk '
-      {
-        if (match($0, /"project_ref":"[^"]+"/)) {
-          ref=substr($0, RSTART+15, RLENGTH-16);
-          row[ref]=$0;
-        }
-      }
-      END {
-        for (r in row) print row[r];
-      }' "$AIIR_PROJECTS_FILE" | tail -n 20
-  )
+  mapfile -t lines < <(aiir_project_lines_latest_unique "$AIIR_PROJECTS_FILE" 20)
   printf '{"ok":1,"count":%d,"projects":[' "${#lines[@]}"
   idx=0
   for line in "${lines[@]}"; do
-    ts="$(printf '%s' "$line" | sed -n 's/.*"ts":\([0-9][0-9]*\).*/\1/p' | head -n1)"
-    project_ref="$(extract_project_field "$line" "project_ref")"
-    db_ref="$(extract_project_field "$line" "db_ref")"
-    project_name="$(extract_project_field "$line" "project_name")"
-    db_profile="$(extract_project_field "$line" "db_profile")"
-    region="$(extract_project_field "$line" "region")"
+    ts="$(aiir_json_get_num "$line" "ts")"
+    project_ref="$(aiir_json_get_str "$line" "project_ref")"
+    db_ref="$(aiir_json_get_str "$line" "db_ref")"
+    project_name="$(aiir_json_get_str "$line" "project_name")"
+    db_profile="$(aiir_json_get_str "$line" "db_profile")"
+    region="$(aiir_json_get_str "$line" "region")"
     if [[ "$idx" -gt 0 ]]; then printf ','; fi
     printf '{"ts":%s,"project_ref":"%s","db_ref":"%s","project_name":"%s","db_profile":"%s","region":"%s"}' \
       "${ts:-0}" "${project_ref}" "${db_ref}" "${project_name}" "${db_profile}" "${region}"
@@ -120,6 +110,13 @@ list_projects_json() {
   done
   echo ']}'
 }
+
+if [[ "$msg" =~ ^(help|aiuto)$ ]]; then
+  cat <<'EOF'
+{"ok":1,"intent":"help","commands":[{"name":"stato","example":"aiir chat \"stato\""},{"name":"lista_progetti","example":"aiir chat \"lista progetti\""},{"name":"stato_progetto","example":"aiir chat \"stato progetto crm-alpha\""},{"name":"crea_progetto","example":"aiir chat \"crea progetto crm-alpha tipo webapp dominio crm.local\""},{"name":"ottimizza_progetto","example":"aiir chat \"ottimizza progetto crm-alpha\""},{"name":"ferma_runtime","example":"aiir chat \"ferma runtime conferma\""}],"error_codes":["intent_unknown","confirmation_required","project_not_found","type_map_missing","projects_lib_missing"]}
+EOF
+  exit 0
+fi
 
 # Safety gate for destructive intents.
 if requires_confirmation "$msg"; then
@@ -146,12 +143,12 @@ if [[ "$msg" =~ ^(stato[[:space:]]+progetto|project[[:space:]]+status)[[:space:]
     printf '{"ok":0,"err":"project_not_found","input":"%s"}\n' "$ident"
     exit 1
   fi
-  project_ref="$(extract_project_field "$line" "project_ref")"
-  db_ref="$(extract_project_field "$line" "db_ref")"
-  project_name="$(extract_project_field "$line" "project_name")"
-  db_profile="$(extract_project_field "$line" "db_profile")"
-  region="$(extract_project_field "$line" "region")"
-  retention_days="$(printf '%s' "$line" | sed -n 's/.*"retention_days":\([0-9][0-9]*\).*/\1/p' | head -n1)"
+  project_ref="$(aiir_json_get_str "$line" "project_ref")"
+  db_ref="$(aiir_json_get_str "$line" "db_ref")"
+  project_name="$(aiir_json_get_str "$line" "project_name")"
+  db_profile="$(aiir_json_get_str "$line" "db_profile")"
+  region="$(aiir_json_get_str "$line" "region")"
+  retention_days="$(aiir_json_get_num "$line" "retention_days")"
   echo "{\"ok\":1,\"project_ref\":\"${project_ref}\",\"db_ref\":\"${db_ref}\",\"project_name\":\"${project_name}\",\"db_profile\":\"${db_profile}\",\"region\":\"${region}\",\"retention_days\":${retention_days:-0},\"status\":\"provisioning_or_ready\"}"
   exit 0
 fi

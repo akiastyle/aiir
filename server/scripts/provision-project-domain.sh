@@ -13,6 +13,7 @@ ROOT="/var/www/aiir"
 RUNTIME_HOST="${AI_RUNTIME_HOST:-127.0.0.1}"
 RUNTIME_PORT="${AI_RUNTIME_PORT:-7788}"
 API_BASE="http://${RUNTIME_HOST}:${RUNTIME_PORT}"
+LOCK_FILE="${AIIR_OPS_LOCK_FILE:-${ROOT}/ai/state/.ops.lock}"
 
 APPLY_SYSTEM="${AIIR_PROVISION_APPLY:-0}"
 DB_PROFILE="${AIIR_DB_DEFAULT_PROFILE:-default}"
@@ -59,6 +60,7 @@ if [[ -z "$PROJECT_REF" || -z "$DB_REF" ]]; then
   exit 1
 fi
 
+write_provision_artifacts() {
 PROJECT_ENV_FILE="${ENV_DIR}/${PROJECT_REF}.env"
 cat > "$PROJECT_ENV_FILE" <<EOF
 PROJECT_NAME=${PROJECT_NAME}
@@ -146,6 +148,18 @@ EOF
       fi
     fi
   fi
+fi
+}
+
+if command -v flock >/dev/null 2>&1; then
+  mkdir -p "$(dirname "$LOCK_FILE")"
+  exec 9>"$LOCK_FILE"
+  flock -x 9
+  write_provision_artifacts
+  flock -u 9
+  exec 9>&-
+else
+  write_provision_artifacts
 fi
 
 cat <<EOF
