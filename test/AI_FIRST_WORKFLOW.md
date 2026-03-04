@@ -33,6 +33,12 @@ Measurement model:
 - AIIR package size: `du -sb` on package built by `ai/exchange/build-package.run.sh`
 - AIIR net size: AIIR package size minus base package overhead (empty-source package)
 
+AI-first packaging defaults (toolchain):
+- language-focused collection enabled (`AIIR_BUILD_LANG_ONLY=1`)
+- text-only filtering enabled (`AIIR_BUILD_TEXT_ONLY=1`)
+- likely-binary extensions skipped (`AIIR_BUILD_SKIP_BINARY_EXT=1`)
+- per-file cap enabled (`AIIR_BUILD_MAX_FILE_BYTES=524288`)
+
 Cleanup policy:
 - temporary clones/packages/logs are removed after each run
 - only scripts/list/csv/reports stay in `test`

@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -367,10 +368,42 @@ static bool has_ext(const char *name, const char *ext) {
   return strcmp(name + ln - le, ext) == 0;
 }
 
+static bool env_bool(const char *name, bool defv) {
+  const char *s = getenv(name);
+  if (!s || !*s) return defv;
+  if (strcmp(s, "1") == 0 || strcasecmp(s, "true") == 0 || strcasecmp(s, "yes") == 0 || strcasecmp(s, "on") == 0) return true;
+  if (strcmp(s, "0") == 0 || strcasecmp(s, "false") == 0 || strcasecmp(s, "no") == 0 || strcasecmp(s, "off") == 0) return false;
+  return defv;
+}
+
+static size_t env_size(const char *name, size_t defv, size_t minv, size_t maxv) {
+  const char *s = getenv(name);
+  if (!s || !*s) return defv;
+  char *end = NULL;
+  unsigned long long v = strtoull(s, &end, 10);
+  if (end == s || *end != '\0') return defv;
+  if (v < minv) return minv;
+  if (v > maxv) return maxv;
+  return (size_t)v;
+}
+
 static bool is_supported_lang(const char *name) {
   static const char *exts[] = {
     ".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".html", ".htm", ".css", ".scss",
     ".sql", ".php", ".py", ".rb", ".go", ".java", ".kt", ".rs", ".json", ".yml", ".yaml"
+  };
+  for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++) if (has_ext(name, exts[i])) return true;
+  return false;
+}
+
+static bool is_probably_binary_ext(const char *name) {
+  static const char *exts[] = {
+    ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".ico", ".svgz",
+    ".pdf", ".zip", ".gz", ".tgz", ".bz2", ".xz", ".7z", ".rar",
+    ".mp3", ".wav", ".ogg", ".mp4", ".mov", ".avi", ".mkv",
+    ".ttf", ".otf", ".woff", ".woff2", ".eot",
+    ".so", ".a", ".o", ".obj", ".dll", ".exe", ".bin", ".class", ".jar",
+    ".pyc", ".pyo", ".wasm", ".sqlite", ".db", ".dylib"
   };
   for (size_t i = 0; i < sizeof(exts) / sizeof(exts[0]); i++) if (has_ext(name, exts[i])) return true;
   return false;
@@ -396,7 +429,8 @@ static uint32_t lang_id_for_ext(const char *name) {
 
 static bool skip_dir_name(const char *name) {
   static const char *skip[] = {
-    ".git", "node_modules", "vendor", "dist", "build", "target", "coverage", ".next", ".cache", "__pycache__"
+    ".git", "node_modules", "vendor", "dist", "build", "target", "coverage", ".next", ".cache", "__pycache__",
+    ".venv", "venv", ".tox", ".idea", ".vscode", ".gradle", ".m2", "out", "tmp", "temp"
   };
   for (size_t i = 0; i < sizeof(skip) / sizeof(skip[0]); i++) if (strcmp(name, skip[i]) == 0) return true;
   return false;
@@ -760,10 +794,15 @@ static int cmd_rebuild_core(const char *git_root, const char *core_dir) {
 }
 
 static int cmd_build_package(const char *src, const char *out_dir, const char *core_dir) {
+  const bool BUILD_LANG_ONLY = env_bool("AIIR_BUILD_LANG_ONLY", true);
+  const bool BUILD_TEXT_ONLY = env_bool("AIIR_BUILD_TEXT_ONLY", true);
+  const bool BUILD_SKIP_BINARY_EXT = env_bool("AIIR_BUILD_SKIP_BINARY_EXT", true);
+  const size_t BUILD_MAX_FILE_BYTES = env_size("AIIR_BUILD_MAX_FILE_BYTES", 524288u, 1u, 128u * 1024u * 1024u);
+
   if (!ensure_dir(out_dir)) return 1;
 
   StrVec files = {0};
-  if (!walk_files_rec(src, &files, false)) { str_free(&files); return 1; }
+  if (!walk_files_rec(src, &files, BUILD_LANG_ONLY)) { str_free(&files); return 1; }
   qsort(files.v, files.n, sizeof(char *), str_cmp);
 
   U8Vec path_blob = {0};
@@ -780,6 +819,9 @@ static int cmd_build_package(const char *src, const char *out_dir, const char *c
     uint8_t *raw = NULL;
     size_t raw_len = 0;
     if (!read_file(fp, &raw, &raw_len)) continue;
+    if (raw_len == 0u || raw_len > BUILD_MAX_FILE_BYTES) { free(raw); continue; }
+    if (BUILD_SKIP_BINARY_EXT && is_probably_binary_ext(fp)) { free(raw); continue; }
+    if (BUILD_TEXT_ONLY && !is_likely_text(raw, raw_len)) { free(raw); continue; }
 
     uint32_t poff = (uint32_t)path_blob.n;
     uint32_t plen = (uint32_t)strlen(rel);
