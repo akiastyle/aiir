@@ -5,6 +5,7 @@ ROOT="/var/www/aiir"
 PROVISION_SCRIPT="${ROOT}/server/scripts/provision-project-domain.sh"
 OPTIMIZE_SCRIPT="${ROOT}/server/scripts/aiir-optimize-project.sh"
 DOWN_SCRIPT="${ROOT}/server/scripts/aiir-down.sh"
+TYPE_MAP_SCRIPT="${ROOT}/server/scripts/project-type-map.sh"
 
 : "${AI_RUNTIME_HOST:=127.0.0.1}"
 : "${AI_RUNTIME_PORT:=7788}"
@@ -26,25 +27,15 @@ USAGE
   exit 1
 fi
 
-msg="$*"
-lower="$(printf '%s' "$msg" | tr '[:upper:]' '[:lower:]')"
+if [[ ! -f "$TYPE_MAP_SCRIPT" ]]; then
+  echo "{\"ok\":0,\"err\":\"type_map_missing\",\"path\":\"${TYPE_MAP_SCRIPT}\"}"
+  exit 1
+fi
+# shellcheck disable=SC1090
+source "$TYPE_MAP_SCRIPT"
 
-map_type() {
-  local t="$1"
-  case "$t" in
-    website|landing_page|cms_content_site|blog_magazine) echo "content 30" ;;
-    ecommerce|marketplace) echo "commerce 180" ;;
-    webapp|dashboard_admin) echo "app 90" ;;
-    backend|api_service) echo "service 90" ;;
-    frontend) echo "edge 30" ;;
-    mobileapp|pwa_app) echo "mobile 60" ;;
-    saas_multitenant) echo "saas 180" ;;
-    booking_platform|lms_elearning) echo "app 120" ;;
-    community_forum) echo "community 90" ;;
-    automation_agentic) echo "agent 60" ;;
-    *) echo "app 90" ;;
-  esac
-}
+msg="$*"
+shopt -s nocasematch
 
 extract_project_field() {
   local line="$1"
@@ -69,7 +60,18 @@ list_projects_json() {
     echo '{"ok":1,"count":0,"projects":[]}'
     return 0
   fi
-  mapfile -t lines < <(tail -n 20 "$AIIR_PROJECTS_FILE")
+  mapfile -t lines < <(
+    awk '
+      {
+        if (match($0, /"project_ref":"[^"]+"/)) {
+          ref=substr($0, RSTART+15, RLENGTH-16);
+          row[ref]=$0;
+        }
+      }
+      END {
+        for (r in row) print row[r];
+      }' "$AIIR_PROJECTS_FILE" | tail -n 20
+  )
   printf '{"ok":1,"count":%d,"projects":[' "${#lines[@]}"
   idx=0
   for line in "${lines[@]}"; do
@@ -88,24 +90,24 @@ list_projects_json() {
 }
 
 # Safety gate for destructive intents.
-if [[ "$lower" =~ (delete|elimina|destroy|drop|wipe|reset|formatta|ferma[[:space:]]+runtime|stop[[:space:]]+runtime) ]]; then
-  if [[ ! "$lower" =~ (conferma|confirm) ]]; then
+if [[ "$msg" =~ (delete|elimina|destroy|drop|wipe|reset|formatta|ferma[[:space:]]+runtime|stop[[:space:]]+runtime) ]]; then
+  if [[ ! "$msg" =~ (conferma|confirm) ]]; then
     echo '{"ok":0,"err":"confirmation_required","hint":"aggiungi conferma/confirm al comando"}'
     exit 1
   fi
 fi
 
-if [[ "$lower" =~ ^(stato|status|health)$ ]]; then
+if [[ "$msg" =~ ^(stato|status|health)$ ]]; then
   curl -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health"
   exit 0
 fi
 
-if [[ "$lower" =~ ^(lista[[:space:]]+progetti|list[[:space:]]+projects|ultimi[[:space:]]+progetti|last[[:space:]]+projects)$ ]]; then
+if [[ "$msg" =~ ^(lista[[:space:]]+progetti|list[[:space:]]+projects|ultimi[[:space:]]+progetti|last[[:space:]]+projects)$ ]]; then
   list_projects_json
   exit 0
 fi
 
-if [[ "$lower" =~ ^(stato[[:space:]]+progetto|project[[:space:]]+status)[[:space:]]+([a-z0-9][a-z0-9._-]{1,95})$ ]]; then
+if [[ "$msg" =~ ^(stato[[:space:]]+progetto|project[[:space:]]+status)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,95})$ ]]; then
   ident="${BASH_REMATCH[2]}"
   line="$(find_project_line "$ident" || true)"
   if [[ -z "$line" ]]; then
@@ -122,13 +124,13 @@ if [[ "$lower" =~ ^(stato[[:space:]]+progetto|project[[:space:]]+status)[[:space
   exit 0
 fi
 
-if [[ "$lower" =~ ^(ottimizza[[:space:]]+progetto|optimize[[:space:]]+project)[[:space:]]+([a-z0-9][a-z0-9._-]{1,95})$ ]]; then
+if [[ "$msg" =~ ^(ottimizza[[:space:]]+progetto|optimize[[:space:]]+project)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,95})$ ]]; then
   ident="${BASH_REMATCH[2]}"
   "$OPTIMIZE_SCRIPT" "$ident"
   exit 0
 fi
 
-if [[ "$lower" =~ ^(ferma[[:space:]]+runtime|stop[[:space:]]+runtime)([[:space:]]+conferma|[[:space:]]+confirm)?$ ]]; then
+if [[ "$msg" =~ ^(ferma[[:space:]]+runtime|stop[[:space:]]+runtime)([[:space:]]+conferma|[[:space:]]+confirm)?$ ]]; then
   "$DOWN_SCRIPT" --host "$AI_RUNTIME_HOST" --port "$AI_RUNTIME_PORT"
   exit 0
 fi
@@ -137,21 +139,21 @@ project=""
 domain=""
 type="webapp"
 
-if [[ "$lower" =~ ^(crea[[:space:]]+progetto|create[[:space:]]+project)[[:space:]]+([a-z0-9][a-z0-9._-]{1,63}) ]]; then
+if [[ "$msg" =~ ^(crea[[:space:]]+progetto|create[[:space:]]+project)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,63}) ]]; then
   project="${BASH_REMATCH[2]}"
 else
   echo '{"ok":0,"err":"intent","hint":"stato | lista progetti | stato progetto <id> | crea progetto <name> [tipo X] [dominio Y] | ottimizza progetto <id> | ferma runtime conferma"}'
   exit 1
 fi
 
-if [[ "$lower" =~ (dominio|domain)[[:space:]]*[:=]?[[:space:]]*([a-z0-9.-]+) ]]; then
+if [[ "$msg" =~ (dominio|domain)[[:space:]]*[:=]?[[:space:]]*([A-Za-z0-9.-]+) ]]; then
   domain="${BASH_REMATCH[2]}"
 fi
-if [[ "$lower" =~ (tipo|type)[[:space:]]*[:=]?[[:space:]]*([a-z_]+) ]]; then
+if [[ "$msg" =~ (tipo|type)[[:space:]]*[:=]?[[:space:]]*([A-Za-z_]+) ]]; then
   type="${BASH_REMATCH[2]}"
 fi
 
-read -r db_profile retention_days < <(map_type "$type")
+read -r db_profile retention_days < <(aiir_map_project_type "$type")
 
 AIIR_DB_DEFAULT_PROFILE="$db_profile" \
 AIIR_DB_RETENTION_DAYS="$retention_days" \

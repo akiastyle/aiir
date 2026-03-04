@@ -91,10 +91,8 @@ if [[ -f "$PID_FILE" ]]; then
 fi
 
 if curl -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
-  echo "aiir-down-warn: runtime still reachable at ${HOST}:${PORT}" >&2
-  if [[ "$FORCE" == "1" ]]; then
-    exit 1
-  fi
+  echo "aiir-down-failed: runtime still reachable at ${HOST}:${PORT}" >&2
+  exit 1
 fi
 
 cat <<EOF2

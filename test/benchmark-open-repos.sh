@@ -143,7 +143,9 @@ cp "${TMP_LATEST}" "${LATEST_FILE}"
 rm -rf "${WORK_ROOT}"
 
 if [[ -x "${DBOARD_SCRIPT}" ]]; then
-  "${DBOARD_SCRIPT}" "${TEST_BASE}" >/dev/null
+  if ! "${DBOARD_SCRIPT}" "${TEST_BASE}" >/dev/null 2>&1; then
+    echo "dashboard-warn: failed to refresh ${DBOARD_FILE}" >&2
+  fi
 fi
 
 echo "benchmark-done: ${LOG_FILE}"

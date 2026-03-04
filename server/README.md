@@ -137,6 +137,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
     - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>] [--apply-web]`
 - Zero-conf stop:
   - `/var/www/aiir/server/scripts/aiir-down.sh`
+  - returns non-zero if runtime is still reachable after stop attempt
 - Runtime diagnostics:
   - `/var/www/aiir/server/scripts/aiir-doctor.sh`
   - strict mode (non-zero on warnings/failures):
@@ -158,6 +159,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `ottimizza progetto <project-ref|project-name>`
   - `ferma runtime conferma`
   - destructive intents require `conferma/confirm`
+  - project type mapping is centralized in:
+    - `/var/www/aiir/server/scripts/project-type-map.sh`
 - Browser access code generator (default 30d):
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:
