@@ -27,8 +27,40 @@ USAGE
   exit 1
 fi
 
+json_err() {
+  local code="$1"
+  local hint="${2:-}"
+  if [[ -n "$hint" ]]; then
+    printf '{"ok":0,"err":"%s","hint":"%s"}\n' "$code" "$hint"
+  else
+    printf '{"ok":0,"err":"%s"}\n' "$code"
+  fi
+}
+
+requires_confirmation() {
+  local text="$1"
+  local patterns=(
+    'delete'
+    'elimina'
+    'destroy'
+    'drop'
+    'wipe'
+    'reset'
+    'formatta'
+    'ferma[[:space:]]+runtime'
+    'stop[[:space:]]+runtime'
+  )
+  local p
+  for p in "${patterns[@]}"; do
+    if [[ "$text" =~ $p ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
 if [[ ! -f "$TYPE_MAP_SCRIPT" ]]; then
-  echo "{\"ok\":0,\"err\":\"type_map_missing\",\"path\":\"${TYPE_MAP_SCRIPT}\"}"
+  json_err "type_map_missing" "$TYPE_MAP_SCRIPT"
   exit 1
 fi
 # shellcheck disable=SC1090
@@ -90,9 +122,9 @@ list_projects_json() {
 }
 
 # Safety gate for destructive intents.
-if [[ "$msg" =~ (delete|elimina|destroy|drop|wipe|reset|formatta|ferma[[:space:]]+runtime|stop[[:space:]]+runtime) ]]; then
+if requires_confirmation "$msg"; then
   if [[ ! "$msg" =~ (conferma|confirm) ]]; then
-    echo '{"ok":0,"err":"confirmation_required","hint":"aggiungi conferma/confirm al comando"}'
+    json_err "confirmation_required" "aggiungi conferma/confirm al comando"
     exit 1
   fi
 fi
@@ -111,7 +143,7 @@ if [[ "$msg" =~ ^(stato[[:space:]]+progetto|project[[:space:]]+status)[[:space:]
   ident="${BASH_REMATCH[2]}"
   line="$(find_project_line "$ident" || true)"
   if [[ -z "$line" ]]; then
-    echo "{\"ok\":0,\"err\":\"project_not_found\",\"input\":\"${ident}\"}"
+    printf '{"ok":0,"err":"project_not_found","input":"%s"}\n' "$ident"
     exit 1
   fi
   project_ref="$(extract_project_field "$line" "project_ref")"
@@ -142,7 +174,7 @@ type="webapp"
 if [[ "$msg" =~ ^(crea[[:space:]]+progetto|create[[:space:]]+project)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,63}) ]]; then
   project="${BASH_REMATCH[2]}"
 else
-  echo '{"ok":0,"err":"intent","hint":"stato | lista progetti | stato progetto <id> | crea progetto <name> [tipo X] [dominio Y] | ottimizza progetto <id> | ferma runtime conferma"}'
+  json_err "intent_unknown" "stato | lista progetti | stato progetto <id> | crea progetto <name> [tipo X] [dominio Y] | ottimizza progetto <id> | ferma runtime conferma"
   exit 1
 fi
 

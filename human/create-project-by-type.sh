@@ -14,6 +14,10 @@ EOF
   exit 1
 fi
 
+if [[ "${AIIR_HUMAN_COMPAT_SILENT:-0}" != "1" ]]; then
+  echo "warning: deprecated path, prefer /var/www/aiir/server/scripts/aiir chat \"crea progetto <name> tipo <type> dominio <domain>\"" >&2
+fi
+
 if [[ ! -f "${TYPE_MAP_SCRIPT}" ]]; then
   echo "missing type map script: ${TYPE_MAP_SCRIPT}" >&2
   exit 1
