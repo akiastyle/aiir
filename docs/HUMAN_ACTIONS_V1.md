@@ -17,8 +17,8 @@ Intent:
 - avoid low-level DB profile selection in human flow
 
 Mapping:
-- human adapter command:
-  - `/var/www/aiir/human/create-project-by-type.sh <project-name> <project-type> [domain]`
+- AI chat command:
+  - `/var/www/aiir/server/scripts/aiir chat "crea progetto <name> tipo <type> dominio <domain>"`
 - internally translates to `create_project` contract (`POST /aiir/project/create`)
 
 Output:

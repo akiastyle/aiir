@@ -55,4 +55,4 @@ AI-first runtime operations with minimal human interaction.
 - Local write operations use a shared lock file:
   - `/var/www/aiir/ai/state/.ops.lock`
 - Legacy human adapter is still available for compatibility, but deprecated:
-  - `/var/www/aiir/human/create-project-by-type.sh`
+  - removed; use chat flow only.

@@ -1,8 +1,18 @@
 # AIIR Changelog (Tracked)
 
-Updated at (UTC): `2026-03-03T07:12:26Z`
+Updated at (UTC): `2026-03-04T11:27:13Z`
 
 ## Recent Commits
+- `1cb465d` 2026-03-04T11:57:52Z ops: unify projects parsing, add ai chat help, and lock write paths
+- `cfbcfce` 2026-03-04T09:37:07Z ops: add AI operations runbook and end-to-end AI-only smoke
+- `f403959` 2026-03-04T09:37:01Z ops: harden aiir chat errors and centralize destructive confirmation
+- `4ac0372` 2026-03-04T09:15:41Z ops: simplify flow with shared type map and stricter runtime stop
+- `130697b` 2026-03-04T09:04:49Z ops: unify aiir cli, extend chat intents, and add benchmark dashboard
+- `a7e9359` 2026-03-03T09:10:11Z ops: add aiir-down and aiir-doctor for zero-conf runtime lifecycle
+- `bed6845` 2026-03-03T08:39:21Z ops: add zero-conf aiir-up bootstrap and ai-first chat cli
+- `b18bae9` 2026-03-03T08:23:34Z runtime: add strict HAL validation and persistent idempotent project create
+- `c9a74ae` 2026-03-03T08:13:09Z test: add axios benchmark run and update repo sources
+- `0de30fa` 2026-03-03T08:12:28Z docs: regenerate file index and changelog after human adapter
 - `a4a5127` 2026-03-03T08:12:20Z human: add typed project adapter and docs boundary
 - `df030bd` 2026-03-03T08:03:13Z human: add browser access code flow and AI-managed i18n policy
 - `2802080` 2026-03-02T20:08:55Z ops: add per-file version index and generated changelog
