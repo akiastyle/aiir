@@ -1,6 +1,6 @@
 # Open Repo Benchmarks (AIIR)
 
-Last run (UTC): `2026-03-03T07:23:09Z`
+Last run (UTC): `2026-03-04T08:04:18Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2329 bytes)
 
@@ -18,7 +18,7 @@ Base package overhead excluded from AIIR net size: 0.00 MB (2329 bytes)
 | `https://github.com/tiangolo/fastapi.git` | `ca5f60e` | 2026-03-02T16:27:27Z | 47.57 | 32.05 | 32.62% | ok |
 | `https://github.com/fastapi/fastapi.git` | `b54aa52` | 2026-03-03T07:12:42Z | 47.58 | 32.05 | 32.62% | ok |
 | `https://github.com/axios/axios.git` | `84285c8` | 2026-03-03T07:23:09Z | 2.19 | 1.72 | 21.68% | ok |
-| `https://github.com/expressjs/express.git` | `6c4249f` | 2026-03-03T07:23:09Z | 0.89 | 0.69 | 23.23% | ok |
+| `https://github.com/expressjs/express.git` | `6c4249f` | 2026-03-04T08:04:18Z | 0.89 | 0.69 | 23.23% | ok |
 
 Reduction summary (latest per repo+commit): avg=33.89% p50=31.61%
 

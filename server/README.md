@@ -144,6 +144,20 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Operational chat CLI (human talks only to AI layer):
   - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto crm-alpha tipo webapp dominio crm.local"`
+- Official unified CLI (recommended):
+  - `/var/www/aiir/server/scripts/aiir up`
+  - `/var/www/aiir/server/scripts/aiir chat "stato"`
+  - `/var/www/aiir/server/scripts/aiir down`
+  - `/var/www/aiir/server/scripts/aiir doctor --strict`
+  - `/var/www/aiir/server/scripts/aiir optimize <project-ref|project-name>`
+- Chat intents:
+  - `stato`
+  - `lista progetti`
+  - `stato progetto <project-ref|project-name>`
+  - `crea progetto <name> tipo <type> dominio <domain>`
+  - `ottimizza progetto <project-ref|project-name>`
+  - `ferma runtime conferma`
+  - destructive intents require `conferma/confirm`
 - Browser access code generator (default 30d):
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:
@@ -151,6 +165,9 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - outputs:
     - `/var/www/aiir/docs/FILE_VERSION_INDEX.csv`
     - `/var/www/aiir/docs/CHANGELOG_AIIR.md`
+- Benchmark dashboard:
+  - generator: `/var/www/aiir/test/aiir-benchmark-dashboard.sh`
+  - output: `/var/www/aiir/test/OPEN_REPO_DASHBOARD.md`
 
 ## State backup (rotation)
 - Manual backup:

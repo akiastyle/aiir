@@ -8,6 +8,18 @@ PORT="${AI_RUNTIME_PORT:-7788}"
 TIMEOUT_SEC="${AIIR_DOWN_TIMEOUT_SEC:-8}"
 FORCE="0"
 
+find_pid_by_port() {
+  local port="$1"
+  local pid=""
+  if command -v ss >/dev/null 2>&1; then
+    pid="$(ss -ltnp "sport = :${port}" 2>/dev/null | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' | head -n1 || true)"
+  fi
+  if [[ -z "$pid" ]] && command -v lsof >/dev/null 2>&1; then
+    pid="$(lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null | head -n1 || true)"
+  fi
+  printf '%s' "$pid"
+}
+
 usage() {
   cat >&2 <<'USAGE'
 usage:
@@ -46,6 +58,26 @@ if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
     kill -9 "$pid" 2>/dev/null || true
     if ! kill -0 "$pid" 2>/dev/null; then
       stopped="1"
+    fi
+  fi
+fi
+
+if [[ "$stopped" != "1" ]]; then
+  pid_by_port="$(find_pid_by_port "$PORT")"
+  if [[ -n "$pid_by_port" ]] && kill -0 "$pid_by_port" 2>/dev/null; then
+    kill "$pid_by_port" 2>/dev/null || true
+    for _ in $(seq 1 "$TIMEOUT_SEC"); do
+      if ! kill -0 "$pid_by_port" 2>/dev/null; then
+        stopped="1"
+        break
+      fi
+      sleep 1
+    done
+    if [[ "$stopped" != "1" && "$FORCE" == "1" ]]; then
+      kill -9 "$pid_by_port" 2>/dev/null || true
+      if ! kill -0 "$pid_by_port" 2>/dev/null; then
+        stopped="1"
+      fi
     fi
   fi
 fi

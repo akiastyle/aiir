@@ -9,6 +9,8 @@ PKG_ROOT="${WORK_ROOT}/pkg"
 LOG_FILE="${TEST_BASE}/OPEN_REPO_TEST_LOG.csv"
 REPORT_FILE="${TEST_BASE}/OPEN_REPO_TESTS.md"
 LATEST_FILE="${TEST_BASE}/OPEN_REPO_TEST_LATEST.csv"
+DBOARD_SCRIPT="${TEST_BASE}/aiir-benchmark-dashboard.sh"
+DBOARD_FILE="${TEST_BASE}/OPEN_REPO_DASHBOARD.md"
 REPO_LIST_FILE="${TEST_BASE}/REPO_SOURCES.txt"
 CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -140,5 +142,12 @@ cp "${TMP_LATEST}" "${LATEST_FILE}"
 
 rm -rf "${WORK_ROOT}"
 
+if [[ -x "${DBOARD_SCRIPT}" ]]; then
+  "${DBOARD_SCRIPT}" "${TEST_BASE}" >/dev/null
+fi
+
 echo "benchmark-done: ${LOG_FILE}"
 echo "report-done: ${REPORT_FILE}"
+if [[ -f "${DBOARD_FILE}" ]]; then
+  echo "dashboard-done: ${DBOARD_FILE}"
+fi

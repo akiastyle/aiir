@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="/var/www/aiir/server/scripts"
+cmd="${1:-}" || true
+
+usage() {
+  cat >&2 <<'USAGE'
+usage:
+  /var/www/aiir/server/scripts/aiir <command> [args]
+
+official commands:
+  up       zero-conf bootstrap runtime/project
+  chat     operational AI chat entrypoint
+  down     stop runtime
+
+support commands:
+  doctor   runtime diagnostics
+  optimize optimize a project policy/env
+USAGE
+}
+
+case "$cmd" in
+  up)
+    shift
+    exec "${ROOT}/aiir-up.sh" "$@" ;;
+  chat)
+    shift
+    exec "${ROOT}/aiir-chat.sh" "$@" ;;
+  down)
+    shift
+    exec "${ROOT}/aiir-down.sh" "$@" ;;
+  doctor)
+    shift
+    exec "${ROOT}/aiir-doctor.sh" "$@" ;;
+  optimize)
+    shift
+    exec "${ROOT}/aiir-optimize-project.sh" "$@" ;;
+  -h|--help|help|"")
+    usage
+    exit 0 ;;
+  *)
+    echo "unknown command: ${cmd}" >&2
+    usage
+    exit 1 ;;
+esac
