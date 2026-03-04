@@ -161,6 +161,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - destructive intents require `conferma/confirm`
   - project type mapping is centralized in:
     - `/var/www/aiir/server/scripts/project-type-map.sh`
+- AI-only smoke (up/chat/optimize/doctor/down):
+  - `/var/www/aiir/server/scripts/smoke-ai-ops.sh`
 - Browser access code generator (default 30d):
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:
@@ -171,6 +173,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Benchmark dashboard:
   - generator: `/var/www/aiir/test/aiir-benchmark-dashboard.sh`
   - output: `/var/www/aiir/test/OPEN_REPO_DASHBOARD.md`
+- AI operations runbook:
+  - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
 
 ## State backup (rotation)
 - Manual backup:

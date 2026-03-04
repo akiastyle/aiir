@@ -126,6 +126,8 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 
 - Unified CLI:
   - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize>`
+- Full runbook:
+  - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
 - Single bootstrap command:
   - `/var/www/aiir/server/scripts/aiir-up.sh`
 - Stop command:
