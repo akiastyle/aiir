@@ -19,6 +19,7 @@ AI-first runtime operations with minimal human interaction.
 /var/www/aiir/server/scripts/aiir chat "lista progetti"
 /var/www/aiir/server/scripts/aiir chat "stato progetto crm-alpha"
 /var/www/aiir/server/scripts/aiir chat "ottimizza progetto crm-alpha"
+/var/www/aiir/server/scripts/aiir chat "ui progetto crm-alpha preset material"
 ```
 
 3. Diagnostics:
@@ -52,6 +53,8 @@ AI-first runtime operations with minimal human interaction.
   - `/var/www/aiir/server/scripts/project-type-map.sh`
 - Project metadata parsing is centralized in:
   - `/var/www/aiir/server/scripts/projects-ndjson-lib.sh`
+- UI presets are stored in:
+  - `/var/www/aiir/server/ui-presets/`
 - Local write operations use a shared lock file:
   - `/var/www/aiir/ai/state/.ops.lock`
 - Legacy human adapter is still available for compatibility, but deprecated:

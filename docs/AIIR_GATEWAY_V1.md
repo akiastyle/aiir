@@ -125,7 +125,7 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 ## Zero-Conf AI Operations
 
 - Unified CLI:
-  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize>`
+  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize|ui>`
 - Full runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
 - Single bootstrap command:
@@ -142,5 +142,6 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
   - `/var/www/aiir/server/scripts/aiir-chat.sh "lista progetti"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "stato progetto <project-ref|project-name>"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "ottimizza progetto <project-ref|project-name>"`
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "ui progetto <project-ref|project-name> preset <utility|material|bootstrap-like>"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "ferma runtime conferma"`
   - destructive intents are blocked unless `conferma/confirm` is present

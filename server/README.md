@@ -146,24 +146,29 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir-chat.sh "help"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto crm-alpha tipo webapp dominio crm.local"`
+  - `/var/www/aiir/server/scripts/aiir-chat.sh "ui progetto crm-alpha preset material"`
 - Official unified CLI (recommended):
   - `/var/www/aiir/server/scripts/aiir up`
   - `/var/www/aiir/server/scripts/aiir chat "stato"`
   - `/var/www/aiir/server/scripts/aiir down`
   - `/var/www/aiir/server/scripts/aiir doctor --strict`
   - `/var/www/aiir/server/scripts/aiir optimize <project-ref|project-name>`
+  - `/var/www/aiir/server/scripts/aiir ui <project-ref|project-name> [utility|material|bootstrap-like]`
 - Chat intents:
   - `stato`
   - `lista progetti`
   - `stato progetto <project-ref|project-name>`
   - `crea progetto <name> tipo <type> dominio <domain>`
   - `ottimizza progetto <project-ref|project-name>`
+  - `ui progetto <project-ref|project-name> preset <utility|material|bootstrap-like>`
   - `ferma runtime conferma`
   - destructive intents require `conferma/confirm`
   - project type mapping is centralized in:
     - `/var/www/aiir/server/scripts/project-type-map.sh`
 - AI-only smoke (up/chat/optimize/doctor/down):
   - `/var/www/aiir/server/scripts/smoke-ai-ops.sh`
+- UI preset assets:
+  - `/var/www/aiir/server/ui-presets/`
 - Browser access code generator (default 30d):
   - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
 - File versioning index and changelog generator:

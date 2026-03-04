@@ -18,8 +18,7 @@ cleanup_project_artifacts() {
     rg '"project_name":"'"${project}"'"' "$projects_file" | sed -n 's/.*"project_ref":"\([^"]*\)".*/\1/p' | while read -r prj; do
       [[ -z "$prj" ]] && continue
       rm -f "${ROOT}/server/env/projects/${prj}.env" "${ROOT}/server/generated/apache/${prj}.conf" "${ROOT}/server/generated/nginx/${prj}.conf"
-      rm -f "${ROOT}/ai/state/projects/${prj}/policy.env"
-      rmdir "${ROOT}/ai/state/projects/${prj}" 2>/dev/null || true
+      rm -rf "${ROOT}/ai/state/projects/${prj}"
     done
     tmp="$(mktemp)"
     rg -v '"project_name":"'"${project}"'"' "$projects_file" > "$tmp" || true
@@ -41,6 +40,7 @@ AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "stato" > /tmp/aiir-
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "lista progetti" > /tmp/aiir-smoke-list.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "stato progetto $PROJECT" > /tmp/aiir-smoke-status.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "ottimizza progetto $PROJECT" > /tmp/aiir-smoke-opt.json
+AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "ui progetto $PROJECT preset material" > /tmp/aiir-smoke-ui.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" doctor --strict > /tmp/aiir-smoke-doctor-up.txt
 
 if AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "ferma runtime" >/tmp/aiir-smoke-stop-no.txt 2>&1; then
@@ -77,8 +77,18 @@ if ! rg -q '"action":"optimize_project"' /tmp/aiir-smoke-opt.json; then
   echo "smoke-ai-ops-failed: optimize output invalid" >&2
   exit 1
 fi
+if ! rg -q '"action":"ui_scaffold"' /tmp/aiir-smoke-ui.json; then
+  echo "smoke-ai-ops-failed: ui scaffold output invalid" >&2
+  exit 1
+fi
+ui_html="$(sed -n 's/.*"ui_html":"\([^"]*\)".*/\1/p' /tmp/aiir-smoke-ui.json | head -n1)"
+if [[ -z "$ui_html" || ! -f "$ui_html" ]]; then
+  echo "smoke-ai-ops-failed: ui scaffold file missing" >&2
+  exit 1
+fi
 
 echo "smoke-ai-ops-ok"
 cat /tmp/aiir-smoke-up.txt
 cat /tmp/aiir-smoke-status.json
 cat /tmp/aiir-smoke-opt.json
+cat /tmp/aiir-smoke-ui.json

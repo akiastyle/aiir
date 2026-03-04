@@ -17,6 +17,7 @@ official commands:
 support commands:
   doctor   runtime diagnostics
   optimize optimize a project policy/env
+  ui       scaffold UI preset for a project
 USAGE
 }
 
@@ -36,6 +37,9 @@ case "$cmd" in
   optimize)
     shift
     exec "${ROOT}/aiir-optimize-project.sh" "$@" ;;
+  ui)
+    shift
+    exec "${ROOT}/aiir-ui-scaffold.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;

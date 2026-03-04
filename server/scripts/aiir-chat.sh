@@ -5,6 +5,7 @@ ROOT="/var/www/aiir"
 PROVISION_SCRIPT="${ROOT}/server/scripts/provision-project-domain.sh"
 OPTIMIZE_SCRIPT="${ROOT}/server/scripts/aiir-optimize-project.sh"
 DOWN_SCRIPT="${ROOT}/server/scripts/aiir-down.sh"
+UI_SCRIPT="${ROOT}/server/scripts/aiir-ui-scaffold.sh"
 TYPE_MAP_SCRIPT="${ROOT}/server/scripts/project-type-map.sh"
 PROJECTS_LIB="${ROOT}/server/scripts/projects-ndjson-lib.sh"
 
@@ -46,7 +47,6 @@ requires_confirmation() {
     'destroy'
     'drop'
     'wipe'
-    'reset'
     'formatta'
     'ferma[[:space:]]+runtime'
     'stop[[:space:]]+runtime'
@@ -113,7 +113,7 @@ list_projects_json() {
 
 if [[ "$msg" =~ ^(help|aiuto)$ ]]; then
   cat <<'EOF'
-{"ok":1,"intent":"help","commands":[{"name":"stato","example":"aiir chat \"stato\""},{"name":"lista_progetti","example":"aiir chat \"lista progetti\""},{"name":"stato_progetto","example":"aiir chat \"stato progetto crm-alpha\""},{"name":"crea_progetto","example":"aiir chat \"crea progetto crm-alpha tipo webapp dominio crm.local\""},{"name":"ottimizza_progetto","example":"aiir chat \"ottimizza progetto crm-alpha\""},{"name":"ferma_runtime","example":"aiir chat \"ferma runtime conferma\""}],"error_codes":["intent_unknown","confirmation_required","project_not_found","type_map_missing","projects_lib_missing"]}
+{"ok":1,"intent":"help","commands":[{"name":"stato","example":"aiir chat \"stato\""},{"name":"lista_progetti","example":"aiir chat \"lista progetti\""},{"name":"stato_progetto","example":"aiir chat \"stato progetto crm-alpha\""},{"name":"crea_progetto","example":"aiir chat \"crea progetto crm-alpha tipo webapp dominio crm.local\""},{"name":"ottimizza_progetto","example":"aiir chat \"ottimizza progetto crm-alpha\""},{"name":"ui_progetto","example":"aiir chat \"ui progetto crm-alpha preset material\""},{"name":"ferma_runtime","example":"aiir chat \"ferma runtime conferma\""}],"error_codes":["intent_unknown","confirmation_required","project_not_found","type_map_missing","projects_lib_missing"]}
 EOF
   exit 0
 fi
@@ -159,6 +159,13 @@ if [[ "$msg" =~ ^(ottimizza[[:space:]]+progetto|optimize[[:space:]]+project)[[:s
   exit 0
 fi
 
+if [[ "$msg" =~ ^(ui[[:space:]]+progetto|ui[[:space:]]+project)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,95})([[:space:]]+preset[[:space:]]+([A-Za-z-]+))?$ ]]; then
+  ident="${BASH_REMATCH[2]}"
+  preset="${BASH_REMATCH[4]:-utility}"
+  "$UI_SCRIPT" "$ident" "$preset"
+  exit 0
+fi
+
 if [[ "$msg" =~ ^(ferma[[:space:]]+runtime|stop[[:space:]]+runtime)([[:space:]]+conferma|[[:space:]]+confirm)?$ ]]; then
   "$DOWN_SCRIPT" --host "$AI_RUNTIME_HOST" --port "$AI_RUNTIME_PORT"
   exit 0
@@ -171,7 +178,7 @@ type="webapp"
 if [[ "$msg" =~ ^(crea[[:space:]]+progetto|create[[:space:]]+project)[[:space:]]+([A-Za-z0-9][A-Za-z0-9._-]{1,63}) ]]; then
   project="${BASH_REMATCH[2]}"
 else
-  json_err "intent_unknown" "stato | lista progetti | stato progetto <id> | crea progetto <name> [tipo X] [dominio Y] | ottimizza progetto <id> | ferma runtime conferma"
+  json_err "intent_unknown" "stato | lista progetti | stato progetto <id> | crea progetto <name> [tipo X] [dominio Y] | ottimizza progetto <id> | ui progetto <id> preset <utility|material|bootstrap-like> | ferma runtime conferma"
   exit 1
 fi
 
