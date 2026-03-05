@@ -15,6 +15,8 @@ REPO_LIST_FILE="${TEST_BASE}/REPO_SOURCES.txt"
 CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,notes"
+CLONE_TIMEOUT_SEC="${AIIR_CLONE_TIMEOUT_SEC:-900}"
+CLONE_RETRIES="${AIIR_CLONE_RETRIES:-2}"
 
 to_mb() {
   awk -v b="$1" 'BEGIN {printf "%.2f", b/1048576}'
@@ -74,8 +76,29 @@ for repo in "${repos[@]}"; do
   pkg="${PKG_ROOT}/${name}"
   rm -rf "${src}" "${pkg}"
 
-  if ! git clone --depth 1 "${repo}" "${src}" >"${WORK_ROOT}/clone_${name}.log" 2>&1; then
-    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,clone_failed" >> "${LOG_FILE}"
+  clone_ok=0
+  clone_note="clone_failed"
+  for attempt in $(seq 1 "${CLONE_RETRIES}"); do
+    rm -rf "${src}"
+    {
+      echo "attempt=${attempt} timeout_sec=${CLONE_TIMEOUT_SEC} repo=${repo}"
+      if command -v timeout >/dev/null 2>&1; then
+        timeout "${CLONE_TIMEOUT_SEC}s" git clone --depth 1 "${repo}" "${src}"
+      else
+        git clone --depth 1 "${repo}" "${src}"
+      fi
+    } >"${WORK_ROOT}/clone_${name}.log" 2>&1 && {
+      clone_ok=1
+      clone_note="ok"
+      break
+    }
+    rc=$?
+    if [[ "$rc" -eq 124 ]]; then
+      clone_note="clone_timeout"
+    fi
+  done
+  if [[ "$clone_ok" != "1" ]]; then
+    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,${clone_note}" >> "${LOG_FILE}"
     continue
   fi
 
