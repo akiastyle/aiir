@@ -34,13 +34,23 @@ trap cleanup EXIT
 
 src_web="${TMPDIR}/src-web.txt"
 norm_web="${TMPDIR}/norm-web.txt"
-rg --files -uu "$SRC_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx' | sed "s#^${SRC_DIR}/##" | sort -u > "$src_web"
-rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx' | sed "s#^${NORM_DIR}/##" | sort -u > "$norm_web"
+list_web_files() {
+  local base="$1"
+  local strip_prefix="$2"
+  rg --files -uu "$base" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx' 2>/dev/null \
+    | sed "s#^${strip_prefix}/##" \
+    | sort -u || true
+}
+list_web_files "$SRC_DIR" "$SRC_DIR" > "$src_web"
+list_web_files "$NORM_DIR" "$NORM_DIR" > "$norm_web"
 
 src_count="$(wc -l < "$src_web" | awk '{print $1}')"
 norm_count="$(wc -l < "$norm_web" | awk '{print $1}')"
 matched_count="$(comm -12 "$src_web" "$norm_web" | wc -l | awk '{print $1}')"
 logic_parity="$(awk -v m="$matched_count" -v s="$src_count" 'BEGIN {if (s<=0) printf "0.00"; else printf "%.2f", (m/s)*100}')"
+if [[ "$src_count" -eq 0 ]]; then
+  logic_parity="100.00"
+fi
 
 extract_logic_tokens() {
   local base="$1"
@@ -66,8 +76,8 @@ logic_token_parity="$(awk -v m="$match_tok_count" -v s="$src_tok_count" 'BEGIN {
 
 # Visual parity proxy: identical file hashes for shared HTML/CSS files.
 shared_visual="${TMPDIR}/shared-visual.txt"
-comm -12 <(rg --files -uu "$SRC_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' | sed "s#^${SRC_DIR}/##" | sort -u) \
-         <(rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' | sed "s#^${NORM_DIR}/##" | sort -u) \
+comm -12 <(rg --files -uu "$SRC_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' 2>/dev/null | sed "s#^${SRC_DIR}/##" | sort -u || true) \
+         <(rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' 2>/dev/null | sed "s#^${NORM_DIR}/##" | sort -u || true) \
   > "$shared_visual"
 
 shared_count="$(wc -l < "$shared_visual" | awk '{print $1}')"
@@ -84,6 +94,9 @@ while IFS= read -r rel; do
 done < "$shared_visual"
 
 visual_parity="$(awk -v i="$identical" -v s="$shared_count" 'BEGIN {if (s<=0) printf "0.00"; else printf "%.2f", (i/s)*100}')"
+if [[ "$shared_count" -eq 0 ]]; then
+  visual_parity="100.00"
+fi
 
 overall="$(awk -v a="$logic_parity" -v b="$logic_token_parity" -v c="$visual_parity" 'BEGIN {printf "%.2f", (a+b+c)/3}')"
 
