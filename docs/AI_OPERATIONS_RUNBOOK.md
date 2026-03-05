@@ -40,6 +40,14 @@ AI-first runtime operations with minimal human interaction.
 /var/www/aiir/server/scripts/smoke-ai-ops.sh
 ```
 
+6. AI2AI migration flow (source -> AIIR -> parity):
+```bash
+/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]
+/var/www/aiir/server/scripts/aiir parity <source-dir> <out-dir>
+```
+Policy reference:
+- `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
+
 ## Chat Error Codes
 - `intent_unknown`
 - `confirmation_required`

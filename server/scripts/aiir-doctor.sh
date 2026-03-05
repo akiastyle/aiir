@@ -80,7 +80,7 @@ check_dir "$CORE_DIR" "core_dir"
 check_file "${ROOT}/server/env/ai-runtime.env" "runtime_env"
 check_file "${ROOT}/server/env/ai-gateway.env" "gateway_env"
 
-if curl -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
+if curl --connect-timeout 1 --max-time 2 -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
   echo "ok runtime=up"
   if "$CHECK_SCRIPT" "$HOST" "$PORT" >/tmp/aiir-doctor-runtime.$$ 2>/tmp/aiir-doctor-runtime.err.$$; then
     echo "ok runtime_endpoints=healthy"

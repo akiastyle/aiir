@@ -127,7 +127,7 @@ if requires_confirmation "$msg"; then
 fi
 
 if [[ "$msg" =~ ^(stato|status|health)$ ]]; then
-  curl -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health"
+  curl --connect-timeout 1 --max-time 2 -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health"
   exit 0
 fi
 

@@ -62,14 +62,18 @@ source "$TYPE_MAP_SCRIPT"
 
 mkdir -p "${ROOT}/ai/log" "${ROOT}/ai/state" "${ROOT}/server/generated" "${ROOT}/server/env/projects"
 
-if ! curl -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health" >/dev/null 2>&1; then
+runtime_health_ok() {
+  curl --connect-timeout 1 --max-time 2 -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health" >/dev/null 2>&1
+}
+
+if ! runtime_health_ok; then
   nohup "$START_SCRIPT" >"$OUT_LOG" 2>"$ERR_LOG" &
   pid="$!"
   echo "$pid" > "$PID_FILE"
 
   ready=0
   for _ in $(seq 1 80); do
-    if curl -fsS "http://${AI_RUNTIME_HOST}:${AI_RUNTIME_PORT}/health" >/dev/null 2>&1; then
+    if runtime_health_ok; then
       ready=1
       break
     fi

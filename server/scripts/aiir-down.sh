@@ -90,7 +90,7 @@ if [[ -f "$PID_FILE" ]]; then
   fi
 fi
 
-if curl -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
+if curl --connect-timeout 1 --max-time 2 -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
   echo "aiir-down-failed: runtime still reachable at ${HOST}:${PORT}" >&2
   exit 1
 fi

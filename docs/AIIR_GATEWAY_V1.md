@@ -125,15 +125,19 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 ## Zero-Conf AI Operations
 
 - Unified CLI:
-  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize|ui>`
+  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize|ui|convert|parity>`
 - Full runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
+  - migration policy: `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
 - Single bootstrap command:
   - `/var/www/aiir/server/scripts/aiir-up.sh`
 - Stop command:
   - `/var/www/aiir/server/scripts/aiir-down.sh`
 - Diagnostic command:
   - `/var/www/aiir/server/scripts/aiir-doctor.sh`
+- Conversion + parity commands:
+  - `/var/www/aiir/server/scripts/aiir-convert-project.sh <source-dir> <out-dir> [project-id]`
+  - `/var/www/aiir/server/scripts/aiir-parity-check.sh <source-dir> <convert-out-dir>`
 - Optional bootstrap + project creation in one step:
   - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>]`
 - Chat-style operational entrypoint:

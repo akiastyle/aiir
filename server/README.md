@@ -116,6 +116,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
 ## AIIR Gateway v1 (project/db orchestration)
 - Contract document:
   - `/var/www/aiir/docs/AIIR_GATEWAY_V1.md`
+  - `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
   - `/var/www/aiir/docs/HUMAN_ACTIONS_V1.md`
   - `/var/www/aiir/docs/HUMAN_BROWSER_ACCESS_V1.md`
   - `/var/www/aiir/docs/I18N_AI_POLICY_V1.md`
@@ -154,6 +155,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir doctor --strict`
   - `/var/www/aiir/server/scripts/aiir optimize <project-ref|project-name>`
   - `/var/www/aiir/server/scripts/aiir ui <project-ref|project-name> [utility|material|bootstrap-like]`
+  - `/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]`
+  - `/var/www/aiir/server/scripts/aiir parity <source-dir> <convert-out-dir>`
 - Chat intents:
   - `stato`
   - `lista progetti`

@@ -18,6 +18,8 @@ support commands:
   doctor   runtime diagnostics
   optimize optimize a project policy/env
   ui       scaffold UI preset for a project
+  convert  convert source project into AIIR-operable assets
+  parity   run logic+visual parity check
 USAGE
 }
 
@@ -40,6 +42,12 @@ case "$cmd" in
   ui)
     shift
     exec "${ROOT}/aiir-ui-scaffold.sh" "$@" ;;
+  convert)
+    shift
+    exec "${ROOT}/aiir-convert-project.sh" "$@" ;;
+  parity)
+    shift
+    exec "${ROOT}/aiir-parity-check.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;
