@@ -87,6 +87,10 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `cp /var/www/aiir/server/systemd/aiir-self-audit.{service,timer} /etc/systemd/system/`
   - `systemctl daemon-reload`
   - `systemctl enable --now aiir-self-audit.timer`
+- Contract pack service/timer:
+  - `cp /var/www/aiir/server/systemd/aiir-contract-pack.{service,timer} /etc/systemd/system/`
+  - `systemctl daemon-reload`
+  - `systemctl enable --now aiir-contract-pack.timer`
 
 ## No-systemd fallback
 - Install cron schedule:
@@ -95,6 +99,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - daily backup at `03:17`
   - smoke checks at `06:00` and `18:00`
   - self-audit every hour
+  - contract test pack daily at `02:47`
 
 ## Nginx
 1. Install site config:

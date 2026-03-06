@@ -76,6 +76,7 @@ Policy reference:
 - systemd:
   - `aiir-smoke.timer` (twice daily AI-ops smoke)
   - `aiir-self-audit.timer` (hourly AI-first self-audit)
+  - `aiir-contract-pack.timer` (daily contract pack)
 - no-systemd:
   - `/var/www/aiir/server/cron/aiir-maintenance`
 - one-shot setup:

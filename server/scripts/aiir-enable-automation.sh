@@ -15,6 +15,7 @@ notes:
     - aiir-state-backup.timer
     - aiir-smoke.timer
     - aiir-self-audit.timer
+    - aiir-contract-pack.timer
   - cron mode installs:
     - /etc/cron.d/aiir-maintenance from server/cron/aiir-maintenance
 USAGE
@@ -55,6 +56,8 @@ enable_systemd() {
     "aiir-smoke.timer"
     "aiir-self-audit.service"
     "aiir-self-audit.timer"
+    "aiir-contract-pack.service"
+    "aiir-contract-pack.timer"
   )
   local u
   for u in "${units[@]}"; do
@@ -64,6 +67,7 @@ enable_systemd() {
   run_cmd systemctl enable --now aiir-state-backup.timer
   run_cmd systemctl enable --now aiir-smoke.timer
   run_cmd systemctl enable --now aiir-self-audit.timer
+  run_cmd systemctl enable --now aiir-contract-pack.timer
 }
 
 enable_cron() {

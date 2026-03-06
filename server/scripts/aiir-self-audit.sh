@@ -44,6 +44,7 @@ check_file "${ROOT}/server/scripts/aiir-contract-test.sh"
 check_file "${ROOT}/server/scripts/smoke-ai-ops.sh"
 check_file "${ROOT}/server/systemd/aiir-smoke.service"
 check_file "${ROOT}/server/systemd/aiir-self-audit.timer"
+check_file "${ROOT}/server/systemd/aiir-contract-pack.timer"
 check_file "${ROOT}/server/cron/aiir-maintenance"
 
 check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "reason natively in AIIR" "aiir_native_core"
@@ -66,7 +67,9 @@ check_pattern "${ROOT}/server/scripts/smoke-ai-ops.sh" "aiir-smoke-audit-up.json
 check_pattern "${ROOT}/test/benchmark-open-repos-full.sh" "aiir\" ingest" "benchmark_prefers_ingest"
 check_pattern "${ROOT}/server/systemd/aiir-smoke.service" "smoke-ai-ops.sh" "systemd_smoke_ai_ops"
 check_pattern "${ROOT}/server/systemd/aiir-self-audit.timer" "OnCalendar=hourly" "systemd_hourly_audit"
+check_pattern "${ROOT}/server/systemd/aiir-contract-pack.timer" "OnCalendar=" "systemd_contract_pack_timer"
 check_pattern "${ROOT}/server/cron/aiir-maintenance" "self-audit hourly" "cron_hourly_audit"
+check_pattern "${ROOT}/server/cron/aiir-maintenance" "contract test pack daily" "cron_contract_pack_daily"
 
 status="ok"
 if [[ "$checks_ok" -ne "$checks_total" ]]; then

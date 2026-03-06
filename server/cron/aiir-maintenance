@@ -9,3 +9,6 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # AIIR self-audit hourly
 0 * * * * root /var/www/aiir/server/scripts/aiir audit >> /var/www/aiir/ai/log/self-audit.log 2>&1
+
+# AIIR contract test pack daily at 02:47
+47 2 * * * root /var/www/aiir/server/scripts/aiir contract >> /var/www/aiir/ai/log/contract-pack.log 2>&1

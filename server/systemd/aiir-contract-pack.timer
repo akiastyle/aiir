@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily AIIR Contract Test Pack Timer
+
+[Timer]
+OnCalendar=*-*-* 02:47:00
+Persistent=true
+Unit=aiir-contract-pack.service
+
+[Install]
+WantedBy=timers.target
