@@ -6,6 +6,15 @@ Scope: future evolution path for AIIR-native web execution
 ## Objective
 Move from intermediate semantic representation (PAIIR) to executable native representation (OAIIR) with deterministic runtime behavior.
 
+## Repo-Closure Standard (mandatory)
+A repository is considered closed only when all conditions below are true:
+- parity functional = 100%
+- parity visual = 100%
+- rerun is idempotent:
+  - `paiir_added_for_repo = 0`
+  - `oaiir_added_for_repo = 0`
+- no regression on baseline benchmark set
+
 ## Operating Loop (every repo batch)
 1. Ingest repository and collect PAIIR/OAIIR metrics.
 2. Extract uncovered semantic patterns from HTML/CSS/JS.
@@ -14,6 +23,15 @@ Move from intermediate semantic representation (PAIIR) to executable native repr
 5. Validate on parity tests and regression suite.
 6. Promote only opcodes/primitives that improve parity without regressions.
 7. Update registry, catalogs, compiler stages, and benchmark reports.
+
+## Single-Repo 100% Protocol
+1. Pick one target repo.
+2. Build explicit parity matrix (feature-by-feature).
+3. Run gap detection against current AIIR output.
+4. Add only required PAIIR/OAIIR deltas.
+5. Re-run parity suite until both logic and visual are 100%.
+6. Re-run same repo to verify idempotence (`added=0`).
+7. Lock repo as `closed_100` and keep it in regression set.
 
 ## Near-Term Roadmap
 1. Stabilize PAIIR taxonomy:
