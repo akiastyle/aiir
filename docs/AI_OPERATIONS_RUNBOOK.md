@@ -44,6 +44,7 @@ Permanent principle reference:
 5. Run end-to-end AI-only smoke:
 ```bash
 /var/www/aiir/server/scripts/smoke-ai-ops.sh
+/var/www/aiir/server/scripts/aiir contract
 ```
 
 6. AI2AI migration flow (source -> AIIR -> parity):

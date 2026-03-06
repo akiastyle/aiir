@@ -127,7 +127,7 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 ## Zero-Conf AI Operations
 
 - Unified CLI:
-  - `/var/www/aiir/server/scripts/aiir <up|deploy|chat|down|doctor|optimize|ui|ingest|convert|parity|bench|clean|audit>`
+  - `/var/www/aiir/server/scripts/aiir <up|deploy|chat|down|doctor|optimize|ui|ingest|convert|parity|bench|contract|clean|audit>`
 - Full runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
   - migration policy: `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`

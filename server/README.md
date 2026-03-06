@@ -168,6 +168,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]` (legacy alias)
   - `/var/www/aiir/server/scripts/aiir parity <source-dir> <ingest-out-dir>`
   - `/var/www/aiir/server/scripts/aiir bench --profile full [repo-url ...]`
+  - `/var/www/aiir/server/scripts/aiir contract`
   - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
   - `/var/www/aiir/server/scripts/aiir audit`
   - `/var/www/aiir/server/scripts/aiir automate --mode auto --dry-run`

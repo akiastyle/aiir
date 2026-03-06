@@ -18,7 +18,9 @@ CLONE_RETRIES="${AIIR_CLONE_RETRIES:-2}"
 INGEST_TIMEOUT_SEC="${AIIR_INGEST_TIMEOUT_SEC:-1200}"
 PARITY_TIMEOUT_SEC="${AIIR_PARITY_TIMEOUT_SEC:-600}"
 FULL_ANALYSIS_MAX_MB="${AIIR_FULL_ANALYSIS_MAX_MB:-350}"
-CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,logic_file_parity,logic_token_parity,visual_parity,overall_parity,notes"
+CHUNK_MAX_WEB_FILES="${AIIR_CHUNK_MAX_WEB_FILES:-4000}"
+CHUNK_MAX_WEB_BYTES="${AIIR_CHUNK_MAX_WEB_BYTES:-157286400}"
+CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,logic_file_parity,logic_token_parity,visual_parity,overall_parity,chunk_mode,chunk_web_files,chunk_web_bytes,notes"
 
 to_mb() {
   awk -v b="$1" 'BEGIN {printf "%.2f", b/1048576}'
@@ -28,6 +30,34 @@ json_num() {
   local key="$1"
   local file="$2"
   sed -n "s/.*\"${key}\":\([0-9.]*\).*/\1/p" "$file" | head -n1
+}
+
+copy_web_sample() {
+  local src="$1"
+  local dst="$2"
+  local max_files="$3"
+  local max_bytes="$4"
+  local manifest="$5"
+  local copied=0
+  local copied_bytes=0
+  mkdir -p "$dst"
+  : > "$manifest"
+  while IFS= read -r abs; do
+    [[ -z "$abs" ]] && continue
+    [[ -f "$abs" ]] || continue
+    fbytes="$(wc -c < "$abs" | awk '{print $1}')"
+    if [[ "$copied" -ge "$max_files" || $((copied_bytes + fbytes)) -gt "$max_bytes" ]]; then
+      break
+    fi
+    rel="${abs#$src/}"
+    out="${dst}/${rel}"
+    mkdir -p "$(dirname "$out")"
+    cp "$abs" "$out"
+    echo "$abs" >> "$manifest"
+    copied=$((copied+1))
+    copied_bytes=$((copied_bytes+fbytes))
+  done < <(rg --files -uu "$src" -g '*.html' -g '*.htm' -g '*.css' -g '*.scss' -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx' 2>/dev/null | sort)
+  echo "${copied},${copied_bytes}"
 }
 
 mkdir -p "$SRC_ROOT" "$PKG_ROOT" "$CONV_ROOT" "$TEST_BASE"
@@ -108,7 +138,7 @@ for repo in "${repos[@]}"; do
   done
 
   if [[ "$clone_ok" != "1" ]]; then
-    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,${clone_note}" >> "$LOG_FILE"
+    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,none,0,0,${clone_note}" >> "$LOG_FILE"
     continue
   fi
 
@@ -117,7 +147,7 @@ for repo in "${repos[@]}"; do
   if ! "${AIIR_ROOT}/ai/exchange/build-package.run.sh" "$src" "$pkg" "$CORE_DIR" >"${WORK_ROOT}/pkg_${name}.log" 2>&1; then
     orig_b="$(du -sb "$src" | awk '{print $1}')"
     orig_mb="$(to_mb "$orig_b")"
-    echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,package_failed" >> "$LOG_FILE"
+    echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,none,0,0,package_failed" >> "$LOG_FILE"
     continue
   fi
 
@@ -137,9 +167,45 @@ for repo in "${repos[@]}"; do
   logic_token="0"
   visual="0"
   overall="0"
+  chunk_mode="none"
+  chunk_web_files="0"
+  chunk_web_bytes="0"
 
   if [[ "$orig_b" -gt "$max_full_b" ]]; then
-    note="analysis_skipped_large"
+    chunk_src="${WORK_ROOT}/chunk_${name}"
+    chunk_manifest="${WORK_ROOT}/chunk_${name}.manifest"
+    rm -rf "$chunk_src"
+    IFS=',' read -r chunk_web_files chunk_web_bytes < <(copy_web_sample "$src" "$chunk_src" "$CHUNK_MAX_WEB_FILES" "$CHUNK_MAX_WEB_BYTES" "$chunk_manifest")
+    if [[ "$chunk_web_files" -gt 0 ]]; then
+      chunk_mode="web_sample"
+      if command -v timeout >/dev/null 2>&1; then
+        timeout "${INGEST_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" ingest "$chunk_src" "$conv" "${name}-chunk" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
+      else
+        "${AIIR_ROOT}/server/scripts/aiir" ingest "$chunk_src" "$conv" "${name}-chunk" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
+      fi
+      if [[ "$note" == "ok" ]]; then
+        native_reuse="$(json_num native_reuse_percent "${WORK_ROOT}/ingest_${name}.json")"
+        [[ -n "$native_reuse" ]] || native_reuse="0"
+        if command -v timeout >/dev/null 2>&1; then
+          timeout "${PARITY_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" parity "$chunk_src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
+        else
+          "${AIIR_ROOT}/server/scripts/aiir" parity "$chunk_src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
+        fi
+      fi
+      if [[ "$note" == "ok" ]]; then
+        logic_file="$(json_num logic_file_parity "${WORK_ROOT}/parity_${name}.json")"
+        logic_token="$(json_num logic_token_parity "${WORK_ROOT}/parity_${name}.json")"
+        visual="$(json_num visual_parity "${WORK_ROOT}/parity_${name}.json")"
+        overall="$(json_num overall_parity "${WORK_ROOT}/parity_${name}.json")"
+        [[ -n "$logic_file" ]] || logic_file="0"
+        [[ -n "$logic_token" ]] || logic_token="0"
+        [[ -n "$visual" ]] || visual="0"
+        [[ -n "$overall" ]] || overall="0"
+        note="analysis_chunked_large"
+      fi
+    else
+      note="analysis_skipped_large_no_web"
+    fi
   else
     if command -v timeout >/dev/null 2>&1; then
       timeout "${INGEST_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" ingest "$src" "$conv" "$name" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
@@ -170,7 +236,7 @@ for repo in "${repos[@]}"; do
     [[ -n "$overall" ]] || overall="0"
   fi
 
-  echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},${native_reuse},${logic_file},${logic_token},${visual},${overall},${note}" >> "$LOG_FILE"
+  echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},${native_reuse},${logic_file},${logic_token},${visual},${overall},${chunk_mode},${chunk_web_files},${chunk_web_bytes},${note}" >> "$LOG_FILE"
 done
 
 TMP_LATEST="${WORK_ROOT}/latest.csv"
@@ -196,16 +262,17 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   echo "Base package overhead excluded from AIIR net size: ${BASE_MB} MB (${BASE_B} bytes)"
   echo "Full analysis threshold (ingest+parity): ${FULL_ANALYSIS_MAX_MB} MB source size"
   echo
-  echo "| Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | Logic | Visual | Overall | Note |"
-  echo "|---|---|---:|---:|---:|---:|---:|---:|---:|---|"
-  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s%% | %s%% | %s%% | %s%% | %s%% | %s |\n", $2, $4, $6, $12, $13, $14, $15, $17, $18, $19}' "$TMP_LATEST" | tail -n 50
+  echo "| Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | Logic | Visual | Overall | Chunk | Note |"
+  echo "|---|---|---:|---:|---:|---:|---:|---:|---:|---|---|"
+  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s%% | %s%% | %s%% | %s%% | %s%% | %s | %s |\n", $2, $4, $6, $12, $13, $14, $15, $17, $18, $19, $22}' "$TMP_LATEST" | tail -n 50
   echo
   avg_red="$(awk -F, 'NR>1 {sum+=$13; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_overall_ok="$(awk -F, 'NR>1 && $19=="ok" {sum+=$18; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  skipped_large_count="$(awk -F, 'NR>1 && $19=="analysis_skipped_large" {c++} END{print c+0}' "$TMP_LATEST")"
-  ok_count="$(awk -F, 'NR>1 && $19=="ok" {c++} END{print c+0}' "$TMP_LATEST")"
+  avg_overall_ok="$(awk -F, 'NR>1 && ($22=="ok" || $22=="analysis_chunked_large") {sum+=$18; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
+  skipped_large_count="$(awk -F, 'NR>1 && $22 ~ /^analysis_skipped_large/ {c++} END{print c+0}' "$TMP_LATEST")"
+  chunked_count="$(awk -F, 'NR>1 && $22=="analysis_chunked_large" {c++} END{print c+0}' "$TMP_LATEST")"
+  ok_count="$(awk -F, 'NR>1 && $22=="ok" {c++} END{print c+0}' "$TMP_LATEST")"
   total_count="$(awk -F, 'NR>1 {c++} END{print c+0}' "$TMP_LATEST")"
-  echo "Summary (latest per repo+commit): reduction_avg=${avg_red}% overall_parity_avg_ok=${avg_overall_ok}% ok=${ok_count}/${total_count} skipped_large=${skipped_large_count}"
+  echo "Summary (latest per repo+commit): reduction_avg=${avg_red}% overall_parity_avg_effective=${avg_overall_ok}% ok=${ok_count}/${total_count} chunked=${chunked_count} skipped_large=${skipped_large_count}"
 } > "$REPORT_FILE"
 
 rm -rf "$WORK_ROOT"

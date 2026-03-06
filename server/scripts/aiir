@@ -23,6 +23,7 @@ support commands:
   convert  legacy alias of ingest
   parity   run logic+visual parity check
   bench    run open-repo benchmark (quick/full)
+  contract run AIIR contract test pack
   clean    clean generated/runtime artifacts
   audit    verify AI-first/AIIR operating rules
   automate enable periodic automation (systemd/cron)
@@ -63,6 +64,9 @@ case "$cmd" in
   bench)
     shift
     exec "${ROOT}/aiir-bench.sh" "$@" ;;
+  contract)
+    shift
+    exec "${ROOT}/aiir-contract-test.sh" "$@" ;;
   clean)
     shift
     exec "${ROOT}/aiir-clean.sh" "$@" ;;
