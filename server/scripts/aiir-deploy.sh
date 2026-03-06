@@ -14,11 +14,13 @@ RUN_DOCTOR="1"
 RUN_AUDIT="1"
 DRY_RUN="0"
 FALLBACK_NO_APPLY="0"
+STRICT_WEB_APPLY="0"
+FALLBACK_REASON=""
 
 usage() {
   cat >&2 <<'USAGE'
 usage:
-  /var/www/aiir/server/scripts/aiir-deploy.sh --project <name> [--domain <domain>] [--type <project-type>] [--no-apply-web] [--no-doctor] [--no-audit] [--dry-run]
+  /var/www/aiir/server/scripts/aiir-deploy.sh --project <name> [--domain <domain>] [--type <project-type>] [--no-apply-web] [--strict-web-apply] [--no-doctor] [--no-audit] [--dry-run]
 
 notes:
   - starts runtime if needed
@@ -40,6 +42,9 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --no-apply-web)
       APPLY_WEB="0"
+      shift ;;
+    --strict-web-apply)
+      STRICT_WEB_APPLY="1"
       shift ;;
     --no-doctor)
       RUN_DOCTOR="0"
@@ -68,7 +73,7 @@ fi
 
 if [[ "$DRY_RUN" == "1" ]]; then
   cat <<EOF2
-{"ok":1,"action":"deploy_project","dry_run":1,"project_name":"${PROJECT_NAME}","project_domain":"${PROJECT_DOMAIN}","project_type":"${PROJECT_TYPE}","apply_web":${APPLY_WEB},"run_doctor":${RUN_DOCTOR},"run_audit":${RUN_AUDIT}}
+{"ok":1,"action":"deploy_project","dry_run":1,"project_name":"${PROJECT_NAME}","project_domain":"${PROJECT_DOMAIN}","project_type":"${PROJECT_TYPE}","apply_web":${APPLY_WEB},"apply_web_strict":${STRICT_WEB_APPLY},"run_doctor":${RUN_DOCTOR},"run_audit":${RUN_AUDIT}}
 EOF2
   exit 0
 fi
@@ -92,8 +97,13 @@ run_up() {
 
 if ! run_up "$APPLY_WEB" >"${TMPDIR}/up.txt" 2>"${TMPDIR}/up.err"; then
   if [[ "$APPLY_WEB" == "1" ]]; then
+    if [[ "$STRICT_WEB_APPLY" == "1" ]]; then
+      cat "${TMPDIR}/up.err" >&2 || true
+      exit 1
+    fi
     FALLBACK_NO_APPLY="1"
     APPLY_WEB="0"
+    FALLBACK_REASON="$(tr '\n' ' ' < "${TMPDIR}/up.err" | sed 's/  */ /g' | sed 's/"/'\''/g' | cut -c1-240)"
     run_up "0" >"${TMPDIR}/up.txt" 2>"${TMPDIR}/up.err"
   else
     cat "${TMPDIR}/up.err" >&2 || true
@@ -118,5 +128,5 @@ if [[ "$RUN_DOCTOR" == "1" ]]; then
 fi
 
 cat <<EOF2
-{"ok":1,"action":"deploy_project","project_name":"${PROJECT_NAME}","project_type":"${PROJECT_TYPE}","project_domain":"${PROJECT_DOMAIN}","project_ref":"${project_ref}","db_ref":"${db_ref}","status":"${status}","runtime":"${runtime}","project_env":"${project_env}","project_policy":"${project_policy}","webserver":"${webserver}","web_conf":"${web_conf}","apply_web":${APPLY_WEB},"apply_web_fallback":${FALLBACK_NO_APPLY},"doctor":${RUN_DOCTOR},"audit":${RUN_AUDIT}}
+{"ok":1,"action":"deploy_project","project_name":"${PROJECT_NAME}","project_type":"${PROJECT_TYPE}","project_domain":"${PROJECT_DOMAIN}","project_ref":"${project_ref}","db_ref":"${db_ref}","status":"${status}","runtime":"${runtime}","project_env":"${project_env}","project_policy":"${project_policy}","webserver":"${webserver}","web_conf":"${web_conf}","apply_web":${APPLY_WEB},"apply_web_strict":${STRICT_WEB_APPLY},"apply_web_fallback":${FALLBACK_NO_APPLY},"fallback_reason":"${FALLBACK_REASON}","doctor":${RUN_DOCTOR},"audit":${RUN_AUDIT}}
 EOF2

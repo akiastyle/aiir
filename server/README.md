@@ -164,7 +164,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir-chat.sh "ui progetto crm-alpha preset material"`
 - Official unified CLI (recommended):
   - `/var/www/aiir/server/scripts/aiir up`
-  - `/var/www/aiir/server/scripts/aiir deploy --project <name> [--domain <domain>] [--type <project-type>]`
+  - `/var/www/aiir/server/scripts/aiir deploy --project <name> [--domain <domain>] [--type <project-type>] [--strict-web-apply]`
   - `/var/www/aiir/server/scripts/aiir chat "stato"`
   - `/var/www/aiir/server/scripts/aiir down`
   - `/var/www/aiir/server/scripts/aiir doctor --strict`

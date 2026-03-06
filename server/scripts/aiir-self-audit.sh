@@ -55,6 +55,7 @@ check_pattern "${ROOT}/docs/AI2AI_MIGRATION_POLICY_V1.md" "Primary mode is AIIR-
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir audit" "runbook_has_audit"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir ingest" "runbook_prefers_ingest"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir deploy" "runbook_has_deploy"
+check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "strict-web-apply" "runbook_has_deploy_strict"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir contract" "runbook_has_contract"
 check_pattern "${ROOT}/server/scripts/aiir" "ingest[[:space:]]+source project" "cli_has_ingest"
 check_pattern "${ROOT}/server/scripts/aiir" "deploy[[:space:]]+AI-first deploy" "cli_has_deploy"
