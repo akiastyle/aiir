@@ -1,6 +1,6 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-06T09:36:00Z`
+Last run (UTC): `2026-03-06T09:47:51Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
 Full analysis threshold (ingest+parity): 350 MB source size
@@ -28,5 +28,15 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/symfony/symfony.git` | `39e648a` | 107.15 | 84.05 | 21.56% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/tiangolo/fastapi.git` | `627c10a` | 47.56 | 3.95 | 91.69% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/vuejs/core.git` | `cea3cf7` | 7.52 | 4.33 | 42.38% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/apache/spark.git` | `073d26c7` | 233.75 | 29.08 | 87.56% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/elastic/elasticsearch.git` | `cea9eb71` | 469.79 | 238.06 | 49.33% | 100.00% | 100.00% | 100.00% | 100.00% | web_sample | analysis_chunked_large |
+| `https://github.com/golang/go.git` | `cbab448` | 171.03 | 61.75 | 63.90% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/hashicorp/terraform.git` | `02723fc` | 30.35 | 19.96 | 34.24% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/nodejs/node.git` | `a06e7896` | 744.69 | 69.92 | 90.61% | 100.00% | 100.00% | 100.00% | 100.00% | web_sample | analysis_chunked_large |
+| `https://github.com/nuxt/nuxt.git` | `004e1ca` | 6.46 | 2.26 | 64.98% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/remix-run/remix.git` | `1a2974f` | 34.91 | 4.23 | 87.89% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/strapi/strapi.git` | `25ea375` | 93.88 | 17.69 | 81.16% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/supabase/supabase.git` | `22d706c` | 1288.11 | 36.59 | 97.16% | 100.00% | 100.00% | 100.00% | 100.00% | web_sample | analysis_chunked_large |
+| `https://github.com/vercel/next.js.git` | `d08f4dc0` | 191.48 | 58.82 | 69.28% | 100.00% | 100.00% | 100.00% | 100.00% | none | ok |
 
-Summary (latest per repo+commit): reduction_avg=58.20% overall_parity_avg_effective=100.00% ok=20/21 chunked=1 skipped_large=0
+Summary (latest per repo+commit): reduction_avg=62.85% overall_parity_avg_effective=100.00% ok=27/31 chunked=4 skipped_large=0
