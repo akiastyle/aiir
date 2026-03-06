@@ -99,6 +99,8 @@ Response `200`:
 - secret storage and rotation are internal to AIIR
 - direct DB credentials are disabled for human mode
 - gateway behavior is independent from Apache/Nginx; it is a runtime contract concern
+- mTLS is not a mandatory baseline dependency for runtime operation
+- capability-based AIIR auth is the default core model (JWT is not required for core gateway ops)
 
 ## Human vs AI Responsibilities
 
@@ -125,7 +127,7 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 ## Zero-Conf AI Operations
 
 - Unified CLI:
-  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize|ui|convert|parity|bench|clean>`
+  - `/var/www/aiir/server/scripts/aiir <up|chat|down|doctor|optimize|ui|convert|parity|bench|clean|audit>`
 - Full runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
   - migration policy: `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`

@@ -3,6 +3,9 @@
 ## Scope
 AI-first runtime operations with minimal human interaction.
 
+Permanent principle reference:
+- `/var/www/aiir/docs/AIIR_AI_FIRST_PRINCIPLES.md`
+
 ## Standard Flow
 
 1. Bootstrap runtime (and optional project):
@@ -26,6 +29,7 @@ AI-first runtime operations with minimal human interaction.
 ```bash
 /var/www/aiir/server/scripts/aiir doctor
 /var/www/aiir/server/scripts/aiir doctor --strict
+/var/www/aiir/server/scripts/aiir audit
 ```
 
 4. Stop runtime (requires explicit confirmation in chat path):

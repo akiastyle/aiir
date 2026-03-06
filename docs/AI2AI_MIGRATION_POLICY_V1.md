@@ -3,6 +3,11 @@
 ## Scope
 Policy for migrating existing projects into AIIR and propagating them across AI nodes.
 
+## Primary Mode (AIIR-native)
+- Primary mode is AIIR-native build/operation.
+- Migration/conversion is a secondary ingestion path for human-origin projects.
+- Human-origin source shape is never the runtime target; AIIR primitives are the target.
+
 ## Core Rule
 - Mandatory 1:1 parity on:
   - functional logic (behavior, flows, business outcomes)
@@ -34,6 +39,8 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
 - Prefer simpler, deterministic transformations over opaque complex rewrites.
 - Validate by outcome diff, not source-code similarity.
 - Record every conversion decision in machine-readable reports.
+- Do not require mTLS as a baseline dependency for runtime interoperability.
+- Prefer AIIR capability-based auth flow over generic JWT session coupling for core ops.
 
 ## Out of Scope (v1)
 - full plugin ecosystem parity for external framework plugins

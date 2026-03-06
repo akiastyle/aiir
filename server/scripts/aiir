@@ -22,6 +22,7 @@ support commands:
   parity   run logic+visual parity check
   bench    run open-repo benchmark (quick/full)
   clean    clean generated/runtime artifacts
+  audit    verify AI-first/AIIR operating rules
 USAGE
 }
 
@@ -56,6 +57,9 @@ case "$cmd" in
   clean)
     shift
     exec "${ROOT}/aiir-clean.sh" "$@" ;;
+  audit)
+    shift
+    exec "${ROOT}/aiir-self-audit.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;

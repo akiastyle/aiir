@@ -35,6 +35,9 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - To enable DB exec explicitly:
   - `AI_POLICY_ALLOW_DB_EXEC=1`
   - `AI_POLICY_ALLOW_OPS='*'` or explicit allowlist like `AI_POLICY_ALLOW_OPS='1001,2001'`
+- Baseline stance:
+  - mTLS is not mandatory for baseline runtime operation
+  - AIIR capability controls are the default core auth flow (JWT is not required for core ops)
 
 ## Health Payload
 - `/health` reports:
@@ -159,6 +162,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir parity <source-dir> <convert-out-dir>`
   - `/var/www/aiir/server/scripts/aiir bench --profile full [repo-url ...]`
   - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
+  - `/var/www/aiir/server/scripts/aiir audit`
 - Chat intents:
   - `stato`
   - `lista progetti`
