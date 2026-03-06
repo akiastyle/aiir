@@ -10,3 +10,12 @@ https://github.com/encode/starlette.git
 https://github.com/labstack/echo.git
 https://github.com/actix/actix-web.git
 https://github.com/axios/axios.git
+https://github.com/django/django.git
+https://github.com/laravel/framework.git
+https://github.com/rails/rails.git
+https://github.com/nestjs/nest.git
+https://github.com/fastify/fastify.git
+https://github.com/symfony/symfony.git
+https://github.com/vuejs/core.git
+https://github.com/angular/angular.git
+https://github.com/sveltejs/kit.git
