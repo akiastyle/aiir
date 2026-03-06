@@ -92,9 +92,43 @@ if ! rg -q '"status":"queued"' "$TMPDIR/exec.json"; then
   exit 1
 fi
 
+# Negative validation checks (must reject invalid contracts/tokens/intents).
+BAD_CONTRACT_HTTP="$(curl -sS -o "$TMPDIR/bad-contract.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/project/create" \
+  -H "Content-Type: application/json" \
+  -d '{"contract_version":"hal.v9","intent":"create_project","project_name":"bad-contract","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-bad-001"}')"
+if [[ "$BAD_CONTRACT_HTTP" -lt 400 ]]; then
+  echo "gateway-smoke-failed: invalid contract_version unexpectedly accepted (${BAD_CONTRACT_HTTP})" >&2
+  cat "$TMPDIR/bad-contract.json" >&2 || true
+  exit 1
+fi
+
+BAD_TOKEN_HTTP="$(curl -sS -o "$TMPDIR/bad-token.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/project/create" \
+  -H "Content-Type: application/json" \
+  -d '{"contract_version":"hal.v1","intent":"create_project","project_name":"bad/name","db_profile":"default","region":"local","retention_days":30,"idempotency_key":"smoke-bad-002"}')"
+if [[ "$BAD_TOKEN_HTTP" -lt 400 ]]; then
+  echo "gateway-smoke-failed: invalid project_name token unexpectedly accepted (${BAD_TOKEN_HTTP})" >&2
+  cat "$TMPDIR/bad-token.json" >&2 || true
+  exit 1
+fi
+
+BAD_INTENT_HTTP="$(curl -sS -o "$TMPDIR/bad-intent.json" -w "%{http_code}" -X POST "http://${HOST}:${PORT}/aiir/db/exec" \
+  -H "Content-Type: application/json" \
+  -d "{\"contract_version\":\"hal.v1\",\"intent\":\"unknown_intent\",\"project_ref\":\"$PROJECT_REF\",\"db_ref\":\"$DB_REF\",\"op_id\":\"entity.upsert\",\"payload\":{\"collection\":\"x\"},\"req_id\":\"smoke-bad-003\"}")"
+if [[ "$BAD_INTENT_HTTP" -lt 400 ]]; then
+  echo "gateway-smoke-failed: invalid intent unexpectedly accepted (${BAD_INTENT_HTTP})" >&2
+  cat "$TMPDIR/bad-intent.json" >&2 || true
+  exit 1
+fi
+
 echo "gateway-smoke-ok"
 cat "$TMPDIR/create.json"
 echo
 cat "$TMPDIR/create2.json"
 echo
 cat "$TMPDIR/exec.json"
+echo
+cat "$TMPDIR/bad-contract.json"
+echo
+cat "$TMPDIR/bad-token.json"
+echo
+cat "$TMPDIR/bad-intent.json"

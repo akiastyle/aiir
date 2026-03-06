@@ -131,6 +131,7 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 - Full runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
   - migration policy: `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
+  - gateway smoke now includes negative validation checks (`contract_version`, token format, invalid intent)
 - Single bootstrap command:
   - `/var/www/aiir/server/scripts/aiir-up.sh`
 - Stop command:
