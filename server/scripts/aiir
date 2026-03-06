@@ -17,6 +17,7 @@ official commands:
 
 support commands:
   doctor   runtime diagnostics
+  verify   run consolidated verification pack
   optimize optimize a project policy/env
   ui       scaffold UI preset for a project
   ingest   ingest source project into AIIR-operable assets
@@ -46,6 +47,9 @@ case "$cmd" in
   doctor)
     shift
     exec "${ROOT}/aiir-doctor.sh" "$@" ;;
+  verify)
+    shift
+    exec "${ROOT}/aiir-verify.sh" "$@" ;;
   optimize)
     shift
     exec "${ROOT}/aiir-optimize-project.sh" "$@" ;;

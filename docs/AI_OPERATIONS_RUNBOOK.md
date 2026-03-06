@@ -33,6 +33,7 @@ Permanent principle reference:
 ```bash
 /var/www/aiir/server/scripts/aiir doctor
 /var/www/aiir/server/scripts/aiir doctor --strict
+/var/www/aiir/server/scripts/aiir verify
 /var/www/aiir/server/scripts/aiir audit
 ```
 

@@ -168,6 +168,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir chat "stato"`
   - `/var/www/aiir/server/scripts/aiir down`
   - `/var/www/aiir/server/scripts/aiir doctor --strict`
+  - `/var/www/aiir/server/scripts/aiir verify`
   - `/var/www/aiir/server/scripts/aiir optimize <project-ref|project-name>`
   - `/var/www/aiir/server/scripts/aiir ui <project-ref|project-name> [utility|material|bootstrap-like]`
   - `/var/www/aiir/server/scripts/aiir ingest <source-dir> <out-dir> [project-id]`
