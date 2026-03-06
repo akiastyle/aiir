@@ -47,9 +47,12 @@ case "$cmd" in
   ui)
     shift
     exec "${ROOT}/aiir-ui-scaffold.sh" "$@" ;;
-  ingest|convert)
+  ingest)
     shift
-    exec "${ROOT}/aiir-convert-project.sh" "$@" ;;
+    exec "${ROOT}/aiir-ingest-project.sh" "$@" ;;
+  convert)
+    shift
+    exec "${ROOT}/aiir-ingest-project.sh" "$@" ;;
   parity)
     shift
     exec "${ROOT}/aiir-parity-check.sh" "$@" ;;

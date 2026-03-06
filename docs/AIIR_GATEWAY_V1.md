@@ -138,8 +138,9 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
 - Diagnostic command:
   - `/var/www/aiir/server/scripts/aiir-doctor.sh`
 - Conversion + parity commands:
-  - `/var/www/aiir/server/scripts/aiir-convert-project.sh <source-dir> <out-dir> [project-id]`
-  - `/var/www/aiir/server/scripts/aiir-parity-check.sh <source-dir> <convert-out-dir>`
+  - `/var/www/aiir/server/scripts/aiir-ingest-project.sh <source-dir> <out-dir> [project-id]`
+  - `/var/www/aiir/server/scripts/aiir-convert-project.sh <source-dir> <out-dir> [project-id]` (legacy path)
+  - `/var/www/aiir/server/scripts/aiir-parity-check.sh <source-dir> <ingest-out-dir>`
 - Optional bootstrap + project creation in one step:
   - `/var/www/aiir/server/scripts/aiir-up.sh --project <name> --type <project-type> [--domain <domain>]`
 - Chat-style operational entrypoint:

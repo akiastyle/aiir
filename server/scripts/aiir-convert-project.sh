@@ -153,5 +153,5 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
 } > "$CMD_FILE"
 
 cat <<EOF2
-{"ok":1,"action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct}}
+{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct}}
 EOF2
