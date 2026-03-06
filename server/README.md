@@ -145,6 +145,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Provision helper (project + DB + env + policy + domain web conf):
   - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
   - optional system install/reload: `AIIR_PROVISION_APPLY=1`
+  - Apache apply path auto-enables `proxy` and `proxy_http` modules when `a2enmod` is available
 - Zero-conf bootstrap (AI-first):
   - `/var/www/aiir/server/scripts/aiir-up.sh`
   - optional project bootstrap:

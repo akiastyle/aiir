@@ -135,6 +135,9 @@ EOF
 EOF
     if [[ "$APPLY_SYSTEM" == "1" && -d /etc/apache2/sites-available ]]; then
       cp "$CONF_FILE" "/etc/apache2/sites-available/aiir-${PROJECT_REF}.conf"
+      if command -v a2enmod >/dev/null 2>&1; then
+        a2enmod proxy proxy_http >/dev/null || true
+      fi
       if command -v a2ensite >/dev/null 2>&1; then
         a2ensite "aiir-${PROJECT_REF}.conf" >/dev/null
       fi
