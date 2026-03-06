@@ -1,0 +1,17 @@
+kind,name,opcode,status,note
+op,script.file.begin,3300,stable,begin js file stream
+op,import.decl,3301,stable,import declaration
+op,export.decl,3302,stable,export declaration
+op,fn.decl,3303,stable,function declaration
+op,class.decl,3304,stable,class declaration
+op,var.decl,3305,stable,variable declaration
+op,call.expr,3306,stable,call expression marker
+op,event.bind,3307,provisional,event listener binding
+construct,import,3301,stable,import statement
+construct,export,3302,stable,export statement
+construct,function,3303,stable,function keyword
+construct,class,3304,stable,class keyword
+construct,const,3305,stable,const declaration
+construct,let,3305,stable,let declaration
+construct,var,3305,stable,var declaration
+construct,addEventListener,3307,provisional,event API

@@ -20,7 +20,7 @@ PARITY_TIMEOUT_SEC="${AIIR_PARITY_TIMEOUT_SEC:-600}"
 FULL_ANALYSIS_MAX_MB="${AIIR_FULL_ANALYSIS_MAX_MB:-350}"
 CHUNK_MAX_WEB_FILES="${AIIR_CHUNK_MAX_WEB_FILES:-4000}"
 CHUNK_MAX_WEB_BYTES="${AIIR_CHUNK_MAX_WEB_BYTES:-157286400}"
-CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,paiir_total,paiir_custom_total,oaiir_total,oaiir_new_total,logic_file_parity,logic_token_parity,visual_parity,overall_parity,chunk_mode,chunk_web_files,chunk_web_bytes,notes"
+CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,paiir_total,paiir_custom_total,oaiir_total,oaiir_new_total,oaiir_html_ops_total,oaiir_css_ops_total,oaiir_js_ops_total,logic_file_parity,logic_token_parity,visual_parity,overall_parity,chunk_mode,chunk_web_files,chunk_web_bytes,notes"
 
 to_mb() {
   awk -v b="$1" 'BEGIN {printf "%.2f", b/1048576}'
@@ -138,7 +138,7 @@ for repo in "${repos[@]}"; do
   done
 
   if [[ "$clone_ok" != "1" ]]; then
-    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,${clone_note}" >> "$LOG_FILE"
+    echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,${clone_note}" >> "$LOG_FILE"
     continue
   fi
 
@@ -147,7 +147,7 @@ for repo in "${repos[@]}"; do
   if ! "${AIIR_ROOT}/ai/exchange/build-package.run.sh" "$src" "$pkg" "$CORE_DIR" >"${WORK_ROOT}/pkg_${name}.log" 2>&1; then
     orig_b="$(du -sb "$src" | awk '{print $1}')"
     orig_mb="$(to_mb "$orig_b")"
-    echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,package_failed" >> "$LOG_FILE"
+    echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,package_failed" >> "$LOG_FILE"
     continue
   fi
 
@@ -167,6 +167,9 @@ for repo in "${repos[@]}"; do
   paiir_custom="0"
   oaiir_total="0"
   oaiir_new="0"
+  oaiir_html_ops="0"
+  oaiir_css_ops="0"
+  oaiir_js_ops="0"
   logic_file="0"
   logic_token="0"
   visual="0"
@@ -193,11 +196,17 @@ for repo in "${repos[@]}"; do
         paiir_custom="$(json_num paiir_custom_total "${WORK_ROOT}/ingest_${name}.json")"
         oaiir_total="$(json_num oaiir_total "${WORK_ROOT}/ingest_${name}.json")"
         oaiir_new="$(json_num oaiir_new_total "${WORK_ROOT}/ingest_${name}.json")"
+        oaiir_html_ops="$(json_num oaiir_html_ops_total "${WORK_ROOT}/ingest_${name}.json")"
+        oaiir_css_ops="$(json_num oaiir_css_ops_total "${WORK_ROOT}/ingest_${name}.json")"
+        oaiir_js_ops="$(json_num oaiir_js_ops_total "${WORK_ROOT}/ingest_${name}.json")"
         [[ -n "$native_reuse" ]] || native_reuse="0"
         [[ -n "$paiir_total" ]] || paiir_total="0"
         [[ -n "$paiir_custom" ]] || paiir_custom="0"
         [[ -n "$oaiir_total" ]] || oaiir_total="0"
         [[ -n "$oaiir_new" ]] || oaiir_new="0"
+        [[ -n "$oaiir_html_ops" ]] || oaiir_html_ops="0"
+        [[ -n "$oaiir_css_ops" ]] || oaiir_css_ops="0"
+        [[ -n "$oaiir_js_ops" ]] || oaiir_js_ops="0"
         if command -v timeout >/dev/null 2>&1; then
           timeout "${PARITY_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" parity "$chunk_src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
         else
@@ -233,10 +242,16 @@ for repo in "${repos[@]}"; do
     paiir_custom="$(json_num paiir_custom_total "${WORK_ROOT}/ingest_${name}.json")"
     oaiir_total="$(json_num oaiir_total "${WORK_ROOT}/ingest_${name}.json")"
     oaiir_new="$(json_num oaiir_new_total "${WORK_ROOT}/ingest_${name}.json")"
+    oaiir_html_ops="$(json_num oaiir_html_ops_total "${WORK_ROOT}/ingest_${name}.json")"
+    oaiir_css_ops="$(json_num oaiir_css_ops_total "${WORK_ROOT}/ingest_${name}.json")"
+    oaiir_js_ops="$(json_num oaiir_js_ops_total "${WORK_ROOT}/ingest_${name}.json")"
     [[ -n "$paiir_total" ]] || paiir_total="0"
     [[ -n "$paiir_custom" ]] || paiir_custom="0"
     [[ -n "$oaiir_total" ]] || oaiir_total="0"
     [[ -n "$oaiir_new" ]] || oaiir_new="0"
+    [[ -n "$oaiir_html_ops" ]] || oaiir_html_ops="0"
+    [[ -n "$oaiir_css_ops" ]] || oaiir_css_ops="0"
+    [[ -n "$oaiir_js_ops" ]] || oaiir_js_ops="0"
 
     if command -v timeout >/dev/null 2>&1; then
       timeout "${PARITY_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" parity "$src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
@@ -256,7 +271,7 @@ for repo in "${repos[@]}"; do
     [[ -n "$overall" ]] || overall="0"
   fi
 
-  echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},${native_reuse},${paiir_total},${paiir_custom},${oaiir_total},${oaiir_new},${logic_file},${logic_token},${visual},${overall},${chunk_mode},${chunk_web_files},${chunk_web_bytes},${note}" >> "$LOG_FILE"
+  echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},${native_reuse},${paiir_total},${paiir_custom},${oaiir_total},${oaiir_new},${oaiir_html_ops},${oaiir_css_ops},${oaiir_js_ops},${logic_file},${logic_token},${visual},${overall},${chunk_mode},${chunk_web_files},${chunk_web_bytes},${note}" >> "$LOG_FILE"
 done
 
 TMP_LATEST="${WORK_ROOT}/latest.csv"
@@ -284,17 +299,20 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   echo
   echo "| Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | PAIIR | OAIIR | Logic | Visual | Overall | Chunk | Note |"
   echo "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"
-  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s%% | %s%% | %s (%s custom) | %s (+%s) | %s%% | %s%% | %s%% | %s | %s |\n", $2, $4, $6, $12, $13, $14, $15, $16, $17, $18, $19, $21, $22, $23, $26}' "$TMP_LATEST" | tail -n 50
+  awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s%% | %s%% | %s (%s custom) | %s (+%s) | %s%% | %s%% | %s%% | %s | %s |\n", $2, $4, $6, $12, $13, $14, $15, $16, $17, $18, $22, $24, $25, $26, $29}' "$TMP_LATEST" | tail -n 50
   echo
   avg_red="$(awk -F, 'NR>1 {sum+=$13; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_overall_ok="$(awk -F, 'NR>1 && ($26=="ok" || $26=="analysis_chunked_large") {sum+=$22; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
+  avg_overall_ok="$(awk -F, 'NR>1 && ($29=="ok" || $29=="analysis_chunked_large") {sum+=$25; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
   avg_paiir="$(awk -F, 'NR>1 {sum+=$15; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
   avg_oaiir="$(awk -F, 'NR>1 {sum+=$17; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  skipped_large_count="$(awk -F, 'NR>1 && $26 ~ /^analysis_skipped_large/ {c++} END{print c+0}' "$TMP_LATEST")"
-  chunked_count="$(awk -F, 'NR>1 && $26=="analysis_chunked_large" {c++} END{print c+0}' "$TMP_LATEST")"
-  ok_count="$(awk -F, 'NR>1 && $26=="ok" {c++} END{print c+0}' "$TMP_LATEST")"
+  avg_oaiir_html_ops="$(awk -F, 'NR>1 {sum+=$19; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
+  avg_oaiir_css_ops="$(awk -F, 'NR>1 {sum+=$20; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
+  avg_oaiir_js_ops="$(awk -F, 'NR>1 {sum+=$21; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
+  skipped_large_count="$(awk -F, 'NR>1 && $29 ~ /^analysis_skipped_large/ {c++} END{print c+0}' "$TMP_LATEST")"
+  chunked_count="$(awk -F, 'NR>1 && $29=="analysis_chunked_large" {c++} END{print c+0}' "$TMP_LATEST")"
+  ok_count="$(awk -F, 'NR>1 && $29=="ok" {c++} END{print c+0}' "$TMP_LATEST")"
   total_count="$(awk -F, 'NR>1 {c++} END{print c+0}' "$TMP_LATEST")"
-  echo "Summary (latest per repo+commit): reduction_avg=${avg_red}% overall_parity_avg_effective=${avg_overall_ok}% paiir_avg=${avg_paiir} oaiir_avg=${avg_oaiir} ok=${ok_count}/${total_count} chunked=${chunked_count} skipped_large=${skipped_large_count}"
+  echo "Summary (latest per repo+commit): reduction_avg=${avg_red}% overall_parity_avg_effective=${avg_overall_ok}% paiir_avg=${avg_paiir} oaiir_avg=${avg_oaiir} oaiir_html_ops_avg=${avg_oaiir_html_ops} oaiir_css_ops_avg=${avg_oaiir_css_ops} oaiir_js_ops_avg=${avg_oaiir_js_ops} ok=${ok_count}/${total_count} chunked=${chunked_count} skipped_large=${skipped_large_count}"
 } > "$REPORT_FILE"
 
 rm -rf "$WORK_ROOT"

@@ -29,6 +29,10 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
     - `/var/www/aiir/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv`
   - HTML catalog and elementary compiler stage:
     - `/var/www/aiir/docs/OAIIR_WEB_HTML_CATALOG_V0.csv`
+  - CSS catalog and elementary compiler stage:
+    - `/var/www/aiir/docs/OAIIR_WEB_CSS_CATALOG_V0.csv`
+  - JS catalog and elementary compiler stage:
+    - `/var/www/aiir/docs/OAIIR_WEB_JS_CATALOG_V0.csv`
 
 ## Migration Pipeline
 1. Ingest source project.

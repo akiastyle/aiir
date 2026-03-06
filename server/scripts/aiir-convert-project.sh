@@ -5,6 +5,8 @@ ROOT="/var/www/aiir"
 BUILD_SCRIPT="${ROOT}/ai/exchange/build-package.run.sh"
 OAIIR_REGISTRY="${ROOT}/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv"
 OAIIR_HTML_CATALOG="${ROOT}/docs/OAIIR_WEB_HTML_CATALOG_V0.csv"
+OAIIR_CSS_CATALOG="${ROOT}/docs/OAIIR_WEB_CSS_CATALOG_V0.csv"
+OAIIR_JS_CATALOG="${ROOT}/docs/OAIIR_WEB_JS_CATALOG_V0.csv"
 
 SRC_DIR="${1:-}"
 OUT_DIR="${2:-}"
@@ -33,6 +35,14 @@ if [[ ! -f "$OAIIR_HTML_CATALOG" ]]; then
   echo '{"ok":0,"err":"oaiir_html_catalog"}'
   exit 1
 fi
+if [[ ! -f "$OAIIR_CSS_CATALOG" ]]; then
+  echo '{"ok":0,"err":"oaiir_css_catalog"}'
+  exit 1
+fi
+if [[ ! -f "$OAIIR_JS_CATALOG" ]]; then
+  echo '{"ok":0,"err":"oaiir_js_catalog"}'
+  exit 1
+fi
 
 project_id="$PROJECT_ID_RAW"
 if [[ -z "$project_id" ]]; then
@@ -50,6 +60,14 @@ MAP_FILE="${REPORT_DIR}/conversion-map.csv"
 REPORT_FILE="${REPORT_DIR}/migration-report.json"
 OAIIR_FILE="${REPORT_DIR}/oaiir-opcodes.csv"
 OAIIR_HTML_IR_FILE="${REPORT_DIR}/oaiir-html-ir.ndjson"
+OAIIR_CSS_IR_FILE="${REPORT_DIR}/oaiir-css-ir.ndjson"
+OAIIR_JS_IR_FILE="${REPORT_DIR}/oaiir-js-ir.ndjson"
+OAIIR_HTML_MAX_FILES="${OAIIR_HTML_MAX_FILES:-120}"
+OAIIR_CSS_MAX_FILES="${OAIIR_CSS_MAX_FILES:-120}"
+OAIIR_JS_MAX_FILES="${OAIIR_JS_MAX_FILES:-120}"
+OAIIR_HTML_TOKENS_PER_FILE="${OAIIR_HTML_TOKENS_PER_FILE:-2000}"
+OAIIR_CSS_LINES_PER_FILE="${OAIIR_CSS_LINES_PER_FILE:-1500}"
+OAIIR_JS_LINES_PER_FILE="${OAIIR_JS_LINES_PER_FILE:-1500}"
 
 mkdir -p "$PKG_DIR" "$NORM_DIR" "$REPORT_DIR"
 
@@ -210,8 +228,107 @@ while IFS= read -r html_abs; do
     printf '{"op":3003,"name":"text.set","file":"%s","seq":%d,"text":"%s"}\n' "$rel_json" "$seq" "$text_json" >> "$OAIIR_HTML_IR_FILE"
     seq=$((seq+1))
     oaiir_html_ops_total=$((oaiir_html_ops_total+1))
-  done < <(grep -oE '<[^>]+>|[^<]+' "$html_abs" || true)
-done < <(rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' 2>/dev/null | sort)
+  done < <(grep -oE '<[^>]+>|[^<]+' "$html_abs" | head -n "$OAIIR_HTML_TOKENS_PER_FILE" || true)
+done < <(rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' 2>/dev/null | sort | head -n "$OAIIR_HTML_MAX_FILES")
+
+oaiir_css_ops_total=0
+: > "$OAIIR_CSS_IR_FILE"
+while IFS= read -r css_abs; do
+  [[ -z "$css_abs" ]] && continue
+  rel="${css_abs#$NORM_DIR/}"
+  rel_json="$(json_escape "$rel")"
+  seq=0
+  printf '{"op":3200,"name":"style.file.begin","file":"%s","seq":%d}\n' "$rel_json" "$seq" >> "$OAIIR_CSS_IR_FILE"
+  seq=$((seq+1))
+  oaiir_css_ops_total=$((oaiir_css_ops_total+1))
+
+  while IFS= read -r line; do
+    trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    [[ -z "$trimmed" ]] && continue
+    [[ "$trimmed" == "/*"* ]] && continue
+    if [[ "$trimmed" == @* ]]; then
+      at_json="$(json_escape "$trimmed")"
+      printf '{"op":3203,"name":"atrule","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$at_json" >> "$OAIIR_CSS_IR_FILE"
+      seq=$((seq+1))
+      oaiir_css_ops_total=$((oaiir_css_ops_total+1))
+      continue
+    fi
+    if [[ "$trimmed" == *"{"* ]]; then
+      selector="$(printf '%s' "$trimmed" | sed 's/{.*$//' | sed 's/[[:space:]]*$//')"
+      [[ -n "$selector" ]] || continue
+      sel_json="$(json_escape "$selector")"
+      printf '{"op":3201,"name":"selector.open","file":"%s","seq":%d,"selector":"%s"}\n' "$rel_json" "$seq" "$sel_json" >> "$OAIIR_CSS_IR_FILE"
+      seq=$((seq+1))
+      oaiir_css_ops_total=$((oaiir_css_ops_total+1))
+      continue
+    fi
+    if [[ "$trimmed" == *:* ]]; then
+      prop="$(printf '%s' "$trimmed" | sed 's/:.*$//' | tr '[:upper:]' '[:lower:]' | sed 's/[[:space:]]*$//')"
+      value="$(printf '%s' "$trimmed" | sed 's/^[^:]*:[[:space:]]*//' | sed 's/;[[:space:]]*$//')"
+      [[ -n "$prop" ]] || continue
+      prop_json="$(json_escape "$prop")"
+      value_json="$(json_escape "$value")"
+      printf '{"op":3202,"name":"decl.set","file":"%s","seq":%d,"prop":"%s","value":"%s"}\n' "$rel_json" "$seq" "$prop_json" "$value_json" >> "$OAIIR_CSS_IR_FILE"
+      seq=$((seq+1))
+      oaiir_css_ops_total=$((oaiir_css_ops_total+1))
+      continue
+    fi
+  done < <(head -n "$OAIIR_CSS_LINES_PER_FILE" "$css_abs")
+done < <(rg --files -uu "$NORM_DIR" -g '*.css' -g '*.scss' 2>/dev/null | sort | head -n "$OAIIR_CSS_MAX_FILES")
+
+oaiir_js_ops_total=0
+: > "$OAIIR_JS_IR_FILE"
+while IFS= read -r js_abs; do
+  [[ -z "$js_abs" ]] && continue
+  rel="${js_abs#$NORM_DIR/}"
+  rel_json="$(json_escape "$rel")"
+  seq=0
+  printf '{"op":3300,"name":"script.file.begin","file":"%s","seq":%d}\n' "$rel_json" "$seq" >> "$OAIIR_JS_IR_FILE"
+  seq=$((seq+1))
+  oaiir_js_ops_total=$((oaiir_js_ops_total+1))
+
+  while IFS= read -r line; do
+    trimmed="$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
+    [[ -z "$trimmed" ]] && continue
+    [[ "$trimmed" == "//"* ]] && continue
+
+    if [[ "$trimmed" == import* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3301,"name":"import.decl","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == export* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3302,"name":"export.decl","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == function* || "$trimmed" == *" function "* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3303,"name":"fn.decl","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == class* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3304,"name":"class.decl","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == const* || "$trimmed" == let* || "$trimmed" == var* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3305,"name":"var.decl","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == *"addEventListener("* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3307,"name":"event.bind","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+    if [[ "$trimmed" == *"("*")"* && "$trimmed" != "if ("* && "$trimmed" != "for ("* && "$trimmed" != "while ("* && "$trimmed" != "switch ("* ]]; then
+      v="$(json_escape "$trimmed")"
+      printf '{"op":3306,"name":"call.expr","file":"%s","seq":%d,"value":"%s"}\n' "$rel_json" "$seq" "$v" >> "$OAIIR_JS_IR_FILE"
+      seq=$((seq+1)); oaiir_js_ops_total=$((oaiir_js_ops_total+1)); continue
+    fi
+  done < <(head -n "$OAIIR_JS_LINES_PER_FILE" "$js_abs")
+done < <(rg --files -uu "$NORM_DIR" -g '*.js' -g '*.jsx' -g '*.ts' -g '*.tsx' 2>/dev/null | sort | head -n "$OAIIR_JS_MAX_FILES")
 
 pkg_bytes="$(du -sb "$PKG_DIR" | awk '{print $1}')"
 pkg_mb="$(awk -v b="$pkg_bytes" 'BEGIN {printf "%.2f", b/1048576}')"
@@ -238,8 +355,12 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   printf '  "oaiir_total":%d,\n' "$oaiir_total"
   printf '  "oaiir_new_total":%d,\n' "$oaiir_new_total"
   printf '  "oaiir_html_ops_total":%d,\n' "$oaiir_html_ops_total"
+  printf '  "oaiir_css_ops_total":%d,\n' "$oaiir_css_ops_total"
+  printf '  "oaiir_js_ops_total":%d,\n' "$oaiir_js_ops_total"
   printf '  "oaiir_file":"%s",\n' "$OAIIR_FILE"
   printf '  "oaiir_html_ir_file":"%s",\n' "$OAIIR_HTML_IR_FILE"
+  printf '  "oaiir_css_ir_file":"%s",\n' "$OAIIR_CSS_IR_FILE"
+  printf '  "oaiir_js_ir_file":"%s",\n' "$OAIIR_JS_IR_FILE"
   printf '  "conversion_map":"%s",\n' "$MAP_FILE"
   printf '  "commands_file":"%s"\n' "$CMD_FILE"
   echo '}'
@@ -266,10 +387,10 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   echo
   echo '  ],'
   printf '  "paiir":{"base_total":%d,"custom_total":%d,"total":%d},\n' "$base_count" "$custom_unique_count" "$paiir_total"
-  printf '  "oaiir":{"total":%d,"new_total":%d,"html_ops_total":%d,"registry":"%s","html_catalog":"%s","project_file":"%s","html_ir_file":"%s"}\n' "$oaiir_total" "$oaiir_new_total" "$oaiir_html_ops_total" "$OAIIR_REGISTRY" "$OAIIR_HTML_CATALOG" "$OAIIR_FILE" "$OAIIR_HTML_IR_FILE"
+  printf '  "oaiir":{"total":%d,"new_total":%d,"html_ops_total":%d,"css_ops_total":%d,"js_ops_total":%d,"registry":"%s","html_catalog":"%s","css_catalog":"%s","js_catalog":"%s","project_file":"%s","html_ir_file":"%s","css_ir_file":"%s","js_ir_file":"%s"}\n' "$oaiir_total" "$oaiir_new_total" "$oaiir_html_ops_total" "$oaiir_css_ops_total" "$oaiir_js_ops_total" "$OAIIR_REGISTRY" "$OAIIR_HTML_CATALOG" "$OAIIR_CSS_CATALOG" "$OAIIR_JS_CATALOG" "$OAIIR_FILE" "$OAIIR_HTML_IR_FILE" "$OAIIR_CSS_IR_FILE" "$OAIIR_JS_IR_FILE"
   echo '}'
 } > "$CMD_FILE"
 
 cat <<EOF2
-{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","oaiir_html_ir":"${OAIIR_HTML_IR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total},"oaiir_html_ops_total":${oaiir_html_ops_total}}
+{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","oaiir_html_ir":"${OAIIR_HTML_IR_FILE}","oaiir_css_ir":"${OAIIR_CSS_IR_FILE}","oaiir_js_ir":"${OAIIR_JS_IR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total},"oaiir_html_ops_total":${oaiir_html_ops_total},"oaiir_css_ops_total":${oaiir_css_ops_total},"oaiir_js_ops_total":${oaiir_js_ops_total}}
 EOF2

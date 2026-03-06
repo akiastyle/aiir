@@ -1,0 +1,21 @@
+kind,name,opcode,status,note
+op,style.file.begin,3200,stable,begin css file stream
+op,selector.open,3201,stable,open selector rule
+op,decl.set,3202,stable,set css declaration
+op,atrule,3203,provisional,at-rule marker
+selector,*,3201,stable,generic selector
+attr,color,3202,stable,color declaration
+attr,background,3202,stable,background declaration
+attr,font-size,3202,stable,font-size declaration
+attr,margin,3202,stable,margin declaration
+attr,padding,3202,stable,padding declaration
+attr,display,3202,stable,display declaration
+attr,width,3202,stable,width declaration
+attr,height,3202,stable,height declaration
+attr,border,3202,stable,border declaration
+attr,border-radius,3202,stable,border-radius declaration
+attr,position,3202,stable,position declaration
+attr,top,3202,stable,top declaration
+attr,right,3202,stable,right declaration
+attr,bottom,3202,stable,bottom declaration
+attr,left,3202,stable,left declaration
