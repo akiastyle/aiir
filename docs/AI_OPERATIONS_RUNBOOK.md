@@ -67,6 +67,13 @@ Policy reference:
 /var/www/aiir/server/scripts/aiir clean --deep
 ```
 
+9. Optional automation:
+- systemd:
+  - `aiir-smoke.timer` (twice daily AI-ops smoke)
+  - `aiir-self-audit.timer` (hourly AI-first self-audit)
+- no-systemd:
+  - `/var/www/aiir/server/cron/aiir-maintenance`
+
 ## Chat Error Codes
 - `intent_unknown`
 - `confirmation_required`

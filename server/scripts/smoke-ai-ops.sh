@@ -36,6 +36,7 @@ trap cleanup EXIT
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" AIIR_RUNTIME_PID_FILE="$PID_FILE" AIIR_RUNTIME_OUT_LOG="$OUT_LOG" AIIR_RUNTIME_ERR_LOG="$ERR_LOG" \
   "$CLI" up --project "$PROJECT" --type webapp --domain "$DOMAIN" > /tmp/aiir-smoke-up.txt
 
+AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" audit > /tmp/aiir-smoke-audit-up.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "stato" > /tmp/aiir-smoke-health.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "lista progetti" > /tmp/aiir-smoke-list.json
 AI_RUNTIME_HOST="$HOST" AI_RUNTIME_PORT="$PORT" "$CLI" chat "stato progetto $PROJECT" > /tmp/aiir-smoke-status.json
@@ -69,6 +70,10 @@ if ! rg -q '"ok":1' /tmp/aiir-smoke-health.json; then
   echo "smoke-ai-ops-failed: health output invalid" >&2
   exit 1
 fi
+if ! rg -q '"status":"ok"' /tmp/aiir-smoke-audit-up.json; then
+  echo "smoke-ai-ops-failed: audit output invalid" >&2
+  exit 1
+fi
 if ! rg -q '"project_name":"'"$PROJECT"'"' /tmp/aiir-smoke-status.json; then
   echo "smoke-ai-ops-failed: status output invalid" >&2
   exit 1
@@ -89,6 +94,7 @@ fi
 
 echo "smoke-ai-ops-ok"
 cat /tmp/aiir-smoke-up.txt
+cat /tmp/aiir-smoke-audit-up.json
 cat /tmp/aiir-smoke-status.json
 cat /tmp/aiir-smoke-opt.json
 cat /tmp/aiir-smoke-ui.json

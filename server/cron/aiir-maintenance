@@ -1,0 +1,11 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# AIIR daily state backup at 03:17
+17 3 * * * root /var/www/aiir/server/scripts/backup-state.sh /var/www/aiir/ai/state /var/backups/aiir-state 14 >> /var/www/aiir/ai/log/backup.log 2>&1
+
+# AIIR smoke checks at 06:00 and 18:00
+0 6,18 * * * root /var/www/aiir/server/scripts/smoke-ai-ops.sh >> /var/www/aiir/ai/log/smoke-ai-ops.log 2>&1
+
+# AIIR self-audit hourly
+0 * * * * root /var/www/aiir/server/scripts/aiir audit >> /var/www/aiir/ai/log/self-audit.log 2>&1

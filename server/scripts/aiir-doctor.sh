@@ -9,6 +9,7 @@ UP_SCRIPT="${ROOT}/server/scripts/aiir-up.sh"
 DOWN_SCRIPT="${ROOT}/server/scripts/aiir-down.sh"
 CHAT_SCRIPT="${ROOT}/server/scripts/aiir-chat.sh"
 CHECK_SCRIPT="${ROOT}/server/scripts/check-runtime.sh"
+AUDIT_SCRIPT="${ROOT}/server/scripts/aiir-self-audit.sh"
 CORE_DIR="${AI_CORE_DIR:-${ROOT}/ai/core}"
 STRICT="0"
 
@@ -76,6 +77,7 @@ check_exec "$UP_SCRIPT" "up_script"
 check_exec "$DOWN_SCRIPT" "down_script"
 check_exec "$CHAT_SCRIPT" "chat_script"
 check_exec "$CHECK_SCRIPT" "check_script"
+check_exec "$AUDIT_SCRIPT" "audit_script"
 check_dir "$CORE_DIR" "core_dir"
 check_file "${ROOT}/server/env/ai-runtime.env" "runtime_env"
 check_file "${ROOT}/server/env/ai-gateway.env" "gateway_env"
@@ -93,6 +95,14 @@ else
   echo "warn runtime=down"
   warns=$((warns+1))
 fi
+
+if "$AUDIT_SCRIPT" >/tmp/aiir-doctor-audit.$$ 2>/tmp/aiir-doctor-audit.err.$$; then
+  echo "ok ai_first_audit=pass"
+else
+  echo "fail ai_first_audit=failed"
+  failures=$((failures+1))
+fi
+rm -f /tmp/aiir-doctor-audit.$$ /tmp/aiir-doctor-audit.err.$$ || true
 
 if [[ "$failures" -eq 0 ]]; then
   echo "doctor_status=ok"
