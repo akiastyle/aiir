@@ -29,6 +29,7 @@ Use every open-repo analysis cycle to increment the native AIIR web semantic eng
 
 ## Immediate Technical Backlog
 1. Add `web-semantic-extract` stage after `ingest`.
+Status: v0 HTML catalog + elementary compiler active.
 2. Introduce `aiir-web-opcode-registry` with stable numeric ids.
 Status: v0 active at `/var/www/aiir/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv`.
 3. Add `propose -> validate -> promote` automation in benchmark full flow.

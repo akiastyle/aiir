@@ -27,6 +27,8 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
   - PAIIR metrics are tracked in ingest and benchmark outputs.
   - OAIIR metrics are tracked from registry-backed opcode emission:
     - `/var/www/aiir/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv`
+  - HTML catalog and elementary compiler stage:
+    - `/var/www/aiir/docs/OAIIR_WEB_HTML_CATALOG_V0.csv`
 
 ## Migration Pipeline
 1. Ingest source project.

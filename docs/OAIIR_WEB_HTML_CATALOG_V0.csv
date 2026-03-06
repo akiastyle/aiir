@@ -1,0 +1,57 @@
+kind,name,opcode,status,note
+op,file.begin,3000,stable,begin html file stream
+op,node.open,3001,stable,open html node
+op,attr.set,3002,stable,set html attribute
+op,text.set,3003,stable,set text node
+op,node.close,3004,stable,close html node
+tag,html,3001,stable,document root
+tag,head,3001,stable,head section
+tag,body,3001,stable,body section
+tag,title,3001,stable,title text
+tag,meta,3001,stable,metadata
+tag,link,3001,stable,stylesheet/link
+tag,script,3001,stable,script node
+tag,style,3001,stable,style node
+tag,div,3001,stable,container
+tag,span,3001,stable,inline container
+tag,p,3001,stable,paragraph
+tag,a,3001,stable,anchor link
+tag,img,3001,stable,image
+tag,button,3001,stable,button
+tag,input,3001,stable,input field
+tag,form,3001,stable,form
+tag,label,3001,stable,label
+tag,ul,3001,stable,list
+tag,ol,3001,stable,ordered list
+tag,li,3001,stable,list item
+tag,section,3001,stable,section
+tag,article,3001,stable,article
+tag,header,3001,stable,header
+tag,footer,3001,stable,footer
+tag,nav,3001,stable,navigation
+tag,main,3001,stable,main content
+tag,h1,3001,stable,heading
+tag,h2,3001,stable,heading
+tag,h3,3001,stable,heading
+tag,h4,3001,stable,heading
+tag,h5,3001,stable,heading
+tag,h6,3001,stable,heading
+attr,id,3002,stable,element id
+attr,class,3002,stable,css class list
+attr,style,3002,stable,inline style
+attr,href,3002,stable,hyperlink
+attr,src,3002,stable,resource source
+attr,alt,3002,stable,image alt
+attr,title,3002,stable,tooltip title
+attr,type,3002,stable,input/button type
+attr,name,3002,stable,form name
+attr,value,3002,stable,input value
+attr,placeholder,3002,stable,input placeholder
+attr,role,3002,stable,aria role
+attr,aria-label,3002,stable,aria label
+attr,data-*,3002,stable,data attribute family
+event,click,3101,provisional,onclick mapping
+event,input,3102,provisional,oninput mapping
+event,change,3103,provisional,onchange mapping
+event,submit,3104,provisional,onsubmit mapping
+event,keydown,3105,provisional,onkeydown mapping

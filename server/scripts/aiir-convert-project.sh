@@ -4,6 +4,7 @@ set -euo pipefail
 ROOT="/var/www/aiir"
 BUILD_SCRIPT="${ROOT}/ai/exchange/build-package.run.sh"
 OAIIR_REGISTRY="${ROOT}/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv"
+OAIIR_HTML_CATALOG="${ROOT}/docs/OAIIR_WEB_HTML_CATALOG_V0.csv"
 
 SRC_DIR="${1:-}"
 OUT_DIR="${2:-}"
@@ -28,6 +29,10 @@ if [[ ! -f "$OAIIR_REGISTRY" ]]; then
   echo '{"ok":0,"err":"oaiir_registry"}'
   exit 1
 fi
+if [[ ! -f "$OAIIR_HTML_CATALOG" ]]; then
+  echo '{"ok":0,"err":"oaiir_html_catalog"}'
+  exit 1
+fi
 
 project_id="$PROJECT_ID_RAW"
 if [[ -z "$project_id" ]]; then
@@ -44,6 +49,7 @@ CMD_FILE="${REPORT_DIR}/project-commands.aiir.json"
 MAP_FILE="${REPORT_DIR}/conversion-map.csv"
 REPORT_FILE="${REPORT_DIR}/migration-report.json"
 OAIIR_FILE="${REPORT_DIR}/oaiir-opcodes.csv"
+OAIIR_HTML_IR_FILE="${REPORT_DIR}/oaiir-html-ir.ndjson"
 
 mkdir -p "$PKG_DIR" "$NORM_DIR" "$REPORT_DIR"
 
@@ -149,6 +155,64 @@ while IFS= read -r p; do
   oaiir_total=$((oaiir_total+1))
 done < "$all_primitives_tmp"
 
+json_escape() {
+  printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
+
+oaiir_html_ops_total=0
+: > "$OAIIR_HTML_IR_FILE"
+while IFS= read -r html_abs; do
+  [[ -z "$html_abs" ]] && continue
+  rel="${html_abs#$NORM_DIR/}"
+  seq=0
+  rel_json="$(json_escape "$rel")"
+  printf '{"op":3000,"name":"file.begin","file":"%s","seq":%d}\n' "$rel_json" "$seq" >> "$OAIIR_HTML_IR_FILE"
+  seq=$((seq+1))
+  oaiir_html_ops_total=$((oaiir_html_ops_total+1))
+
+  while IFS= read -r token; do
+    [[ -z "$token" ]] && continue
+    if [[ "$token" == \<\!* || "$token" == \<\?* ]]; then
+      continue
+    fi
+    if [[ "$token" == \<* ]]; then
+      if [[ "$token" == \</* ]]; then
+        tag="$(printf '%s' "$token" | sed -n 's#^</\([a-zA-Z0-9:_-][a-zA-Z0-9:_-]*\)[^>]*>$#\1#p' | tr '[:upper:]' '[:lower:]')"
+        [[ -n "$tag" ]] || continue
+        tag_json="$(json_escape "$tag")"
+        printf '{"op":3004,"name":"node.close","file":"%s","seq":%d,"tag":"%s"}\n' "$rel_json" "$seq" "$tag_json" >> "$OAIIR_HTML_IR_FILE"
+        seq=$((seq+1))
+        oaiir_html_ops_total=$((oaiir_html_ops_total+1))
+        continue
+      fi
+
+      tag="$(printf '%s' "$token" | sed -n 's#^<\([a-zA-Z0-9:_-][a-zA-Z0-9:_-]*\).*#\1#p' | tr '[:upper:]' '[:lower:]')"
+      [[ -n "$tag" ]] || continue
+      tag_json="$(json_escape "$tag")"
+      printf '{"op":3001,"name":"node.open","file":"%s","seq":%d,"tag":"%s"}\n' "$rel_json" "$seq" "$tag_json" >> "$OAIIR_HTML_IR_FILE"
+      seq=$((seq+1))
+      oaiir_html_ops_total=$((oaiir_html_ops_total+1))
+
+      while IFS= read -r attr; do
+        [[ -z "$attr" ]] && continue
+        lower_attr="$(printf '%s' "$attr" | tr '[:upper:]' '[:lower:]')"
+        attr_json="$(json_escape "$lower_attr")"
+        printf '{"op":3002,"name":"attr.set","file":"%s","seq":%d,"tag":"%s","attr":"%s"}\n' "$rel_json" "$seq" "$tag_json" "$attr_json" >> "$OAIIR_HTML_IR_FILE"
+        seq=$((seq+1))
+        oaiir_html_ops_total=$((oaiir_html_ops_total+1))
+      done < <(printf '%s' "$token" | grep -oE '[A-Za-z_:][-A-Za-z0-9_:.-]*=' | sed 's/=$//' | sort -u)
+      continue
+    fi
+
+    text="$(printf '%s' "$token" | tr -s '[:space:]' ' ' | sed 's/^ //; s/ $//')"
+    [[ -n "$text" ]] || continue
+    text_json="$(json_escape "$text")"
+    printf '{"op":3003,"name":"text.set","file":"%s","seq":%d,"text":"%s"}\n' "$rel_json" "$seq" "$text_json" >> "$OAIIR_HTML_IR_FILE"
+    seq=$((seq+1))
+    oaiir_html_ops_total=$((oaiir_html_ops_total+1))
+  done < <(grep -oE '<[^>]+>|[^<]+' "$html_abs" || true)
+done < <(rg --files -uu "$NORM_DIR" -g '*.html' -g '*.htm' 2>/dev/null | sort)
+
 pkg_bytes="$(du -sb "$PKG_DIR" | awk '{print $1}')"
 pkg_mb="$(awk -v b="$pkg_bytes" 'BEGIN {printf "%.2f", b/1048576}')"
 source_bytes="$(du -sb "$SRC_DIR" | awk '{print $1}')"
@@ -173,7 +237,9 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   printf '  "paiir_total":%d,\n' "$paiir_total"
   printf '  "oaiir_total":%d,\n' "$oaiir_total"
   printf '  "oaiir_new_total":%d,\n' "$oaiir_new_total"
+  printf '  "oaiir_html_ops_total":%d,\n' "$oaiir_html_ops_total"
   printf '  "oaiir_file":"%s",\n' "$OAIIR_FILE"
+  printf '  "oaiir_html_ir_file":"%s",\n' "$OAIIR_HTML_IR_FILE"
   printf '  "conversion_map":"%s",\n' "$MAP_FILE"
   printf '  "commands_file":"%s"\n' "$CMD_FILE"
   echo '}'
@@ -200,10 +266,10 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   echo
   echo '  ],'
   printf '  "paiir":{"base_total":%d,"custom_total":%d,"total":%d},\n' "$base_count" "$custom_unique_count" "$paiir_total"
-  printf '  "oaiir":{"total":%d,"new_total":%d,"registry":"%s","project_file":"%s"}\n' "$oaiir_total" "$oaiir_new_total" "$OAIIR_REGISTRY" "$OAIIR_FILE"
+  printf '  "oaiir":{"total":%d,"new_total":%d,"html_ops_total":%d,"registry":"%s","html_catalog":"%s","project_file":"%s","html_ir_file":"%s"}\n' "$oaiir_total" "$oaiir_new_total" "$oaiir_html_ops_total" "$OAIIR_REGISTRY" "$OAIIR_HTML_CATALOG" "$OAIIR_FILE" "$OAIIR_HTML_IR_FILE"
   echo '}'
 } > "$CMD_FILE"
 
 cat <<EOF2
-{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total}}
+{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","oaiir_html_ir":"${OAIIR_HTML_IR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total},"oaiir_html_ops_total":${oaiir_html_ops_total}}
 EOF2
