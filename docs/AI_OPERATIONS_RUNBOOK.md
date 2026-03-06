@@ -13,6 +13,8 @@ Permanent principle reference:
 /var/www/aiir/server/scripts/aiir up
 # optional:
 /var/www/aiir/server/scripts/aiir up --project crm-alpha --type webapp --domain crm.local
+# deploy-oriented one-shot (runtime + project + policy + web apply when possible):
+/var/www/aiir/server/scripts/aiir deploy --project crm-alpha --type webapp --domain crm.local
 ```
 
 2. Operate via chat intents only:
