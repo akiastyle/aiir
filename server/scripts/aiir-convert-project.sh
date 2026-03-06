@@ -92,6 +92,14 @@ while IFS= read -r abs; do
 done < "$web_files_tmp"
 
 # Base + custom command model for project.
+base_cmds=(
+  "page.render.static"
+  "style.apply.theme"
+  "script.exec.basic"
+  "route.bind"
+  "data.read"
+  "data.write"
+)
 custom_cmds=()
 if rg -q '\.sql$' "$all_files_tmp"; then custom_cmds+=("project.db.sql.exec"); fi
 if rg -q '/migrations?/|/migration/' "$all_files_tmp"; then custom_cmds+=("project.db.migrate"); fi
@@ -104,6 +112,12 @@ if rg -q 'dockerfile|docker-compose|compose\.ya?ml' "$all_files_tmp"; then custo
 # Unique custom commands.
 custom_unique_tmp="${TMPDIR}/custom-unique.txt"
 printf '%s\n' "${custom_cmds[@]:-}" | awk 'NF && !seen[$0]++' > "$custom_unique_tmp"
+custom_unique_count="$(awk 'NF{c++} END{print c+0}' "$custom_unique_tmp")"
+base_count="${#base_cmds[@]}"
+paiir_total=$((base_count + custom_unique_count))
+# OAIIR registry is planned; keep explicit counters for tracking from now.
+oaiir_total=0
+oaiir_new_total=0
 
 pkg_bytes="$(du -sb "$PKG_DIR" | awk '{print $1}')"
 pkg_mb="$(awk -v b="$pkg_bytes" 'BEGIN {printf "%.2f", b/1048576}')"
@@ -124,6 +138,11 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   printf '  "native_reuse_files":%d,\n' "$native_count"
   printf '  "custom_mapping_files":%d,\n' "$custom_count"
   printf '  "native_reuse_percent":%s,\n' "$reuse_pct"
+  printf '  "paiir_base_total":%d,\n' "$base_count"
+  printf '  "paiir_custom_total":%d,\n' "$custom_unique_count"
+  printf '  "paiir_total":%d,\n' "$paiir_total"
+  printf '  "oaiir_total":%d,\n' "$oaiir_total"
+  printf '  "oaiir_new_total":%d,\n' "$oaiir_new_total"
   printf '  "conversion_map":"%s",\n' "$MAP_FILE"
   printf '  "commands_file":"%s"\n' "$CMD_FILE"
   echo '}'
@@ -148,10 +167,12 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
     i=$((i+1))
   done < "$custom_unique_tmp"
   echo
-  echo '  ]'
+  echo '  ],'
+  printf '  "paiir":{"base_total":%d,"custom_total":%d,"total":%d},\n' "$base_count" "$custom_unique_count" "$paiir_total"
+  printf '  "oaiir":{"total":%d,"new_total":%d}\n' "$oaiir_total" "$oaiir_new_total"
   echo '}'
 } > "$CMD_FILE"
 
 cat <<EOF2
-{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct}}
+{"ok":1,"action":"ingest_project","legacy_action":"convert_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total}}
 EOF2

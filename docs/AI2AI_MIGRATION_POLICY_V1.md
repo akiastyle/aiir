@@ -20,6 +20,13 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
 2. If a gap exists, create project-specific commands.
 3. Decompose project-specific commands into reusable AIIR primitives when stable.
 
+## Metrics Vocabulary
+- `PAIIR` (Primitive AIIR): semantic intermediate primitives used during ingest/migration.
+- `OAIIR` (Opcode AIIR): numeric native execution units for runtime engine.
+- Current state:
+  - PAIIR metrics are tracked in ingest and benchmark outputs.
+  - OAIIR metrics are tracked with explicit counters (registry promotion planned).
+
 ## Migration Pipeline
 1. Ingest source project.
 2. Normalize into AIIR migration contract.
