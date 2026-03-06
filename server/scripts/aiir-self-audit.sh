@@ -49,6 +49,7 @@ check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "mTLS" "no_mtls_baselin
 check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "JWT" "capability_over_jwt"
 check_pattern "${ROOT}/docs/AI2AI_MIGRATION_POLICY_V1.md" "Primary mode is AIIR-native" "migration_primary_mode"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir audit" "runbook_has_audit"
+check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir ingest" "runbook_prefers_ingest"
 check_pattern "${ROOT}/server/scripts/provision-project-domain.sh" "AIIR_DB_ALLOW_DIRECT_CREDENTIALS=0" "no_direct_db_credentials"
 check_pattern "${ROOT}/server/scripts/provision-project-domain.sh" "AIIR_HUMAN_DB_MODE=indirect" "human_indirect_db_mode"
 check_pattern "${ROOT}/server/scripts/aiir-chat.sh" "confirmation_required" "destructive_confirmation_gate"

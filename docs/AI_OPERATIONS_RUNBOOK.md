@@ -46,9 +46,11 @@ Permanent principle reference:
 
 6. AI2AI migration flow (source -> AIIR -> parity):
 ```bash
-/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]
+/var/www/aiir/server/scripts/aiir ingest <source-dir> <out-dir> [project-id]
 /var/www/aiir/server/scripts/aiir parity <source-dir> <out-dir>
 ```
+Compatibility alias:
+- `/var/www/aiir/server/scripts/aiir convert ...` (legacy alias of `ingest`)
 Policy reference:
 - `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
 

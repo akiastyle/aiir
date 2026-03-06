@@ -18,7 +18,8 @@ support commands:
   doctor   runtime diagnostics
   optimize optimize a project policy/env
   ui       scaffold UI preset for a project
-  convert  convert source project into AIIR-operable assets
+  ingest   ingest source project into AIIR-operable assets
+  convert  legacy alias of ingest
   parity   run logic+visual parity check
   bench    run open-repo benchmark (quick/full)
   clean    clean generated/runtime artifacts
@@ -46,7 +47,7 @@ case "$cmd" in
   ui)
     shift
     exec "${ROOT}/aiir-ui-scaffold.sh" "$@" ;;
-  convert)
+  ingest|convert)
     shift
     exec "${ROOT}/aiir-convert-project.sh" "$@" ;;
   parity)
