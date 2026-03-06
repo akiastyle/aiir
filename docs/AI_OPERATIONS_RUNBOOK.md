@@ -73,6 +73,8 @@ Policy reference:
   - `aiir-self-audit.timer` (hourly AI-first self-audit)
 - no-systemd:
   - `/var/www/aiir/server/cron/aiir-maintenance`
+- one-shot setup:
+  - `/var/www/aiir/server/scripts/aiir automate --mode auto --dry-run`
 
 ## Chat Error Codes
 - `intent_unknown`

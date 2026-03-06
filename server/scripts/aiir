@@ -23,6 +23,7 @@ support commands:
   bench    run open-repo benchmark (quick/full)
   clean    clean generated/runtime artifacts
   audit    verify AI-first/AIIR operating rules
+  automate enable periodic automation (systemd/cron)
 USAGE
 }
 
@@ -60,6 +61,9 @@ case "$cmd" in
   audit)
     shift
     exec "${ROOT}/aiir-self-audit.sh" "$@" ;;
+  automate)
+    shift
+    exec "${ROOT}/aiir-enable-automation.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;

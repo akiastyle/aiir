@@ -168,6 +168,7 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir bench --profile full [repo-url ...]`
   - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
   - `/var/www/aiir/server/scripts/aiir audit`
+  - `/var/www/aiir/server/scripts/aiir automate --mode auto --dry-run`
 - Chat intents:
   - `stato`
   - `lista progetti`
