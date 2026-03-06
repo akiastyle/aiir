@@ -51,6 +51,7 @@ fi
 
 if [[ "$PROFILE" == "full" ]]; then
   : "${AIIR_FULL_ANALYSIS_MAX_MB:=350}"
+  : "${AIIR_INGEST_TIMEOUT_SEC:=${AIIR_CONVERT_TIMEOUT_SEC:-1200}}"
 fi
 
 if [[ "$#" -gt 0 ]]; then

@@ -57,6 +57,7 @@ check_pattern "${ROOT}/server/scripts/provision-project-domain.sh" "AIIR_HUMAN_D
 check_pattern "${ROOT}/server/scripts/aiir-chat.sh" "confirmation_required" "destructive_confirmation_gate"
 check_pattern "${ROOT}/server/scripts/aiir-chat.sh" "ferma runtime conferma" "chat_confirm_intent"
 check_pattern "${ROOT}/server/scripts/smoke-ai-ops.sh" "aiir-smoke-audit-up.json" "smoke_runs_audit"
+check_pattern "${ROOT}/test/benchmark-open-repos-full.sh" "aiir\" ingest" "benchmark_prefers_ingest"
 check_pattern "${ROOT}/server/systemd/aiir-smoke.service" "smoke-ai-ops.sh" "systemd_smoke_ai_ops"
 check_pattern "${ROOT}/server/systemd/aiir-self-audit.timer" "OnCalendar=hourly" "systemd_hourly_audit"
 check_pattern "${ROOT}/server/cron/aiir-maintenance" "self-audit hourly" "cron_hourly_audit"

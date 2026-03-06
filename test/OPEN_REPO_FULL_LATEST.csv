@@ -5,7 +5,6 @@ run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes
 2026-03-06T08:12:00Z,https://github.com/django/django.git,django,23931eb,59521222,56.76,19689989,18.78,2281,0.00,19687708,18.78,66.92,100.00,100.00,100.00,100.00,100.00,ok
 2026-03-06T08:12:00Z,https://github.com/dotnet/runtime.git,runtime,8b63bd26,765697454,730.23,4238309,4.04,2281,0.00,4236028,4.04,99.45,0,0,0,0,0,analysis_skipped_large
 2026-03-06T08:12:00Z,https://github.com/elastic/elasticsearch.git,elasticsearch,f5c3e5f9,492576751,469.76,249591437,238.03,2281,0.00,249589156,238.03,49.33,0,0,0,0,0,analysis_skipped_large
-2026-03-06T08:12:00Z,https://github.com/facebook/react.git,react,4610359,47585625,45.38,23158453,22.09,2281,0.00,23156172,22.08,51.34,100.00,100.00,100.00,100.00,100.00,ok
 2026-03-06T08:12:00Z,https://github.com/flutter/flutter.git,flutter,7a95d24e,184943892,176.38,6021541,5.74,2281,0.00,6019260,5.74,96.75,100.00,100.00,100.00,100.00,100.00,ok
 2026-03-06T08:12:00Z,https://github.com/golang/go.git,go,cbab448,179375170,171.07,64746793,61.75,2281,0.00,64744512,61.75,63.91,100.00,100.00,100.00,100.00,100.00,ok
 2026-03-06T08:12:00Z,https://github.com/hashicorp/terraform.git,terraform,02723fc,31822207,30.35,20927281,19.96,2281,0.00,20925000,19.96,34.24,0.00,100.00,100.00,100.00,100.00,ok
@@ -19,3 +18,4 @@ run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes
 2026-03-06T08:12:00Z,https://github.com/tensorflow/tensorflow.git,tensorflow,c9a1ee99,496390403,473.39,51512545,49.13,2281,0.00,51510264,49.12,89.62,0,0,0,0,0,analysis_skipped_large
 2026-03-06T08:12:00Z,https://github.com/torvalds/linux.git,linux,5ee8dbf54,1867726728,1781.20,47075709,44.89,2281,0.00,47073428,44.89,97.48,0,0,0,0,0,analysis_skipped_large
 2026-03-06T08:12:00Z,https://github.com/vuejs/core.git,core,cea3cf7,7880909,7.52,4542897,4.33,2281,0.00,4540616,4.33,42.38,100.00,100.00,100.00,100.00,100.00,ok
+2026-03-06T09:15:23Z,https://github.com/facebook/react.git,react,4610359,47585625,45.38,23158453,22.09,2281,0.00,23156172,22.08,51.34,100.00,100.00,100.00,100.00,100.00,ok

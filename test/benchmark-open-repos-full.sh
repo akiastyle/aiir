@@ -15,7 +15,7 @@ CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 CLONE_TIMEOUT_SEC="${AIIR_CLONE_TIMEOUT_SEC:-900}"
 CLONE_RETRIES="${AIIR_CLONE_RETRIES:-2}"
-CONVERT_TIMEOUT_SEC="${AIIR_CONVERT_TIMEOUT_SEC:-1200}"
+INGEST_TIMEOUT_SEC="${AIIR_INGEST_TIMEOUT_SEC:-1200}"
 PARITY_TIMEOUT_SEC="${AIIR_PARITY_TIMEOUT_SEC:-600}"
 FULL_ANALYSIS_MAX_MB="${AIIR_FULL_ANALYSIS_MAX_MB:-350}"
 CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,logic_file_parity,logic_token_parity,visual_parity,overall_parity,notes"
@@ -142,14 +142,14 @@ for repo in "${repos[@]}"; do
     note="analysis_skipped_large"
   else
     if command -v timeout >/dev/null 2>&1; then
-      timeout "${CONVERT_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" convert "$src" "$conv" "$name" >"${WORK_ROOT}/convert_${name}.json" 2>"${WORK_ROOT}/convert_${name}.err" || note="convert_failed"
+      timeout "${INGEST_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" ingest "$src" "$conv" "$name" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
     else
-      "${AIIR_ROOT}/server/scripts/aiir" convert "$src" "$conv" "$name" >"${WORK_ROOT}/convert_${name}.json" 2>"${WORK_ROOT}/convert_${name}.err" || note="convert_failed"
+      "${AIIR_ROOT}/server/scripts/aiir" ingest "$src" "$conv" "$name" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
     fi
   fi
 
   if [[ "$note" == "ok" ]]; then
-    native_reuse="$(json_num native_reuse_percent "${WORK_ROOT}/convert_${name}.json")"
+    native_reuse="$(json_num native_reuse_percent "${WORK_ROOT}/ingest_${name}.json")"
     if [[ -z "$native_reuse" ]]; then native_reuse="0"; fi
 
     if command -v timeout >/dev/null 2>&1; then
@@ -194,7 +194,7 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   echo "Last run (UTC): \`${RUN_TS}\`"
   echo
   echo "Base package overhead excluded from AIIR net size: ${BASE_MB} MB (${BASE_B} bytes)"
-  echo "Full analysis threshold (convert+parity): ${FULL_ANALYSIS_MAX_MB} MB source size"
+  echo "Full analysis threshold (ingest+parity): ${FULL_ANALYSIS_MAX_MB} MB source size"
   echo
   echo "| Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | Logic | Visual | Overall | Note |"
   echo "|---|---|---:|---:|---:|---:|---:|---:|---:|---|"
