@@ -1,0 +1,14 @@
+primitive,opcode,status
+page.render.static,1001,stable
+style.apply.theme,1002,stable
+script.exec.basic,1003,stable
+route.bind,1004,stable
+data.read,1101,stable
+data.write,1102,stable
+project.db.sql.exec,2001,provisional
+project.db.migrate,2002,provisional
+project.api.python.handle,2101,provisional
+project.api.go.handle,2102,provisional
+project.api.js.handle,2103,provisional
+project.web.bundle.spa,2201,provisional
+project.ops.container,2301,provisional

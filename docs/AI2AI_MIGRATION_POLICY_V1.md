@@ -25,7 +25,8 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
 - `OAIIR` (Opcode AIIR): numeric native execution units for runtime engine.
 - Current state:
   - PAIIR metrics are tracked in ingest and benchmark outputs.
-  - OAIIR metrics are tracked with explicit counters (registry promotion planned).
+  - OAIIR metrics are tracked from registry-backed opcode emission:
+    - `/var/www/aiir/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv`
 
 ## Migration Pipeline
 1. Ingest source project.
