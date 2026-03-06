@@ -48,6 +48,21 @@ AI-first runtime operations with minimal human interaction.
 Policy reference:
 - `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
 
+7. Benchmarks:
+```bash
+# quick MB-only
+/var/www/aiir/server/scripts/aiir bench --profile quick
+# full MB+parity (size-aware)
+/var/www/aiir/server/scripts/aiir bench --profile full
+```
+
+8. Cleanup generated artifacts:
+```bash
+/var/www/aiir/server/scripts/aiir clean --safe
+# includes test workdirs
+/var/www/aiir/server/scripts/aiir clean --deep
+```
+
 ## Chat Error Codes
 - `intent_unknown`
 - `confirmation_required`

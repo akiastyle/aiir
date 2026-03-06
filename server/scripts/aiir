@@ -20,6 +20,8 @@ support commands:
   ui       scaffold UI preset for a project
   convert  convert source project into AIIR-operable assets
   parity   run logic+visual parity check
+  bench    run open-repo benchmark (quick/full)
+  clean    clean generated/runtime artifacts
 USAGE
 }
 
@@ -48,6 +50,12 @@ case "$cmd" in
   parity)
     shift
     exec "${ROOT}/aiir-parity-check.sh" "$@" ;;
+  bench)
+    shift
+    exec "${ROOT}/aiir-bench.sh" "$@" ;;
+  clean)
+    shift
+    exec "${ROOT}/aiir-clean.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;

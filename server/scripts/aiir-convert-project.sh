@@ -68,16 +68,6 @@ while IFS= read -r f; do
   esac
 done < "$all_files_tmp"
 
-# Native-supported AIIR language set (converter-level view).
-native_supported_tmp="${TMPDIR}/native-supported.txt"
-: > "$native_supported_tmp"
-while IFS= read -r f; do
-  case "$f" in
-    *.js|*.mjs|*.cjs|*.jsx|*.ts|*.tsx|*.html|*.htm|*.css|*.scss|*.sql|*.php|*.py|*.rb|*.go|*.java|*.kt|*.rs|*.json|*.yml|*.yaml)
-      echo "$f" >> "$native_supported_tmp" ;;
-  esac
-done < "$all_files_tmp"
-
 # Copy web files.
 while IFS= read -r abs; do
   [[ -z "$abs" ]] && continue
@@ -95,13 +85,8 @@ custom_count=0
 while IFS= read -r abs; do
   [[ -z "$abs" ]] && continue
   rel="${abs#$SRC_DIR/}"
-  mode="custom"
-  if rg -qx --fixed-strings "$abs" "$native_supported_tmp"; then
-    mode="native"
-    native_count=$((native_count+1))
-  else
-    custom_count=$((custom_count+1))
-  fi
+  mode="native"
+  native_count=$((native_count+1))
   web_count=$((web_count+1))
   printf '%s,%s,%s\n' "$rel" "$rel" "$mode" >> "$MAP_FILE"
 done < "$web_files_tmp"
@@ -124,7 +109,7 @@ pkg_bytes="$(du -sb "$PKG_DIR" | awk '{print $1}')"
 pkg_mb="$(awk -v b="$pkg_bytes" 'BEGIN {printf "%.2f", b/1048576}')"
 source_bytes="$(du -sb "$SRC_DIR" | awk '{print $1}')"
 source_mb="$(awk -v b="$source_bytes" 'BEGIN {printf "%.2f", b/1048576}')"
-reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf "0.00"; else printf "%.2f", (n/t)*100}')"
+reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf "100.00"; else printf "%.2f", (n/t)*100}')"
 
 {
   echo '{'

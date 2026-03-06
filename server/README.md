@@ -157,6 +157,8 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir ui <project-ref|project-name> [utility|material|bootstrap-like]`
   - `/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]`
   - `/var/www/aiir/server/scripts/aiir parity <source-dir> <convert-out-dir>`
+  - `/var/www/aiir/server/scripts/aiir bench --profile full [repo-url ...]`
+  - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
 - Chat intents:
   - `stato`
   - `lista progetti`
@@ -182,6 +184,12 @@ This path contains deployment assets to expose the native runtime behind Apache 
 - Benchmark dashboard:
   - generator: `/var/www/aiir/test/aiir-benchmark-dashboard.sh`
   - output: `/var/www/aiir/test/OPEN_REPO_DASHBOARD.md`
+- Full benchmark (MB + parity, size-aware):
+  - runner: `/var/www/aiir/test/benchmark-open-repos-full.sh`
+  - log/latest/report:
+    - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`
+    - `/var/www/aiir/test/OPEN_REPO_FULL_LATEST.csv`
+    - `/var/www/aiir/test/OPEN_REPO_FULL_REPORT.md`
 - AI operations runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
 
