@@ -1,6 +1,6 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-08T12:13:03Z`
+Last run (UTC): `2026-03-08T12:52:04Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
 Full analysis threshold (ingest+parity): 350 MB source size
@@ -28,5 +28,15 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/sequelize/sequelize.git` | `c234325` | 11.59 | 5.56 | 52.03% | 100.00% | 10 (4 custom) | 10 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/solidjs/solid.git` | `a0524c0` | 1.91 | 0.85 | 55.48% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/tailwindlabs/tailwindcss.git` | `bf2e2fe` | 6.03 | 3.50 | 42.00% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/alpinejs/alpine.git` | `b357068` | 6.96 | 1.30 | 81.31% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/date-fns/date-fns.git` | `dd66398` | 11.80 | 3.44 | 70.82% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/immerjs/immer.git` | `cdccf1a` | 3.68 | 0.45 | 87.75% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/mobxjs/mobx.git` | `d9b877a` | 20.82 | 2.47 | 88.15% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/pmndrs/zustand.git` | `a3869ca` | 2.71 | 0.46 | 83.14% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/ramda/ramda.git` | `7d9d827` | 2.56 | 0.77 | 69.97% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/remix-run/react-router.git` | `00cb4d7` | 11.78 | 6.93 | 41.15% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/sindresorhus/ky.git` | `191057d` | 0.90 | 0.36 | 60.52% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/vercel/swr.git` | `5fa2952` | 1.34 | 0.87 | 34.86% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/vitest-dev/vitest.git` | `2049e8a` | 51.92 | 5.11 | 90.16% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 
-Summary (latest per repo+commit): reduction_avg=62.45% overall_parity_avg_effective=100.00% paiir_avg=7.81 oaiir_avg=7.81 oaiir_html_ops_avg=295.00 oaiir_css_ops_avg=174.38 oaiir_js_ops_avg=3401.57 ok=21/21 chunked=0 skipped_large=0
+Summary (latest per repo+commit): reduction_avg=65.14% overall_parity_avg_effective=100.00% paiir_avg=7.77 oaiir_avg=7.77 oaiir_html_ops_avg=527.55 oaiir_css_ops_avg=186.10 oaiir_js_ops_avg=3372.13 ok=31/31 chunked=0 skipped_large=0
