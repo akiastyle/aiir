@@ -54,6 +54,8 @@ Permanent principle reference:
 ```bash
 /var/www/aiir/server/scripts/aiir ingest <source-dir> <out-dir> [project-id]
 /var/www/aiir/server/scripts/aiir parity <source-dir> <out-dir>
+# execute OAIIR web IR into runnable web output:
+/var/www/aiir/server/scripts/aiir oaiir <out-dir> [runtime-out-dir]
 ```
 Compatibility alias:
 - `/var/www/aiir/server/scripts/aiir convert ...` (legacy alias of `ingest`)

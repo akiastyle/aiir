@@ -24,6 +24,7 @@ support commands:
   convert  legacy alias of ingest
   parity   run logic+visual parity check
   bench    run open-repo benchmark (quick/full)
+  oaiir    execute OAIIR web IR into runtime web output
   contract run AIIR contract test pack
   clean    clean generated/runtime artifacts
   audit    verify AI-first/AIIR operating rules
@@ -68,6 +69,9 @@ case "$cmd" in
   bench)
     shift
     exec "${ROOT}/aiir-bench.sh" "$@" ;;
+  oaiir)
+    shift
+    exec "${ROOT}/aiir-oaiir-exec.sh" "$@" ;;
   contract)
     shift
     exec "${ROOT}/aiir-contract-test.sh" "$@" ;;
