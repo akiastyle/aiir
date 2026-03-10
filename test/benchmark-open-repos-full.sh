@@ -10,6 +10,7 @@ CONV_ROOT="${WORK_ROOT}/conv"
 LOG_FILE="${TEST_BASE}/OPEN_REPO_FULL_LOG.csv"
 LATEST_FILE="${TEST_BASE}/OPEN_REPO_FULL_LATEST.csv"
 REPORT_FILE="${TEST_BASE}/OPEN_REPO_FULL_REPORT.md"
+ARTIFACT_DELTA_FILE="${TEST_BASE}/OPEN_REPO_FULL_ARTIFACT_DELTA.csv"
 REPO_LIST_FILE="${TEST_BASE}/REPO_SOURCES.txt"
 CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -290,6 +291,15 @@ TMP_LATEST="${WORK_ROOT}/latest.csv"
 cp "$TMP_LATEST" "$LATEST_FILE"
 
 {
+  echo "run_utc,repo_url,repo_name,repo_commit,paiir_total,paiir_custom_total,paiir_base_total,oaiir_total,oaiir_new_total,oaiir_existing_total,oaiir_html_ops_total,oaiir_css_ops_total,oaiir_js_ops_total,overall_parity,note"
+  awk -F, 'NR>1 {
+    paiir_base=$15-$16; if (paiir_base<0) paiir_base=0;
+    oaiir_existing=$17-$18; if (oaiir_existing<0) oaiir_existing=0;
+    printf "%s,%s,%s,%s,%s,%s,%d,%s,%s,%d,%s,%s,%s,%s,%s\n", $1,$2,$3,$4,$15,$16,paiir_base,$17,$18,oaiir_existing,$19,$20,$21,$25,$29;
+  }' "$TMP_LATEST"
+} > "$ARTIFACT_DELTA_FILE"
+
+{
   echo "# Open Repo Full Benchmark (AIIR MB + Parity)"
   echo
   echo "Last run (UTC): \`${RUN_TS}\`"
@@ -301,18 +311,17 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   echo "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|"
   awk -F, 'NR>1 {printf "| `%s` | `%s` | %s | %s | %s%% | %s%% | %s (%s custom) | %s (+%s) | %s%% | %s%% | %s%% | %s | %s |\n", $2, $4, $6, $12, $13, $14, $15, $16, $17, $18, $22, $24, $25, $26, $29}' "$TMP_LATEST" | tail -n 50
   echo
-  avg_red="$(awk -F, 'NR>1 {sum+=$13; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_overall_ok="$(awk -F, 'NR>1 && ($29=="ok" || $29=="analysis_chunked_large") {sum+=$25; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_paiir="$(awk -F, 'NR>1 {sum+=$15; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_oaiir="$(awk -F, 'NR>1 {sum+=$17; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_oaiir_html_ops="$(awk -F, 'NR>1 {sum+=$19; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_oaiir_css_ops="$(awk -F, 'NR>1 {sum+=$20; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
-  avg_oaiir_js_ops="$(awk -F, 'NR>1 {sum+=$21; n++} END {if(n==0) printf "0.00"; else printf "%.2f", sum/n}' "$TMP_LATEST")"
   skipped_large_count="$(awk -F, 'NR>1 && $29 ~ /^analysis_skipped_large/ {c++} END{print c+0}' "$TMP_LATEST")"
   chunked_count="$(awk -F, 'NR>1 && $29=="analysis_chunked_large" {c++} END{print c+0}' "$TMP_LATEST")"
   ok_count="$(awk -F, 'NR>1 && $29=="ok" {c++} END{print c+0}' "$TMP_LATEST")"
   total_count="$(awk -F, 'NR>1 {c++} END{print c+0}' "$TMP_LATEST")"
-  echo "Summary (latest per repo+commit): reduction_avg=${avg_red}% overall_parity_avg_effective=${avg_overall_ok}% paiir_avg=${avg_paiir} oaiir_avg=${avg_oaiir} oaiir_html_ops_avg=${avg_oaiir_html_ops} oaiir_css_ops_avg=${avg_oaiir_css_ops} oaiir_js_ops_avg=${avg_oaiir_js_ops} ok=${ok_count}/${total_count} chunked=${chunked_count} skipped_large=${skipped_large_count}"
+  paiir_custom_added_total="$(awk -F, 'NR>1 {sum+=$16} END{print sum+0}' "$TMP_LATEST")"
+  oaiir_new_added_total="$(awk -F, 'NR>1 {sum+=$18} END{print sum+0}' "$TMP_LATEST")"
+  repos_with_oaiir_new="$(awk -F, 'NR>1 && ($18+0)>0 {c++} END{print c+0}' "$TMP_LATEST")"
+  repos_with_custom_paiir="$(awk -F, 'NR>1 && ($16+0)>0 {c++} END{print c+0}' "$TMP_LATEST")"
+  parity_below_100="$(awk -F, 'NR>1 && ($25+0)<100 {c++} END{print c+0}' "$TMP_LATEST")"
+  echo "Artifact delta (latest per repo+commit): paiir_custom_added_total=${paiir_custom_added_total} oaiir_new_added_total=${oaiir_new_added_total} repos_with_custom_paiir=${repos_with_custom_paiir}/${total_count} repos_with_oaiir_new=${repos_with_oaiir_new}/${total_count} parity_below_100=${parity_below_100}/${total_count} ok=${ok_count}/${total_count} chunked=${chunked_count} skipped_large=${skipped_large_count}"
+  echo "Artifact delta csv: ${ARTIFACT_DELTA_FILE}"
 } > "$REPORT_FILE"
 
 rm -rf "$WORK_ROOT"

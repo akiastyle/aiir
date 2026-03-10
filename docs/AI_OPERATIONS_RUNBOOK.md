@@ -68,7 +68,14 @@ Policy reference:
 /var/www/aiir/server/scripts/aiir bench --profile quick
 # full MB+parity (size-aware)
 /var/www/aiir/server/scripts/aiir bench --profile full
+# full with strict quality gates (AI-first hardening)
+/var/www/aiir/server/scripts/aiir bench --profile full --gate-strict
 ```
+Full benchmark outputs:
+- `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`
+- `/var/www/aiir/test/OPEN_REPO_FULL_LATEST.csv`
+- `/var/www/aiir/test/OPEN_REPO_FULL_REPORT.md`
+- `/var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv`
 
 8. Cleanup generated artifacts:
 ```bash
