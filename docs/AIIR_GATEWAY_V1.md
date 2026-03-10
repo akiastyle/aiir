@@ -3,6 +3,12 @@
 ## Goal
 Provide a single AI-managed interface where human operators can create and use projects without direct database credentials.
 
+## Strategic Objective
+AIIR server is designed as a unified platform that:
+- synchronizes AI capabilities and operational contracts across nodes (AI2AI sync path)
+- creates, provisions, and runs real applications in production (project/domain/db lifecycle)
+- exposes a minimal human surface for intent input while keeping orchestration AI-first
+
 Core rule:
 - human never receives DB user/password
 - AIIR provisions and manages DB in background

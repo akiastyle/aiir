@@ -3,6 +3,11 @@
 ## Scope
 AI-first runtime operations with minimal human interaction.
 
+## Platform Focus
+This runbook assumes AIIR server has two primary outcomes:
+- AI sync reliability: trusted AI2AI exchange and repeatable contract alignment
+- app delivery reliability: end-to-end creation, provisioning, deployment, and operation of production apps
+
 Permanent principle reference:
 - `/var/www/aiir/docs/AIIR_AI_FIRST_PRINCIPLES.md`
 

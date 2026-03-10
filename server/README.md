@@ -2,6 +2,12 @@
 
 This path contains deployment assets to expose the native runtime behind Apache or Nginx.
 
+## Platform Mission
+AIIR server is not only a runtime wrapper. It is the operational core for:
+- AI synchronization: packaging/applying trusted AIIR capabilities across AI nodes
+- application production: creating, provisioning, deploying, and running real projects end-to-end
+- human interaction surface: minimal intent-driven UI/CLI while orchestration remains AI-first
+
 ## Runtime
 - Single native binary: `/var/www/aiir/ai/toolchain-native/aiird`
 - Default bind: `127.0.0.1:7788`
@@ -162,6 +168,9 @@ This path contains deployment assets to expose the native runtime behind Apache 
   - `/var/www/aiir/server/scripts/aiir-chat.sh "stato"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "crea progetto crm-alpha tipo webapp dominio crm.local"`
   - `/var/www/aiir/server/scripts/aiir-chat.sh "ui progetto crm-alpha preset material"`
+- Human console (full-screen, fluid, gateway mode):
+  - `/var/www/aiir/human/console.html`
+  - logo asset: `/var/www/aiir/human/assets/aiir-logo.svg`
 - Official unified CLI (recommended):
   - `/var/www/aiir/server/scripts/aiir up`
   - `/var/www/aiir/server/scripts/aiir deploy --project <name> [--domain <domain>] [--type <project-type>] [--strict-web-apply]`
