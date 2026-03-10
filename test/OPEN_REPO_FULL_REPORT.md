@@ -1,25 +1,15 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-10T11:24:30Z`
+Last run (UTC): `2026-03-10T20:06:56Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
-Full analysis threshold (ingest+parity): 500 MB source size
+Full analysis threshold (ingest+parity): 350 MB source size
 
 | Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | PAIIR | OAIIR | Logic | Visual | Overall | Chunk | Note |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
-| `https://github.com/gin-gonic/gin.git` | `3e44fdc` | 1.14 | 0.67 | 41.57% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/go-chi/chi.git` | `a54874f` | 0.49 | 0.29 | 40.41% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/jqlang/jq.git` | `3cd7e0d` | 5.82 | 0.95 | 83.62% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/labstack/echo.git` | `1753170` | 1.85 | 1.05 | 43.45% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/pallets/flask.git` | `3a9d54f` | 2.53 | 0.59 | 76.64% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/psf/requests.git` | `0e4ae38` | 8.36 | 0.38 | 95.48% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/tiangolo/fastapi.git` | `627c10a` | 47.56 | 3.95 | 91.69% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/axios/axios.git` | `84285c8` | 2.19 | 0.66 | 69.72% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/hapijs/hapi.git` | `f2a24f6` | 2.06 | 1.11 | 45.89% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/koajs/koa.git` | `d3ea8bf` | 0.85 | 0.39 | 54.76% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/lodash/lodash.git` | `0783181` | 5.21 | 0.42 | 91.96% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/moment/moment.git` | `18aba13` | 14.15 | 5.45 | 61.51% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/preactjs/preact.git` | `2459326` | 2.27 | 1.75 | 22.97% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/prisma/prisma.git` | `9fa295d` | 55.88 | 9.37 | 83.24% | 100.00% | 11 (5 custom) | 11 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/reduxjs/redux.git` | `ab47d94` | 46.96 | 0.75 | 98.40% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/sequelize/sequelize.git` | `c234325` | 11.59 | 5.56 | 52.03% | 100.00% | 10 (4 custom) | 10 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
@@ -57,6 +47,16 @@ Full analysis threshold (ingest+parity): 500 MB source size
 | `https://github.com/vitejs/vite.git` | `eaa4352` | 26.12 | 3.64 | 86.08% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/webpack/webpack.git` | `d6927b4` | 40.81 | 9.53 | 76.65% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/microsoft/TypeScript.git` | `c9e7428bb` | 409.10 | 116.35 | 71.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/ReactiveX/rxjs.git` | `c15b37f` | 16.05 | 3.63 | 77.40% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/adonisjs/core.git` | `60ae7d2` | 0.84 | 0.62 | 26.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/koajs/koa.git` | `d3ea8bf` | 0.85 | 0.39 | 54.76% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/lit/lit.git` | `8a70fa2` | 17.99 | 4.59 | 74.49% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/lodash/lodash.git` | `0783181` | 5.21 | 0.42 | 91.96% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/mithriljs/mithril.js.git` | `bd0ee3f` | 1.27 | 0.94 | 26.16% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/preactjs/preact.git` | `2459326` | 2.27 | 1.75 | 22.97% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/remix-run/remix.git` | `3a245b6` | 34.91 | 4.23 | 87.89% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/sveltejs/kit.git` | `a85396c` | 9.52 | 2.52 | 73.51% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/vercel/turbo.git` | `a70d0fc` | 141.13 | 15.49 | 89.02% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 
-Artifact delta (latest per repo+commit): paiir_custom_added_total=93 oaiir_new_added_total=0 repos_with_custom_paiir=52/52 repos_with_oaiir_new=0/52 parity_below_100=0/52 ok=52/52 chunked=0 skipped_large=0
+Artifact delta (latest per repo+commit): paiir_custom_added_total=107 oaiir_new_added_total=0 repos_with_custom_paiir=59/59 repos_with_oaiir_new=0/59 parity_below_100=0/59 ok=59/59 chunked=0 skipped_large=0
 Artifact delta csv: /var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv

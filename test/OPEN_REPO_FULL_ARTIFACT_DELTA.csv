@@ -10,10 +10,7 @@ run_utc,repo_url,repo_name,repo_commit,paiir_total,paiir_custom_total,paiir_base
 2026-03-06T11:31:06Z,https://github.com/tiangolo/fastapi.git,fastapi,627c10a,8,2,6,8,0,8,333,232,224,100.00,ok
 2026-03-06T11:39:53Z,https://github.com/axios/axios.git,axios,84285c8,8,2,6,8,0,8,1885,0,4095,100.00,ok
 2026-03-08T12:13:03Z,https://github.com/hapijs/hapi.git,hapi,f2a24f6,7,1,6,7,0,7,16,0,10700,100.00,ok
-2026-03-08T12:13:03Z,https://github.com/koajs/koa.git,koa,d3ea8bf,7,1,6,7,0,7,0,0,3554,100.00,ok
-2026-03-08T12:13:03Z,https://github.com/lodash/lodash.git,lodash,0783181,7,1,6,7,0,7,1620,1621,11076,100.00,ok
 2026-03-08T12:13:03Z,https://github.com/moment/moment.git,moment,18aba13,7,1,6,7,0,7,0,0,1717,100.00,ok
-2026-03-08T12:13:03Z,https://github.com/preactjs/preact.git,preact,2459326,8,2,6,8,0,8,29,407,6153,100.00,ok
 2026-03-08T12:13:03Z,https://github.com/prisma/prisma.git,prisma,9fa295d,11,5,6,11,0,11,0,0,3672,100.00,ok
 2026-03-08T12:13:03Z,https://github.com/reduxjs/redux.git,redux,ab47d94,9,3,6,9,0,9,426,410,1586,100.00,ok
 2026-03-08T12:13:03Z,https://github.com/sequelize/sequelize.git,sequelize,c234325,10,4,6,10,0,10,0,0,5137,100.00,ok
@@ -51,3 +48,13 @@ run_utc,repo_url,repo_name,repo_commit,paiir_total,paiir_custom_total,paiir_base
 2026-03-10T07:51:10Z,https://github.com/vitejs/vite.git,vite,eaa4352,8,2,6,8,0,8,5351,3381,3606,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/webpack/webpack.git,webpack,d6927b4,8,2,6,8,0,8,400,1729,1308,100.00,ok
 2026-03-10T11:24:30Z,https://github.com/microsoft/TypeScript.git,TypeScript,c9e7428bb,7,1,6,7,0,7,0,0,21811,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/ReactiveX/rxjs.git,rxjs,c15b37f,8,2,6,8,0,8,1621,2741,5420,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/adonisjs/core.git,core,60ae7d2,7,1,6,7,0,7,0,0,2587,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/koajs/koa.git,koa,d3ea8bf,7,1,6,7,0,7,0,0,3554,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/lit/lit.git,lit,8a70fa2,8,2,6,8,0,8,6431,821,5395,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/lodash/lodash.git,lodash,0783181,7,1,6,7,0,7,1620,1621,11076,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/mithriljs/mithril.js.git,mithril.js,bd0ee3f,7,1,6,7,0,7,236,0,13671,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/preactjs/preact.git,preact,2459326,8,2,6,8,0,8,29,407,6153,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/remix-run/remix.git,remix,3a245b6,9,3,6,9,0,9,438,586,4961,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/sveltejs/kit.git,kit,a85396c,8,2,6,8,0,8,1196,27,1916,100.00,ok
+2026-03-10T20:06:56Z,https://github.com/vercel/turbo.git,turbo,a70d0fc,9,3,6,9,0,9,926,4711,3526,100.00,ok
