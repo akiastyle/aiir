@@ -16,6 +16,12 @@
         <span class="dot"></span>
         <strong>AIIR Human Console</strong>
       </div>
+
+      <div class="mode-switch" role="tablist" aria-label="Vista console">
+        <button id="mode_form" class="mode-btn active" data-mode="form" role="tab" aria-selected="true">Form</button>
+        <button id="mode_chat" class="mode-btn" data-mode="chat" role="tab" aria-selected="false">Chat</button>
+      </div>
+
       <div class="endpoint-row">
         <label for="endpoint">Gateway</label>
         <input id="endpoint" type="text" value="http://127.0.0.1:3000" />
@@ -23,75 +29,111 @@
     </header>
 
     <main class="workspace">
-      <section class="panel panel-left">
-        <h2>Progetto</h2>
-        <div class="grid-two">
-          <label>Nome progetto
-            <input id="project_name" type="text" placeholder="crm-alpha" />
-          </label>
-          <label>Tipo
-            <select id="project_type">
-              <option value="webapp">webapp</option>
-              <option value="website">website</option>
-              <option value="ecommerce">ecommerce</option>
-              <option value="backend">backend</option>
-              <option value="frontend">frontend</option>
-              <option value="mobileapp">mobileapp</option>
-            </select>
-          </label>
-          <label>Dominio
-            <input id="domain" type="text" placeholder="crm.local" />
-          </label>
-          <label>Regione
-            <input id="region" type="text" value="local" />
-          </label>
-        </div>
+      <div id="view_form" class="view active">
+        <section class="panel panel-left">
+          <h2>Progetto</h2>
+          <div class="grid-two">
+            <label>Nome progetto
+              <input id="project_name" type="text" placeholder="crm-alpha" />
+            </label>
+            <label>Tipo
+              <select id="project_type">
+                <option value="webapp">webapp</option>
+                <option value="website">website</option>
+                <option value="ecommerce">ecommerce</option>
+                <option value="backend">backend</option>
+                <option value="frontend">frontend</option>
+                <option value="mobileapp">mobileapp</option>
+              </select>
+            </label>
+            <label>Dominio
+              <input id="domain" type="text" placeholder="crm.local" />
+            </label>
+            <label>Regione
+              <input id="region" type="text" value="local" />
+            </label>
+          </div>
 
-        <div class="actions">
-          <button id="create_project">Crea Progetto</button>
-          <button id="refresh_state" class="ghost">Stato Locale</button>
-        </div>
+          <div class="actions">
+            <button id="create_project">Crea Progetto</button>
+            <button id="refresh_state" class="ghost">Stato Locale</button>
+          </div>
 
-        <h2>DB Exec</h2>
-        <div class="grid-two">
-          <label>Project Ref
-            <input id="project_ref" type="text" placeholder="prj_..." />
-          </label>
-          <label>DB Ref
-            <input id="db_ref" type="text" placeholder="db_..." />
-          </label>
-          <label>Operazione
-            <select id="op_id">
-              <option value="entity.upsert">entity.upsert</option>
-              <option value="entity.read">entity.read</option>
-            </select>
-          </label>
-          <label>Collection
-            <input id="collection" type="text" value="customers" />
-          </label>
-        </div>
+          <h2>DB Exec</h2>
+          <div class="grid-two">
+            <label>Project Ref
+              <input id="project_ref" type="text" placeholder="prj_..." />
+            </label>
+            <label>DB Ref
+              <input id="db_ref" type="text" placeholder="db_..." />
+            </label>
+            <label>Operazione
+              <select id="op_id">
+                <option value="entity.upsert">entity.upsert</option>
+                <option value="entity.read">entity.read</option>
+              </select>
+            </label>
+            <label>Collection
+              <input id="collection" type="text" value="customers" />
+            </label>
+          </div>
 
-        <label>Payload JSON
-          <textarea id="payload_json" rows="8">{
+          <label>Payload JSON
+            <textarea id="payload_json" rows="8">{
   "doc": {
     "id": "cus_1001",
     "name": "Acme Srl"
   }
 }</textarea>
-        </label>
+          </label>
 
-        <div class="actions">
-          <button id="exec_db">Esegui DB</button>
-        </div>
-      </section>
+          <div class="actions">
+            <button id="exec_db">Esegui DB</button>
+          </div>
+        </section>
 
-      <section class="panel panel-right">
-        <div class="log-header">
-          <h2>Output</h2>
-          <button id="clear_log" class="ghost">Pulisci</button>
-        </div>
-        <pre id="log" aria-live="polite"></pre>
-      </section>
+        <section class="panel panel-right">
+          <div class="log-header">
+            <h2>Output</h2>
+            <button id="clear_log" class="ghost">Pulisci</button>
+          </div>
+          <pre id="log" aria-live="polite"></pre>
+        </section>
+      </div>
+
+      <div id="view_chat" class="view">
+        <section class="panel panel-left">
+          <h2>Chat Operativa</h2>
+          <p class="hint">Comandi supportati via gateway HTTP:</p>
+          <div class="chip-list">
+            <button class="chip" data-chat='crea progetto crm-alpha tipo webapp dominio crm.local'>crea progetto ...</button>
+            <button class="chip" data-chat='salva customers {"doc":{"id":"cus_1002","name":"Beta"}}'>salva ...</button>
+            <button class="chip" data-chat='leggi customers cus_1002'>leggi ...</button>
+            <button class="chip" data-chat='stato locale'>stato locale</button>
+            <button class="chip" data-chat='help'>help</button>
+          </div>
+
+          <label>Messaggio
+            <textarea id="chat_input" rows="7" placeholder="Scrivi un comando operativo..."></textarea>
+          </label>
+
+          <div class="actions">
+            <button id="send_chat">Invia</button>
+            <button id="clear_chat" class="ghost">Pulisci Chat</button>
+          </div>
+
+          <p class="hint">
+            Note: comandi CLI puri (`lista progetti`, `stato progetto`, `ottimizza progetto`, `ui progetto`) non hanno endpoint HTTP dedicato in questa v1.
+          </p>
+        </section>
+
+        <section class="panel panel-right">
+          <div class="log-header">
+            <h2>Transcript</h2>
+          </div>
+          <pre id="chat_log" aria-live="polite"></pre>
+        </section>
+      </div>
     </main>
   </div>
 

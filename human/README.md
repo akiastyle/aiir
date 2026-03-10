@@ -5,6 +5,10 @@ Human Console v1 (full-screen, fluid, no boxed layout):
 - [console.css](/var/www/aiir/human/console.css)
 - [console.js](/var/www/aiir/human/console.js)
 
+Views:
+- `Form`: create project + db exec
+- `Chat`: operational prompt (gateway-backed intents)
+
 Run:
 ```bash
 cd /var/www/aiir/human
@@ -18,6 +22,13 @@ Gateway defaults:
 - endpoint UI default: `http://127.0.0.1:3000`
 - project create: `POST /aiir/project/create`
 - db exec: `POST /aiir/db/exec`
+
+Chat intents in v1:
+- `crea progetto <nome> [tipo <tipo>] [dominio <dominio>]`
+- `salva <collection> <json>`
+- `leggi <collection> <id>`
+- `stato locale`
+- `help`
 
 Operational provisioning remains AI-first and can still be managed via chat CLI:
 ```bash
