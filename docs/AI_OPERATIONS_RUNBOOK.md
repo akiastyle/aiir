@@ -70,6 +70,8 @@ Policy reference:
 /var/www/aiir/server/scripts/aiir bench --profile full
 # full with strict quality gates (AI-first hardening)
 /var/www/aiir/server/scripts/aiir bench --profile full --gate-strict
+# also require full analysis only (no chunk mode)
+/var/www/aiir/server/scripts/aiir bench --profile full --gate-strict --gate-no-chunk
 ```
 Full benchmark outputs:
 - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`

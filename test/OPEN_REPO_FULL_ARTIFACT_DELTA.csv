@@ -45,9 +45,9 @@ run_utc,repo_url,repo_name,repo_commit,paiir_total,paiir_custom_total,paiir_base
 2026-03-10T07:51:10Z,https://github.com/fastify/fastify.git,fastify,e02d602,8,2,6,8,0,8,0,0,9234,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/honojs/hono.git,hono,3f88636,8,2,6,8,0,8,8,0,4281,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/jestjs/jest.git,jest,efb59c2,7,1,6,7,0,7,0,689,3664,100.00,ok
-2026-03-10T07:51:10Z,https://github.com/microsoft/TypeScript.git,TypeScript,c9e7428bb,7,1,6,7,0,7,0,0,21811,100.00,analysis_chunked_large
 2026-03-10T07:51:10Z,https://github.com/nuxt/nuxt.git,nuxt,9d27cf5,8,2,6,8,0,8,721,20,4138,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/puppeteer/puppeteer.git,puppeteer,60ace04,8,2,6,8,0,8,1724,154,6086,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/rollup/rollup.git,rollup,e3d6591,8,2,6,8,0,8,412,46,3974,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/vitejs/vite.git,vite,eaa4352,8,2,6,8,0,8,5351,3381,3606,100.00,ok
 2026-03-10T07:51:10Z,https://github.com/webpack/webpack.git,webpack,d6927b4,8,2,6,8,0,8,400,1729,1308,100.00,ok
+2026-03-10T11:24:30Z,https://github.com/microsoft/TypeScript.git,TypeScript,c9e7428bb,7,1,6,7,0,7,0,0,21811,100.00,ok

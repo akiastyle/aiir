@@ -1,9 +1,9 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-10T07:51:10Z`
+Last run (UTC): `2026-03-10T11:24:30Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
-Full analysis threshold (ingest+parity): 350 MB source size
+Full analysis threshold (ingest+parity): 500 MB source size
 
 | Repo | Commit | Original MB | AIIR Net MB | Reduction | Reuse | PAIIR | OAIIR | Logic | Visual | Overall | Chunk | Note |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|---|
@@ -51,12 +51,12 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/fastify/fastify.git` | `e02d602` | 3.36 | 2.05 | 38.91% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/honojs/hono.git` | `3f88636` | 5.87 | 2.27 | 61.42% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/jestjs/jest.git` | `efb59c2` | 55.73 | 4.98 | 91.06% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/microsoft/TypeScript.git` | `c9e7428bb` | 409.11 | 116.35 | 71.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | web_sample | analysis_chunked_large |
 | `https://github.com/nuxt/nuxt.git` | `9d27cf5` | 6.47 | 2.26 | 65.15% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/puppeteer/puppeteer.git` | `60ace04` | 11.41 | 2.97 | 73.99% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/rollup/rollup.git` | `e3d6591` | 16.88 | 5.98 | 64.58% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/vitejs/vite.git` | `eaa4352` | 26.12 | 3.64 | 86.08% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/webpack/webpack.git` | `d6927b4` | 40.81 | 9.53 | 76.65% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/microsoft/TypeScript.git` | `c9e7428bb` | 409.10 | 116.35 | 71.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 
-Artifact delta (latest per repo+commit): paiir_custom_added_total=93 oaiir_new_added_total=0 repos_with_custom_paiir=52/52 repos_with_oaiir_new=0/52 parity_below_100=0/52 ok=51/52 chunked=1 skipped_large=0
+Artifact delta (latest per repo+commit): paiir_custom_added_total=93 oaiir_new_added_total=0 repos_with_custom_paiir=52/52 repos_with_oaiir_new=0/52 parity_below_100=0/52 ok=52/52 chunked=0 skipped_large=0
 Artifact delta csv: /var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv

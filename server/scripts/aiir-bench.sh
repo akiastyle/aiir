@@ -7,12 +7,13 @@ PROFILE="full"
 GATE_ZERO_NEW=0
 GATE_OVERALL_MIN=""
 GATE_NOTE_OK=0
+GATE_NO_CHUNK=0
 REPOS=()
 
 usage() {
   cat >&2 <<'USAGE'
 usage:
-  /var/www/aiir/server/scripts/aiir-bench.sh [--profile quick|full] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-strict] [repo-url ...]
+  /var/www/aiir/server/scripts/aiir-bench.sh [--profile quick|full] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-no-chunk] [--gate-strict] [repo-url ...]
 
 profiles:
   quick  -> MB benchmark only (OPEN_REPO_TEST_*)
@@ -22,6 +23,7 @@ gates (full profile):
   --gate-zero-new      fail if any repo in current run has oaiir_new_total > 0
   --gate-overall-min N fail if any repo in current run has overall_parity < N
   --gate-note-ok       fail if note is not ok or analysis_chunked_large
+  --gate-no-chunk      fail if any repo in current run used chunk_mode != none
   --gate-strict        equivalent to --gate-zero-new --gate-overall-min 100 --gate-note-ok
 USAGE
 }
@@ -42,6 +44,9 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --gate-note-ok)
       GATE_NOTE_OK=1
+      shift ;;
+    --gate-no-chunk)
+      GATE_NO_CHUNK=1
       shift ;;
     --gate-strict)
       GATE_ZERO_NEW=1
@@ -90,7 +95,7 @@ if [[ -n "$GATE_OVERALL_MIN" ]]; then
   fi
 fi
 
-if [[ "$PROFILE" == "quick" && ( "$GATE_ZERO_NEW" == "1" || -n "$GATE_OVERALL_MIN" || "$GATE_NOTE_OK" == "1" ) ]]; then
+if [[ "$PROFILE" == "quick" && ( "$GATE_ZERO_NEW" == "1" || -n "$GATE_OVERALL_MIN" || "$GATE_NOTE_OK" == "1" || "$GATE_NO_CHUNK" == "1" ) ]]; then
   echo "gate options are supported only with --profile full" >&2
   exit 1
 fi
@@ -105,7 +110,7 @@ if [[ "$PROFILE" != "full" ]]; then
   exit 0
 fi
 
-if [[ "$GATE_ZERO_NEW" != "1" && -z "$GATE_OVERALL_MIN" && "$GATE_NOTE_OK" != "1" ]]; then
+if [[ "$GATE_ZERO_NEW" != "1" && -z "$GATE_OVERALL_MIN" && "$GATE_NOTE_OK" != "1" && "$GATE_NO_CHUNK" != "1" ]]; then
   exit 0
 fi
 
@@ -142,6 +147,14 @@ if [[ "$GATE_NOTE_OK" == "1" ]]; then
   note_rows="$(awk -F, -v ts="$run_ts" 'NR>1 && $1==ts && ($29!="ok" && $29!="analysis_chunked_large") {c++} END{print c+0}' "$LOG_FILE")"
   if [[ "$note_rows" != "0" ]]; then
     echo "gate failed (--gate-note-ok): run_ts=${run_ts} rows_with_bad_note=${note_rows}" >&2
+    gate_fail=1
+  fi
+fi
+
+if [[ "$GATE_NO_CHUNK" == "1" ]]; then
+  chunk_rows="$(awk -F, -v ts="$run_ts" 'NR>1 && $1==ts && $26!="none" {c++} END{print c+0}' "$LOG_FILE")"
+  if [[ "$chunk_rows" != "0" ]]; then
+    echo "gate failed (--gate-no-chunk): run_ts=${run_ts} rows_with_chunk_mode=${chunk_rows}" >&2
     gate_fail=1
   fi
 fi
