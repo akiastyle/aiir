@@ -4,6 +4,7 @@ Human Console v1 (full-screen, fluid, no boxed layout):
 - [console.html](/var/www/aiir/human/console.html)
 - [console.css](/var/www/aiir/human/console.css)
 - [console.js](/var/www/aiir/human/console.js)
+- logo: [aiir-logo.svg](/var/www/aiir/human/assets/aiir-logo.svg)
 
 Views:
 - `Form`: create project + db exec

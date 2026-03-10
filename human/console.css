@@ -49,17 +49,16 @@ body {
 
 .brand {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.65rem;
   align-items: center;
   letter-spacing: 0.2px;
 }
 
-.dot {
-  width: 0.8rem;
-  height: 0.8rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), #78ffd2);
-  box-shadow: 0 0 20px rgba(31, 208, 164, 0.7);
+.brand-logo {
+  width: 132px;
+  height: auto;
+  display: block;
+  border-radius: 6px;
 }
 
 .mode-switch {
