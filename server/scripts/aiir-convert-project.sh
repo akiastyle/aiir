@@ -131,13 +131,40 @@ base_cmds=(
   "data.write"
 )
 custom_cmds=()
-if rg -q '\.sql$' "$all_files_tmp"; then custom_cmds+=("project.db.sql.exec"); fi
-if rg -q '/migrations?/|/migration/' "$all_files_tmp"; then custom_cmds+=("project.db.migrate"); fi
-if rg -q '\.py$' "$all_files_tmp"; then custom_cmds+=("project.api.python.handle"); fi
-if rg -q '\.go$' "$all_files_tmp"; then custom_cmds+=("project.api.go.handle"); fi
-if rg -q '\.(js|ts)$' "$all_files_tmp"; then custom_cmds+=("project.api.js.handle"); fi
-if rg -q 'vite\.config|webpack\.config|next\.config|angular\.json|nuxt\.config|svelte\.config' "$all_files_tmp"; then custom_cmds+=("project.web.bundle.spa"); fi
-if rg -q 'dockerfile|docker-compose|compose\.ya?ml' "$all_files_tmp"; then custom_cmds+=("project.ops.container"); fi
+# Single-pass detection to reduce repeated scans on very large repositories.
+eval "$(
+  awk '
+    BEGIN {
+      sql=0; mig=0; py=0; go=0; js=0; spa=0; ctr=0;
+    }
+    {
+      l=tolower($0);
+      if (l ~ /\.sql$/) sql=1;
+      if (l ~ /\/migrations?\// || l ~ /\/migration\//) mig=1;
+      if (l ~ /\.py$/) py=1;
+      if (l ~ /\.go$/) go=1;
+      if (l ~ /\.(js|ts)$/) js=1;
+      if (l ~ /vite\.config/ || l ~ /webpack\.config/ || l ~ /next\.config/ || l ~ /angular\.json/ || l ~ /nuxt\.config/ || l ~ /svelte\.config/) spa=1;
+      if (l ~ /dockerfile/ || l ~ /docker-compose/ || l ~ /compose\.ya?ml/) ctr=1;
+    }
+    END {
+      printf "HAS_SQL=%d\n", sql;
+      printf "HAS_MIG=%d\n", mig;
+      printf "HAS_PY=%d\n", py;
+      printf "HAS_GO=%d\n", go;
+      printf "HAS_JS=%d\n", js;
+      printf "HAS_SPA=%d\n", spa;
+      printf "HAS_CTR=%d\n", ctr;
+    }
+  ' "$all_files_tmp"
+)"
+if [[ "${HAS_SQL:-0}" == "1" ]]; then custom_cmds+=("project.db.sql.exec"); fi
+if [[ "${HAS_MIG:-0}" == "1" ]]; then custom_cmds+=("project.db.migrate"); fi
+if [[ "${HAS_PY:-0}" == "1" ]]; then custom_cmds+=("project.api.python.handle"); fi
+if [[ "${HAS_GO:-0}" == "1" ]]; then custom_cmds+=("project.api.go.handle"); fi
+if [[ "${HAS_JS:-0}" == "1" ]]; then custom_cmds+=("project.api.js.handle"); fi
+if [[ "${HAS_SPA:-0}" == "1" ]]; then custom_cmds+=("project.web.bundle.spa"); fi
+if [[ "${HAS_CTR:-0}" == "1" ]]; then custom_cmds+=("project.ops.container"); fi
 
 # Unique custom commands.
 custom_unique_tmp="${TMPDIR}/custom-unique.txt"
@@ -155,10 +182,20 @@ echo 'primitive,opcode,status,scope' > "$OAIIR_FILE"
 oaiir_total=0
 oaiir_new_total=0
 oaiir_dynamic_next=900000
+# Load opcode registry once (primitive -> opcode/status) to avoid per-row awk scans.
+declare -A oaiir_opcode_map=()
+declare -A oaiir_status_map=()
+while IFS=, read -r primitive opcode status _rest; do
+  [[ -z "${primitive:-}" ]] && continue
+  [[ "$primitive" == "primitive" ]] && continue
+  oaiir_opcode_map["$primitive"]="$opcode"
+  oaiir_status_map["$primitive"]="$status"
+done < "$OAIIR_REGISTRY"
+
 while IFS= read -r p; do
   [[ -z "$p" ]] && continue
-  opcode="$(awk -F, -v prim="$p" 'NR>1 && $1==prim {print $2; exit}' "$OAIIR_REGISTRY")"
-  status="$(awk -F, -v prim="$p" 'NR>1 && $1==prim {print $3; exit}' "$OAIIR_REGISTRY")"
+  opcode="${oaiir_opcode_map[$p]:-}"
+  status="${oaiir_status_map[$p]:-}"
   if [[ -z "$opcode" ]]; then
     opcode="$oaiir_dynamic_next"
     oaiir_dynamic_next=$((oaiir_dynamic_next+1))

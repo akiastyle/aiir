@@ -1,6 +1,6 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-10T20:06:56Z`
+Last run (UTC): `2026-03-10T22:00:11Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
 Full analysis threshold (ingest+parity): 350 MB source size
@@ -49,7 +49,6 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/microsoft/TypeScript.git` | `c9e7428bb` | 409.10 | 116.35 | 71.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/ReactiveX/rxjs.git` | `c15b37f` | 16.05 | 3.63 | 77.40% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/adonisjs/core.git` | `60ae7d2` | 0.84 | 0.62 | 26.56% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/koajs/koa.git` | `d3ea8bf` | 0.85 | 0.39 | 54.76% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/lit/lit.git` | `8a70fa2` | 17.99 | 4.59 | 74.49% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/lodash/lodash.git` | `0783181` | 5.21 | 0.42 | 91.96% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/mithriljs/mithril.js.git` | `bd0ee3f` | 1.27 | 0.94 | 26.16% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
@@ -57,6 +56,7 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/remix-run/remix.git` | `3a245b6` | 34.91 | 4.23 | 87.89% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/sveltejs/kit.git` | `a85396c` | 9.52 | 2.52 | 73.51% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/vercel/turbo.git` | `a70d0fc` | 141.13 | 15.49 | 89.02% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/koajs/koa.git` | `d3ea8bf` | 0.85 | 0.39 | 54.76% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 
 Artifact delta (latest per repo+commit): paiir_custom_added_total=107 oaiir_new_added_total=0 repos_with_custom_paiir=59/59 repos_with_oaiir_new=0/59 parity_below_100=0/59 ok=59/59 chunked=0 skipped_large=0
 Artifact delta csv: /var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv
