@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AIIR Human Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./console.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="dot"></span>
+        <strong>AIIR Human Console</strong>
+      </div>
+      <div class="endpoint-row">
+        <label for="endpoint">Gateway</label>
+        <input id="endpoint" type="text" value="http://127.0.0.1:3000" />
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel panel-left">
+        <h2>Progetto</h2>
+        <div class="grid-two">
+          <label>Nome progetto
+            <input id="project_name" type="text" placeholder="crm-alpha" />
+          </label>
+          <label>Tipo
+            <select id="project_type">
+              <option value="webapp">webapp</option>
+              <option value="website">website</option>
+              <option value="ecommerce">ecommerce</option>
+              <option value="backend">backend</option>
+              <option value="frontend">frontend</option>
+              <option value="mobileapp">mobileapp</option>
+            </select>
+          </label>
+          <label>Dominio
+            <input id="domain" type="text" placeholder="crm.local" />
+          </label>
+          <label>Regione
+            <input id="region" type="text" value="local" />
+          </label>
+        </div>
+
+        <div class="actions">
+          <button id="create_project">Crea Progetto</button>
+          <button id="refresh_state" class="ghost">Stato Locale</button>
+        </div>
+
+        <h2>DB Exec</h2>
+        <div class="grid-two">
+          <label>Project Ref
+            <input id="project_ref" type="text" placeholder="prj_..." />
+          </label>
+          <label>DB Ref
+            <input id="db_ref" type="text" placeholder="db_..." />
+          </label>
+          <label>Operazione
+            <select id="op_id">
+              <option value="entity.upsert">entity.upsert</option>
+              <option value="entity.read">entity.read</option>
+            </select>
+          </label>
+          <label>Collection
+            <input id="collection" type="text" value="customers" />
+          </label>
+        </div>
+
+        <label>Payload JSON
+          <textarea id="payload_json" rows="8">{
+  "doc": {
+    "id": "cus_1001",
+    "name": "Acme Srl"
+  }
+}</textarea>
+        </label>
+
+        <div class="actions">
+          <button id="exec_db">Esegui DB</button>
+        </div>
+      </section>
+
+      <section class="panel panel-right">
+        <div class="log-header">
+          <h2>Output</h2>
+          <button id="clear_log" class="ghost">Pulisci</button>
+        </div>
+        <pre id="log" aria-live="polite"></pre>
+      </section>
+    </main>
+  </div>
+
+  <script src="./console.js"></script>
+</body>
+</html>

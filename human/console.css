@@ -1,0 +1,203 @@
+:root {
+  --bg-a: #0b1720;
+  --bg-b: #122a36;
+  --panel: rgba(9, 22, 30, 0.72);
+  --border: rgba(130, 186, 197, 0.24);
+  --text: #ecf4f6;
+  --muted: #9db3ba;
+  --primary: #1fd0a4;
+  --primary-ink: #082219;
+  --ghost: rgba(128, 199, 186, 0.12);
+  --danger: #ff7d6b;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(31, 208, 164, 0.14), transparent 60%),
+    radial-gradient(1000px 500px at 110% 10%, rgba(255, 125, 107, 0.12), transparent 58%),
+    linear-gradient(135deg, var(--bg-a), var(--bg-b));
+}
+
+.app-shell {
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+}
+
+.topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(5, 14, 20, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  letter-spacing: 0.2px;
+}
+
+.dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), #78ffd2);
+  box-shadow: 0 0 20px rgba(31, 208, 164, 0.7);
+}
+
+.endpoint-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.workspace {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 0.8rem;
+  padding: 0.8rem;
+}
+
+.panel {
+  min-height: 0;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  padding: 1rem;
+}
+
+.panel-left {
+  overflow: auto;
+}
+
+.panel-right {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h2 {
+  margin: 0.1rem 0 0.8rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+input,
+select,
+textarea,
+button {
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(8, 20, 28, 0.75);
+  color: var(--text);
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 0.58rem 0.62rem;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 160px;
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0.9rem 0 1rem;
+}
+
+button {
+  cursor: pointer;
+  padding: 0.56rem 0.82rem;
+  font-weight: 600;
+  transition: transform 120ms ease, opacity 120ms ease, background-color 120ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:not(.ghost) {
+  background: linear-gradient(135deg, var(--primary), #6df5ca);
+  color: var(--primary-ink);
+  border: none;
+}
+
+button.ghost {
+  background: var(--ghost);
+}
+
+#log {
+  margin: 0;
+  margin-top: 0.6rem;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(4, 12, 17, 0.78);
+  padding: 0.7rem;
+  color: #d8eef3;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 980px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(260px, 42vh);
+  }
+
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+}
