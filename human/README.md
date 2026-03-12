@@ -19,6 +19,10 @@ python3 -m http.server 8090
 Open:
 - `http://127.0.0.1:8090/console.html`
 
+Human policy:
+- human non deve gestire script operativi interni
+- human usa solo console/chat intent; orchestrazione, tuning, benchmark e recovery sono AI-managed
+
 Gateway defaults:
 - endpoint UI default: `http://127.0.0.1:3000`
 - project create: `POST /aiir/project/create`

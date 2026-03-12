@@ -9,27 +9,14 @@ usage() {
 usage:
   /var/www/aiir/server/scripts/aiir <command> [args]
 
-official commands:
+public commands (human-facing):
   up       zero-conf bootstrap runtime/project
-  deploy   AI-first deploy project/runtime/policy/web
   chat     operational AI chat entrypoint
   down     stop runtime
 
-support commands:
-  doctor   runtime diagnostics
-  verify   run consolidated verification pack
-  optimize optimize a project policy/env
-  ui       scaffold UI preset for a project
-  ingest   ingest source project into AIIR-operable assets
-  convert  legacy alias of ingest
-  parity   run logic+visual parity check
-  bench    run open-repo benchmark (quick/full)
-  tune     compute/apply AI-first tuning profile
-  oaiir    execute OAIIR web IR into runtime web output
-  contract run AIIR contract test pack
-  clean    clean generated/runtime artifacts
-  audit    verify AI-first/AIIR operating rules
-  automate enable periodic automation (systemd/cron)
+internal control-plane commands (AI-managed, not for manual human use):
+  deploy, doctor, verify, optimize, ui, ingest, convert, parity,
+  bench, tune, oaiir, contract, clean, audit, automate
 USAGE
 }
 

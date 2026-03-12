@@ -3,6 +3,13 @@
 ## Scope
 AI-first runtime operations with minimal human interaction.
 
+## Interface Policy
+- Human-facing surface is intentionally minimal:
+  - `aiir up`
+  - `aiir chat "<intent>"`
+  - `aiir down`
+- All other CLI procedures are AI internal control-plane and should be treated as automation internals.
+
 ## Platform Focus
 This runbook assumes AIIR server has two primary outcomes:
 - AI sync reliability: trusted AI2AI exchange and repeatable contract alignment

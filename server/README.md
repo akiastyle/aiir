@@ -173,25 +173,13 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 - Human console (full-screen, fluid, gateway mode):
   - `/var/www/aiir/human/console.html`
   - logo asset: `/var/www/aiir/human/assets/aiir-logo.svg`
-- Official unified CLI (recommended):
+- Human surface (recommended):
   - `/var/www/aiir/server/scripts/aiir up`
-  - `/var/www/aiir/server/scripts/aiir deploy --project <name> [--domain <domain>] [--type <project-type>] [--strict-web-apply]`
-  - `/var/www/aiir/server/scripts/aiir chat "stato"`
-  - `/var/www/aiir/server/scripts/aiir tune`
+  - `/var/www/aiir/server/scripts/aiir chat "<intent>"`
   - `/var/www/aiir/server/scripts/aiir down`
-  - `/var/www/aiir/server/scripts/aiir doctor --strict`
-  - `/var/www/aiir/server/scripts/aiir verify`
-  - `/var/www/aiir/server/scripts/aiir optimize <project-ref|project-name>`
-  - `/var/www/aiir/server/scripts/aiir ui <project-ref|project-name> [utility|material|bootstrap-like]`
-  - `/var/www/aiir/server/scripts/aiir ingest <source-dir> <out-dir> [project-id]`
-  - `/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]` (legacy alias)
-  - `/var/www/aiir/server/scripts/aiir oaiir <ingest-out-dir> [runtime-out-dir]`
-  - `/var/www/aiir/server/scripts/aiir parity <source-dir> <ingest-out-dir>`
-  - `/var/www/aiir/server/scripts/aiir bench --profile full [--regression-pack] [--gate-strict|--gate-zero-new --gate-overall-min 100 --gate-note-ok] [repo-url ...]`
-  - `/var/www/aiir/server/scripts/aiir contract`
-  - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
-  - `/var/www/aiir/server/scripts/aiir audit`
-  - `/var/www/aiir/server/scripts/aiir automate --mode auto --dry-run`
+- AI internal control-plane:
+  - all other `aiir` subcommands are maintained for AI automation, validation, and recovery flows
+  - they are intentionally not required for manual human operation
 - Chat intents:
   - `stato`
   - `lista progetti`
