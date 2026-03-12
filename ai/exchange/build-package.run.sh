@@ -8,6 +8,7 @@ KEY_DIR="${AIIR_KEY_DIR:-/var/www/aiir/ai/keys}"
 STATE_DIR="${AIIR_STATE_DIR:-/var/www/aiir/ai/state}"
 NODE_ID_FILE="${AIIR_NODE_ID_FILE:-${STATE_DIR}/node.id}"
 CODEC_ENV_FILE="${AIIR_CODEC_ENV_FILE:-/var/www/aiir/server/env/ai-codec.env}"
+HEURISTICS_FILE="${AIIR_HEURISTICS_REGISTRY:-${STATE_DIR}/heuristics/web-heuristics.v1.csv}"
 
 if [[ -f "$CODEC_ENV_FILE" ]]; then
   # shellcheck disable=SC1090
@@ -36,6 +37,14 @@ SIGNED_AT="${AIIR_SIGNED_AT_OVERRIDE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 (
   cd "$OUT_DIR"
   rm -f package.sha256 package.sig package.sig.meta package.sig.payload
+  HAS_HEURISTICS=0
+  HEURISTICS_SHA256=""
+  if [[ -f "$HEURISTICS_FILE" ]]; then
+    mkdir -p heuristics
+    cp "$HEURISTICS_FILE" heuristics/web-heuristics.v1.csv
+    HAS_HEURISTICS=1
+    HEURISTICS_SHA256="$(sha256sum heuristics/web-heuristics.v1.csv | awk '{print $1}')"
+  fi
   sha256sum \
     manifest.aiir \
     files.table.aiir \
@@ -49,12 +58,17 @@ SIGNED_AT="${AIIR_SIGNED_AT_OVERRIDE:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
     m2m.ai2ai.source.adapt.blob.aiir \
     m2m.db.packet.aiir \
     > package.sha256
+  if [[ "$HAS_HEURISTICS" == "1" ]]; then
+    sha256sum heuristics/web-heuristics.v1.csv >> package.sha256
+  fi
   {
     echo "signer_id=${SIGNER_ID}"
     echo "key_id=${SIGN_KEY_ID}"
     echo "pub_sha256=${PUB_SHA256}"
     echo "signed_at=${SIGNED_AT}"
     echo "algo=sha256+rsa"
+    echo "has_heuristics=${HAS_HEURISTICS}"
+    echo "heuristics_sha256=${HEURISTICS_SHA256}"
   } > package.sig.meta
   {
     cat package.sig.meta

@@ -31,6 +31,16 @@ Expected output:
 /var/www/aiir/ai/exchange/sync-core.run.sh apply <pkg-dir> <out-dir>
 ```
 
+## Heuristics Sync (Core)
+- Core heuristics registry is synced alongside signed package when present:
+  - source: `/var/www/aiir/ai/state/heuristics/web-heuristics.v1.csv`
+  - package path: `heuristics/web-heuristics.v1.csv`
+  - apply target: `/var/www/aiir/ai/state/heuristics/web-heuristics.v1.csv`
+- Refresh local registry from benchmark telemetry:
+```bash
+/var/www/aiir/server/scripts/aiir heuristics
+```
+
 ## Import Security Checks
 - valid signature on signed payload
 - signer not revoked

@@ -86,6 +86,8 @@ Policy reference:
 /var/www/aiir/server/scripts/aiir bench --profile full --gate-strict
 # also require full analysis only (no chunk mode)
 /var/www/aiir/server/scripts/aiir bench --profile full --gate-strict --gate-no-chunk
+# refresh heuristics registry from benchmark telemetry
+/var/www/aiir/server/scripts/aiir heuristics
 ```
 Full benchmark outputs:
 - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`

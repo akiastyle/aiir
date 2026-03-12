@@ -16,7 +16,7 @@ public commands (human-facing):
 
 internal control-plane commands (AI-managed, not for manual human use):
   deploy, doctor, verify, optimize, ui, ingest, parity,
-  bench, tune, oaiir, contract, clean, audit
+  bench, tune, oaiir, contract, clean, audit, heuristics
 USAGE
 }
 
@@ -69,6 +69,9 @@ case "$cmd" in
   audit)
     shift
     exec "${ROOT}/aiir-self-audit.sh" "$@" ;;
+  heuristics)
+    shift
+    exec "${ROOT}/aiir-heuristics-refresh.sh" "$@" ;;
   -h|--help|help|"")
     usage
     exit 0 ;;

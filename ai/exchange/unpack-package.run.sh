@@ -113,6 +113,12 @@ if [[ "${REQUIRE_SIGNED}" != "0" ]]; then
   echo "package-verify-ok: signer=${SIGNER_ID}"
 fi
 
+if [[ -f "${PKG_DIR}/heuristics/web-heuristics.v1.csv" ]]; then
+  install -d -m 2770 -o root -g www-data "${STATE_DIR}/heuristics"
+  install -m 0660 -o root -g www-data "${PKG_DIR}/heuristics/web-heuristics.v1.csv" "${STATE_DIR}/heuristics/web-heuristics.v1.csv"
+  echo "heuristics-sync-ok: ${STATE_DIR}/heuristics/web-heuristics.v1.csv"
+fi
+
 cd /var/www/aiir/ai/toolchain-native
 make
 ./aiir-toolchain unpack-package "$PKG_DIR" "$OUT_DIR"

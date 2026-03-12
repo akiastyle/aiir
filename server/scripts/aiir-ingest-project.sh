@@ -7,6 +7,7 @@ OAIIR_REGISTRY="${ROOT}/docs/OAIIR_WEB_OPCODE_REGISTRY_V0.csv"
 OAIIR_HTML_CATALOG="${ROOT}/docs/OAIIR_WEB_HTML_CATALOG_V0.csv"
 OAIIR_CSS_CATALOG="${ROOT}/docs/OAIIR_WEB_CSS_CATALOG_V0.csv"
 OAIIR_JS_CATALOG="${ROOT}/docs/OAIIR_WEB_JS_CATALOG_V0.csv"
+HEURISTICS_FILE="${AIIR_HEURISTICS_REGISTRY:-${ROOT}/ai/state/heuristics/web-heuristics.v1.csv}"
 
 SRC_DIR="${1:-}"
 OUT_DIR="${2:-}"
@@ -97,6 +98,29 @@ while IFS= read -r f; do
       echo "$f" >> "$web_files_tmp" ;;
   esac
 done < "$all_files_tmp"
+
+heuristics_applied=0
+if [[ -f "$HEURISTICS_FILE" ]]; then
+  ranked_tmp="${TMPDIR}/web-files-ranked.txt"
+  awk -F, '
+    FNR==NR {
+      if (NR==1) next
+      k=tolower($3); w[k]=$4+0; next
+    }
+    {
+      f=$0
+      e=""
+      n=split(f,a,".")
+      if (n>1) e="." tolower(a[n])
+      score=(e in w)?w[e]:0.5000
+      printf "%.4f\t%s\n", score, f
+    }
+  ' "$HEURISTICS_FILE" "$web_files_tmp" \
+    | sort -t $'\t' -k1,1nr -k2,2 \
+    | cut -f2- > "$ranked_tmp"
+  mv "$ranked_tmp" "$web_files_tmp"
+  heuristics_applied=1
+fi
 
 # Copy web files.
 while IFS= read -r abs; do
@@ -397,6 +421,8 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   printf '  "oaiir_html_ops_total":%d,\n' "$oaiir_html_ops_total"
   printf '  "oaiir_css_ops_total":%d,\n' "$oaiir_css_ops_total"
   printf '  "oaiir_js_ops_total":%d,\n' "$oaiir_js_ops_total"
+  printf '  "heuristics_applied":%d,\n' "$heuristics_applied"
+  printf '  "heuristics_file":"%s",\n' "$HEURISTICS_FILE"
   printf '  "oaiir_file":"%s",\n' "$OAIIR_FILE"
   printf '  "oaiir_html_ir_file":"%s",\n' "$OAIIR_HTML_IR_FILE"
   printf '  "oaiir_css_ir_file":"%s",\n' "$OAIIR_CSS_IR_FILE"
@@ -427,10 +453,11 @@ reuse_pct="$(awk -v n="$native_count" -v t="$web_count" 'BEGIN {if (t<=0) printf
   echo
   echo '  ],'
   printf '  "paiir":{"base_total":%d,"custom_total":%d,"total":%d},\n' "$base_count" "$custom_unique_count" "$paiir_total"
+  printf '  "heuristics":{"applied":%d,"file":"%s"},\n' "$heuristics_applied" "$HEURISTICS_FILE"
   printf '  "oaiir":{"total":%d,"new_total":%d,"html_ops_total":%d,"css_ops_total":%d,"js_ops_total":%d,"registry":"%s","html_catalog":"%s","css_catalog":"%s","js_catalog":"%s","project_file":"%s","html_ir_file":"%s","css_ir_file":"%s","js_ir_file":"%s"}\n' "$oaiir_total" "$oaiir_new_total" "$oaiir_html_ops_total" "$oaiir_css_ops_total" "$oaiir_js_ops_total" "$OAIIR_REGISTRY" "$OAIIR_HTML_CATALOG" "$OAIIR_CSS_CATALOG" "$OAIIR_JS_CATALOG" "$OAIIR_FILE" "$OAIIR_HTML_IR_FILE" "$OAIIR_CSS_IR_FILE" "$OAIIR_JS_IR_FILE"
   echo '}'
 } > "$CMD_FILE"
 
 cat <<EOF2
-{"ok":1,"action":"ingest_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","oaiir_html_ir":"${OAIIR_HTML_IR_FILE}","oaiir_css_ir":"${OAIIR_CSS_IR_FILE}","oaiir_js_ir":"${OAIIR_JS_IR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total},"oaiir_html_ops_total":${oaiir_html_ops_total},"oaiir_css_ops_total":${oaiir_css_ops_total},"oaiir_js_ops_total":${oaiir_js_ops_total}}
+{"ok":1,"action":"ingest_project","project_id":"${project_id}","report":"${REPORT_FILE}","commands":"${CMD_FILE}","oaiir":"${OAIIR_FILE}","oaiir_html_ir":"${OAIIR_HTML_IR_FILE}","oaiir_css_ir":"${OAIIR_CSS_IR_FILE}","oaiir_js_ir":"${OAIIR_JS_IR_FILE}","normalized_web":"${NORM_DIR}","package_dir":"${PKG_DIR}","native_reuse_percent":${reuse_pct},"paiir_base_total":${base_count},"paiir_custom_total":${custom_unique_count},"paiir_total":${paiir_total},"oaiir_total":${oaiir_total},"oaiir_new_total":${oaiir_new_total},"oaiir_html_ops_total":${oaiir_html_ops_total},"oaiir_css_ops_total":${oaiir_css_ops_total},"oaiir_js_ops_total":${oaiir_js_ops_total},"heuristics_applied":${heuristics_applied},"heuristics_file":"${HEURISTICS_FILE}"}
 EOF2
