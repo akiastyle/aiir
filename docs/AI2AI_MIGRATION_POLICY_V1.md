@@ -55,6 +55,7 @@ Policy for migrating existing projects into AIIR and propagating them across AI 
 - Record every conversion decision in machine-readable reports.
 - Do not require mTLS as a baseline dependency for runtime interoperability.
 - Prefer AIIR capability-based auth flow over generic JWT session coupling for core ops.
+- Use codec defaults aligned with AI-first operation: signed binary sync payloads, base64 only for text-bound channels, base32 only for optional human emergency flows.
 
 ## Out of Scope (v1)
 - full plugin ecosystem parity for external framework plugins

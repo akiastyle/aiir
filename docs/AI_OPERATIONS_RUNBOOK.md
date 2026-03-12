@@ -17,6 +17,7 @@ This runbook assumes AIIR server has two primary outcomes:
 
 Permanent principle reference:
 - `/var/www/aiir/docs/AIIR_AI_FIRST_PRINCIPLES.md`
+- `/var/www/aiir/docs/AIIR_CODEC_POLICY_V1.md`
 
 ## Standard Flow
 
@@ -108,8 +109,6 @@ Full benchmark outputs:
   - `aiir-contract-pack.timer` (daily contract pack)
 - no-systemd:
   - `/var/www/aiir/server/cron/aiir-maintenance`
-- one-shot setup:
-  - `/var/www/aiir/server/scripts/aiir automate --mode auto --dry-run`
 
 ## Chat Error Codes
 - `intent_unknown`
@@ -132,3 +131,6 @@ Full benchmark outputs:
   - `/var/www/aiir/ai/state/.ops.lock`
 - Legacy human adapter is still available for compatibility, but deprecated:
   - removed; use chat flow only.
+- Codec defaults:
+  - operational runtime + AI2AI sync: binary (or base64 when transport is text-only)
+  - base32: emergency human manual codes only, not normal operations

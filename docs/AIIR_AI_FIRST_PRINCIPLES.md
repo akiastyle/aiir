@@ -21,6 +21,7 @@
 - Keep execution/control on AIIR side; expose minimal human adapters only when needed.
 - Avoid hard dependency on mTLS for baseline runtime operation across heterogeneous VPS setups.
 - Use AIIR capability controls as default core auth model; do not couple core ops to generic JWT flows.
+- Keep codec policy AI-first: binary/default machine paths, base64 for text transport only, base32 only as optional human emergency fallback.
 
 ## Output Policy
 - Primary output: AIIR-native contracts and runtime behavior.

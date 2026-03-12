@@ -29,8 +29,22 @@ check_pattern() {
   fi
 }
 
+check_absent_pattern() {
+  local p="$1"
+  local pattern="$2"
+  local label="$3"
+  checks_total=$((checks_total+1))
+  if rg -q "$pattern" "$p"; then
+    echo "fail:pattern_present:${label}"
+  else
+    checks_ok=$((checks_ok+1))
+    echo "ok:pattern_absent:${label}"
+  fi
+}
+
 # AI-first docs and runtime core
 check_file "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md"
+check_file "${ROOT}/docs/AIIR_CODEC_POLICY_V1.md"
 check_file "${ROOT}/docs/AI2AI_MIGRATION_POLICY_V1.md"
 check_file "${ROOT}/docs/AIIR_GATEWAY_V1.md"
 check_file "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md"
@@ -66,6 +80,9 @@ check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "reason natively in AII
 check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "Human-facing artifacts \(including JSON\) are adapters" "json_adapter_only"
 check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "mTLS" "no_mtls_baseline"
 check_pattern "${ROOT}/docs/AIIR_AI_FIRST_PRINCIPLES.md" "JWT" "capability_over_jwt"
+check_pattern "${ROOT}/docs/AIIR_CODEC_POLICY_V1.md" "binary-first" "codec_binary_first"
+check_pattern "${ROOT}/docs/AIIR_CODEC_POLICY_V1.md" "base64" "codec_base64_text_fallback"
+check_pattern "${ROOT}/docs/AIIR_CODEC_POLICY_V1.md" "base32" "codec_base32_emergency_only"
 check_pattern "${ROOT}/docs/AI2AI_MIGRATION_POLICY_V1.md" "Primary mode is AIIR-native" "migration_primary_mode"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir audit" "runbook_has_audit"
 check_pattern "${ROOT}/docs/AI_OPERATIONS_RUNBOOK.md" "aiir ingest" "runbook_prefers_ingest"
@@ -85,6 +102,11 @@ check_pattern "${ROOT}/server/scripts/provision-project-domain.sh" "AIIR_DB_ALLO
 check_pattern "${ROOT}/server/scripts/provision-project-domain.sh" "AIIR_HUMAN_DB_MODE=indirect" "human_indirect_db_mode"
 check_pattern "${ROOT}/server/scripts/aiir-chat.sh" "confirmation_required" "destructive_confirmation_gate"
 check_pattern "${ROOT}/server/scripts/aiir-chat.sh" "ferma runtime conferma" "chat_confirm_intent"
+check_absent_pattern "${ROOT}/server/scripts/aiir-chat.sh" "base32" "no_base32_in_chat"
+check_absent_pattern "${ROOT}/server/scripts/aiir-up.sh" "base32" "no_base32_in_up"
+check_absent_pattern "${ROOT}/server/scripts/aiir-ingest-project.sh" "base32" "no_base32_in_ingest"
+check_absent_pattern "${ROOT}/server/scripts/start-runtime.sh" "base32" "no_base32_in_start_runtime"
+check_absent_pattern "${ROOT}/ai/runtime-server-native/ai_runtime_native.c" "base32" "no_base32_in_runtime_native"
 
 status="ok"
 if [[ "$checks_ok" -ne "$checks_total" ]]; then
