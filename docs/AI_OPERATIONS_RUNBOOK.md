@@ -120,6 +120,8 @@ Full benchmark outputs:
 ## Notes
 - AI-first tuning profile file:
   - `/var/www/aiir/server/env/ai-first-tuning.env`
+- Codec policy env file:
+  - `/var/www/aiir/server/env/ai-codec.env`
 - Destructive intents are blocked unless `conferma/confirm` is present.
 - Project type mapping is centralized in:
   - `/var/www/aiir/server/scripts/project-type-map.sh`

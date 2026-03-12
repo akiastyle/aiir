@@ -7,6 +7,18 @@ CORE_DIR="${3:-${AI_CORE_DIR:-/var/www/aiir/ai/core}}"
 KEY_DIR="${AIIR_KEY_DIR:-/var/www/aiir/ai/keys}"
 STATE_DIR="${AIIR_STATE_DIR:-/var/www/aiir/ai/state}"
 NODE_ID_FILE="${AIIR_NODE_ID_FILE:-${STATE_DIR}/node.id}"
+CODEC_ENV_FILE="${AIIR_CODEC_ENV_FILE:-/var/www/aiir/server/env/ai-codec.env}"
+
+if [[ -f "$CODEC_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$CODEC_ENV_FILE"
+fi
+: "${AIIR_CODEC_OPERATIONAL:=binary}"
+: "${AIIR_CODEC_TEXT_FALLBACK:=base64}"
+: "${AIIR_CODEC_HUMAN_EMERGENCY:=base32}"
+[[ "$AIIR_CODEC_OPERATIONAL" == "binary" ]] || { echo "invalid AIIR_CODEC_OPERATIONAL (expected: binary)"; exit 1; }
+[[ "$AIIR_CODEC_TEXT_FALLBACK" == "base64" ]] || { echo "invalid AIIR_CODEC_TEXT_FALLBACK (expected: base64)"; exit 1; }
+[[ "$AIIR_CODEC_HUMAN_EMERGENCY" == "base32" ]] || { echo "invalid AIIR_CODEC_HUMAN_EMERGENCY (expected: base32)"; exit 1; }
 
 cd /var/www/aiir/ai/toolchain-native
 make

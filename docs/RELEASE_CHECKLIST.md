@@ -1,10 +1,10 @@
 # Release Checklist
 
 ## Pre-release
-- [ ] `lockdown-perms.sh` executed
-- [ ] `build-native-runtime.sh` OK
-- [ ] `smoke-runtime.sh` OK
-- [ ] `backup-state.sh` OK
+- [ ] permissions hardening executed (`chmod -R o-rwx /var/www/aiir/ai/state /var/www/aiir/server/env`)
+- [ ] native runtime build OK (`/var/www/aiir/ai/toolchain-native/build-static.sh`)
+- [ ] runtime verify OK (`/var/www/aiir/server/scripts/aiir verify --skip-contract`)
+- [ ] backup rotation command OK (cron/systemd inline tar flow)
 - [ ] documentation updated
 
 ## Security
@@ -12,13 +12,14 @@
 - [ ] anti-replay verified
 - [ ] signed-time window verified
 - [ ] deny-by-default policy confirmed
-- [ ] capability token checks verified (`smoke-capability.sh`)
+- [ ] capability token checks verified (`/var/www/aiir/server/scripts/aiir contract --no-ai-ops`)
 - [ ] gateway human-indirect DB mode verified (`ai-gateway.env`)
-- [ ] gateway project/db flow verified (`smoke-gateway.sh`)
+- [ ] gateway project/db flow verified (`/var/www/aiir/server/scripts/aiir contract --no-ai-ops`)
 - [ ] project auto-provision script verified (`provision-project-domain.sh`)
-- [ ] file version index/changelog refreshed (`update-file-version-index.sh`)
-- [ ] browser access code workflow verified (`generate-browser-access-code.sh`)
+- [ ] file version index/changelog policy reviewed (historical ledger may include removed files)
+- [ ] browser access workflow verified (AI-managed, no direct human script)
 - [ ] i18n AI policy validated (locale + RTL/LTR behavior)
+- [ ] codec policy verified (`/var/www/aiir/server/env/ai-codec.env`)
 
 ## Publish
 - [ ] clean commit state

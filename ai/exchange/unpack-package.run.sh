@@ -6,6 +6,7 @@ OUT_DIR="${2:?out-dir-required}"
 KEY_DIR="${AIIR_KEY_DIR:-/var/www/aiir/ai/keys}"
 STATE_DIR="${AIIR_STATE_DIR:-/var/www/aiir/ai/state}"
 NODE_ID_FILE="${AIIR_NODE_ID_FILE:-${STATE_DIR}/node.id}"
+CODEC_ENV_FILE="${AIIR_CODEC_ENV_FILE:-/var/www/aiir/server/env/ai-codec.env}"
 REQUIRE_SIGNED="${AIIR_REQUIRE_SIGNED_PACKAGE:-1}"
 TRUSTED_DIR="${KEY_DIR}/trusted"
 REVOKED_FILE="${AIIR_REVOKED_PEERS_FILE:-${STATE_DIR}/revoked.peers}"
@@ -13,6 +14,17 @@ LEDGER_FILE="${AIIR_IMPORT_LEDGER_FILE:-${STATE_DIR}/import-ledger.log}"
 ALLOW_REPLAY="${AIIR_ALLOW_REPLAY:-0}"
 SIGNED_AT_MAX_AGE_SEC="${AIIR_SIGNED_AT_MAX_AGE_SEC:-86400}"
 SIGNED_AT_MAX_FUTURE_SEC="${AIIR_SIGNED_AT_MAX_FUTURE_SEC:-300}"
+
+if [[ -f "$CODEC_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$CODEC_ENV_FILE"
+fi
+: "${AIIR_CODEC_OPERATIONAL:=binary}"
+: "${AIIR_CODEC_TEXT_FALLBACK:=base64}"
+: "${AIIR_CODEC_HUMAN_EMERGENCY:=base32}"
+[[ "$AIIR_CODEC_OPERATIONAL" == "binary" ]] || { echo "invalid AIIR_CODEC_OPERATIONAL (expected: binary)"; exit 1; }
+[[ "$AIIR_CODEC_TEXT_FALLBACK" == "base64" ]] || { echo "invalid AIIR_CODEC_TEXT_FALLBACK (expected: base64)"; exit 1; }
+[[ "$AIIR_CODEC_HUMAN_EMERGENCY" == "base32" ]] || { echo "invalid AIIR_CODEC_HUMAN_EMERGENCY (expected: base32)"; exit 1; }
 
 if [[ "${REQUIRE_SIGNED}" != "0" ]]; then
   [[ -s "${PKG_DIR}/package.sha256" ]] || { echo "missing package.sha256"; exit 1; }

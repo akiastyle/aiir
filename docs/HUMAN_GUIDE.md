@@ -11,9 +11,9 @@ This guide is for operators integrating AIIR on a server without handling intern
 
 ## Quick Bootstrap
 ```bash
-/var/www/aiir/server/scripts/lockdown-perms.sh
+/bin/chmod -R o-rwx /var/www/aiir/ai/state /var/www/aiir/server/env
 /var/www/aiir/ai/bootstrap.sh
-/var/www/aiir/server/scripts/smoke-runtime.sh
+/var/www/aiir/server/scripts/aiir verify --skip-contract
 ```
 
 ## Runtime Base Endpoints
@@ -40,9 +40,8 @@ This guide is for operators integrating AIIR on a server without handling intern
 - Preferred command:
   - `/var/www/aiir/server/scripts/aiir chat "crea progetto <name> tipo <type> dominio <domain>"`
 
-## Browser Access Code (Plugin-friendly)
-- Generate time-bound access code from CLI:
-  - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
+## Browser Access (Plugin-friendly)
+- Human access bootstrap is AI-managed via chat intents.
 - Guide:
   - `/var/www/aiir/docs/HUMAN_BROWSER_ACCESS_V1.md`
 
@@ -60,11 +59,11 @@ This guide is for operators integrating AIIR on a server without handling intern
 ## Daily Operations
 - state backup:
 ```bash
-/var/www/aiir/server/scripts/backup-state.sh
+/bin/bash -lc 'mkdir -p /var/backups/aiir-state && ts=$(date -u +%Y%m%d-%H%M%S) && tar -czf /var/backups/aiir-state/state-${ts}.tar.gz /var/www/aiir/ai/state && ls -1t /var/backups/aiir-state/state-*.tar.gz | tail -n +15 | xargs -r rm -f'
 ```
 - state restore:
 ```bash
-/var/www/aiir/server/scripts/restore-state.sh <archive.tar.gz>
+tar -xzf <archive.tar.gz> -C /
 ```
 - runtime probe:
 ```bash

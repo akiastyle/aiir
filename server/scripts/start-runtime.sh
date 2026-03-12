@@ -4,6 +4,7 @@ set -euo pipefail
 ENV_FILE="/var/www/aiir/server/env/ai-runtime.env"
 GATEWAY_ENV_FILE="/var/www/aiir/server/env/ai-gateway.env"
 TUNING_ENV_FILE="/var/www/aiir/server/env/ai-first-tuning.env"
+CODEC_ENV_FILE="/var/www/aiir/server/env/ai-codec.env"
 RUNTIME_BIN="/var/www/aiir/ai/toolchain-native/aiird"
 
 CLI_AI_CORE_DIR="${AI_CORE_DIR-}"
@@ -48,6 +49,10 @@ fi
 if [[ -f "$TUNING_ENV_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$TUNING_ENV_FILE"
+fi
+if [[ -f "$CODEC_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$CODEC_ENV_FILE"
 fi
 
 if [[ -n "$CLI_AI_CORE_DIR" ]]; then AI_CORE_DIR="$CLI_AI_CORE_DIR"; fi
@@ -111,6 +116,13 @@ if [[ -n "$CLI_AIIR_PROJECTS_FILE" ]]; then AIIR_PROJECTS_FILE="$CLI_AIIR_PROJEC
 : "${AIIR_DB_AUDIT_ENABLE:=1}"
 : "${AIIR_DB_ALLOW_DIRECT_CREDENTIALS:=0}"
 : "${AIIR_PROJECTS_FILE:=/var/www/aiir/ai/state/projects.ndjson}"
+: "${AIIR_CODEC_OPERATIONAL:=binary}"
+: "${AIIR_CODEC_TEXT_FALLBACK:=base64}"
+: "${AIIR_CODEC_HUMAN_EMERGENCY:=base32}"
+if [[ "$AIIR_CODEC_OPERATIONAL" != "binary" || "$AIIR_CODEC_TEXT_FALLBACK" != "base64" || "$AIIR_CODEC_HUMAN_EMERGENCY" != "base32" ]]; then
+  echo "invalid codec policy: expected operational=binary, text_fallback=base64, human_emergency=base32" >&2
+  exit 1
+fi
 
 export AI_CORE_DIR AI_RUNTIME_HOST AI_RUNTIME_PORT AI_DB_EXEC_MODE
 export AI_POLICY_ALLOW_DB_EXEC AI_POLICY_ALLOW_OPS AI_WAL_PATH AI_SNAPSHOT_PATH
@@ -121,6 +133,7 @@ export AI_LOG_REQUESTS
 export AIIR_GATEWAY_ENABLE AIIR_PROJECT_AUTOCREATE_DB AIIR_HUMAN_DB_MODE
 export AIIR_DB_PROVIDER AIIR_DB_DEFAULT_PROFILE AIIR_DB_REGION AIIR_DB_RETENTION_DAYS
 export AIIR_DB_REQUIRE_CAPABILITY AIIR_DB_AUDIT_ENABLE AIIR_DB_ALLOW_DIRECT_CREDENTIALS AIIR_PROJECTS_FILE
+export AIIR_CODEC_OPERATIONAL AIIR_CODEC_TEXT_FALLBACK AIIR_CODEC_HUMAN_EMERGENCY
 if [[ ! -x "$RUNTIME_BIN" ]]; then
   /var/www/aiir/ai/toolchain-native/build-static.sh
 fi

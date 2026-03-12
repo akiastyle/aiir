@@ -1,19 +1,19 @@
 # Human Browser Access v1
 
 ## Goal
-Allow a human operator to connect from browser/plugin using a short-lived access code generated from CLI.
+Allow a human operator to connect from browser/plugin using a short-lived access code issued by AIIR.
 
-## Generate Code (default 30 days)
+## Generate Code (default 30 days, AI-managed)
 
 ```bash
-/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]
+/var/www/aiir/server/scripts/aiir chat "help"
 ```
 
-Examples:
+Notes:
 
 ```bash
-/var/www/aiir/server/scripts/generate-browser-access-code.sh prj_01J...
-/var/www/aiir/server/scripts/generate-browser-access-code.sh prj_01J... 30 browser_connect
+# Browser access code lifecycle is AI-managed.
+# Human workflow uses chat intents and receives opaque code/materialized access only when enabled by runtime policy.
 ```
 
 Output:

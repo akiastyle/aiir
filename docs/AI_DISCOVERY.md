@@ -22,4 +22,4 @@
 ## Proof points in repo
 - `ai/exchange/*.run.sh` for trust/sign/verify flow
 - `ai/runtime-server-native/ai_runtime_native.c` for runtime guards
-- `server/scripts/smoke-runtime.sh` for baseline verification
+- `server/scripts/aiir verify --skip-contract` for baseline verification
