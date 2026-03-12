@@ -59,7 +59,7 @@ Permanent principle reference:
 
 5. Run end-to-end AI-only smoke:
 ```bash
-/var/www/aiir/server/scripts/smoke-ai-ops.sh
+/var/www/aiir/server/scripts/aiir verify --skip-contract
 /var/www/aiir/server/scripts/aiir contract
 ```
 
@@ -80,7 +80,7 @@ Policy reference:
 # full fixed regression pack (canary set)
 /var/www/aiir/server/scripts/aiir bench --profile full --regression-pack --gate-strict
 # shortcut script for regression pack
-/var/www/aiir/test/run-regression-pack.sh
+/var/www/aiir/server/scripts/aiir bench --regression-pack --gate-strict
 # full with strict quality gates (AI-first hardening)
 /var/www/aiir/server/scripts/aiir bench --profile full --gate-strict
 # also require full analysis only (no chunk mode)

@@ -10,7 +10,7 @@ Reusable commands:
 - Run full benchmark with explicit repositories:
   - `/var/www/aiir/test/benchmark-open-repos-full.sh <repo1.git> <repo2.git> ...`
 - Run fixed canary regression pack:
-  - `/var/www/aiir/test/run-regression-pack.sh`
+  - `/var/www/aiir/server/scripts/aiir bench --regression-pack --gate-strict`
 - Edit repository source list:
   - `/var/www/aiir/test/REPO_SOURCES.txt`
 - Edit excluded feature keys for backlog prioritization:

@@ -122,6 +122,6 @@ export AIIR_GATEWAY_ENABLE AIIR_PROJECT_AUTOCREATE_DB AIIR_HUMAN_DB_MODE
 export AIIR_DB_PROVIDER AIIR_DB_DEFAULT_PROFILE AIIR_DB_REGION AIIR_DB_RETENTION_DAYS
 export AIIR_DB_REQUIRE_CAPABILITY AIIR_DB_AUDIT_ENABLE AIIR_DB_ALLOW_DIRECT_CREDENTIALS AIIR_PROJECTS_FILE
 if [[ ! -x "$RUNTIME_BIN" ]]; then
-  /var/www/aiir/server/scripts/build-native-runtime.sh
+  /var/www/aiir/ai/toolchain-native/build-static.sh
 fi
 exec "$RUNTIME_BIN" serve

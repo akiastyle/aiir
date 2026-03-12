@@ -6,4 +6,4 @@ After=network.target
 Type=oneshot
 User=root
 Group=www-data
-ExecStart=/var/www/aiir/server/scripts/smoke-ai-ops.sh
+ExecStart=/var/www/aiir/server/scripts/aiir verify --skip-contract

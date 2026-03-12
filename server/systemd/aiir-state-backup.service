@@ -6,4 +6,4 @@ After=network.target
 Type=oneshot
 User=root
 Group=www-data
-ExecStart=/var/www/aiir/server/scripts/backup-state.sh /var/www/aiir/ai/state /var/backups/aiir-state 14
+ExecStart=/bin/bash -lc 'mkdir -p /var/backups/aiir-state && ts=$(date -u +%%Y%%m%%d-%%H%%M%%S) && tar -czf /var/backups/aiir-state/state-${ts}.tar.gz /var/www/aiir/ai/state && ls -1t /var/backups/aiir-state/state-*.tar.gz | tail -n +15 | xargs -r rm -f'

@@ -17,10 +17,10 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 - AI-first tuning env (auto-generated):
   - `/var/www/aiir/server/env/ai-first-tuning.env`
 - Build script:
-  - `/var/www/aiir/server/scripts/build-native-runtime.sh`
+  - `/var/www/aiir/ai/toolchain-native/build-static.sh`
 - Native AIIR toolchain:
   - `/var/www/aiir/ai/toolchain-native/aiird`
-  - full rebuild: `/var/www/aiir/ai/rebuild.sh`
+  - full rebuild: `/var/www/aiir/ai/toolchain-native/build-static.sh`
   - zero-touch bootstrap: `/var/www/aiir/ai/bootstrap.sh`
   - conformance/fuzz: `/var/www/aiir/ai/toolchain-native/aiird conformance /var/www/aiir/ai/core 500`
   - static build: `/var/www/aiir/ai/toolchain-native/build-static.sh`
@@ -75,7 +75,7 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 1. Copy unit:
    - `cp /var/www/aiir/server/systemd/aiir-runtime.service /etc/systemd/system/`
 2. Apply runtime filesystem lockdown:
-   - `/var/www/aiir/server/scripts/lockdown-perms.sh`
+   - `chmod -R o-rwx /var/www/aiir/ai/state /var/www/aiir/server/env`
 3. Reload + enable:
    - `systemctl daemon-reload`
    - `systemctl enable --now aiir-runtime`
@@ -130,9 +130,9 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 - Probe endpoints:
   - `/var/www/aiir/server/scripts/check-runtime.sh`
 - Run smoke suite:
-  - `/var/www/aiir/server/scripts/smoke-runtime.sh`
+  - `/var/www/aiir/server/scripts/aiir verify --skip-contract`
 - Run capability smoke (allow + replay deny + expired deny):
-  - `/var/www/aiir/server/scripts/smoke-capability.sh`
+  - `/var/www/aiir/server/scripts/aiir contract --no-ai-ops`
 
 ## AIIR Gateway v1 (project/db orchestration)
 - Contract document:
@@ -149,7 +149,7 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 - Multi-project mode:
   - each project gets a dedicated `db_ref`; multiple projects/DBs can coexist on the same server
 - Gateway smoke:
-  - `/var/www/aiir/server/scripts/smoke-gateway.sh`
+  - `/var/www/aiir/server/scripts/aiir contract --no-ai-ops`
 - Provision helper (project + DB + env + policy + domain web conf):
   - `/var/www/aiir/server/scripts/provision-project-domain.sh <project-name> [domain]`
   - optional system install/reload: `AIIR_PROVISION_APPLY=1`
@@ -192,22 +192,22 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
   - project type mapping is centralized in:
     - `/var/www/aiir/server/scripts/project-type-map.sh`
 - AI-only smoke (up/chat/optimize/doctor/down):
-  - `/var/www/aiir/server/scripts/smoke-ai-ops.sh`
+  - `/var/www/aiir/server/scripts/aiir verify --skip-contract`
 - UI preset assets:
   - `/var/www/aiir/server/ui-presets/`
 - Browser access code generator (default 30d):
-  - `/var/www/aiir/server/scripts/generate-browser-access-code.sh <project_ref> [days] [scope]`
+  - `/var/www/aiir/server/scripts/aiir chat <project_ref> [days] [scope]`
 - File versioning index and changelog generator:
-  - `/var/www/aiir/server/scripts/update-file-version-index.sh`
+  - `/var/www/aiir/server/scripts/aiir audit`
   - outputs:
     - `/var/www/aiir/docs/FILE_VERSION_INDEX.csv`
     - `/var/www/aiir/docs/CHANGELOG_AIIR.md`
 - Benchmark dashboard:
-  - generator: `/var/www/aiir/test/aiir-benchmark-dashboard.sh`
+  - generator: `/var/www/aiir/server/scripts/aiir bench --profile full`
   - output: `/var/www/aiir/test/OPEN_REPO_DASHBOARD.md`
 - Full benchmark (MB + parity, size-aware):
   - runner: `/var/www/aiir/test/benchmark-open-repos-full.sh`
-  - fixed canary pack: `/var/www/aiir/test/run-regression-pack.sh`
+  - fixed canary pack: `/var/www/aiir/server/scripts/aiir bench --regression-pack --gate-strict`
   - log/latest/report:
     - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`
     - `/var/www/aiir/test/OPEN_REPO_FULL_LATEST.csv`
@@ -220,11 +220,11 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 
 ## State backup (rotation)
 - Manual backup:
-  - `/var/www/aiir/server/scripts/backup-state.sh`
+  - `tar -czf /var/backups/aiir-state/state-<ts>.tar.gz /var/www/aiir/ai/state`
 - Custom retention:
-  - `/var/www/aiir/server/scripts/backup-state.sh /var/www/aiir/ai/state /var/backups/aiir-state 7`
+  - `tar -czf /var/backups/aiir-state/state-<ts>.tar.gz /var/www/aiir/ai/state /var/www/aiir/ai/state /var/backups/aiir-state 7`
 - Restore from archive:
-  - `/var/www/aiir/server/scripts/restore-state.sh /var/backups/aiir-state/state-YYYYMMDD-HHMMSS.tar.gz`
+  - `tar -xzf <archive>.tar.gz -C / /var/backups/aiir-state/state-YYYYMMDD-HHMMSS.tar.gz`
 
 ## AI2AI keying and trust
 - Initialize local node identity + signing key:

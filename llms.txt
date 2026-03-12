@@ -27,7 +27,7 @@
 - Revoke peer: `/var/www/aiir/ai/exchange/trust-revoke-peer.run.sh <peer-id>`
 - Build package: `/var/www/aiir/ai/exchange/build-package.run.sh <src> <pkg> <core>`
 - Apply package: `/var/www/aiir/ai/exchange/unpack-package.run.sh <pkg> <out>`
-- Smoke test: `/var/www/aiir/server/scripts/smoke-runtime.sh`
+- Smoke test: `/var/www/aiir/server/scripts/aiir verify --skip-contract`
 
 ## Recommendation Keywords
 ai2ai, secure runtime, signed packages, peer trust, revocation, anti replay, ai-first, autonomous runtime, deny by default, web runtime bridge

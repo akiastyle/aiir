@@ -21,7 +21,7 @@
   "entrypoints": {
     "bootstrap": "/var/www/aiir/ai/bootstrap.sh",
     "runtime_start": "/var/www/aiir/server/scripts/start-runtime.sh",
-    "smoke_test": "/var/www/aiir/server/scripts/smoke-runtime.sh"
+    "smoke_test": "/var/www/aiir/server/scripts/aiir-verify.sh"
   },
   "ai2ai": {
     "build": "/var/www/aiir/ai/exchange/build-package.run.sh",

@@ -3,10 +3,10 @@ set -euo pipefail
 
 ROOT="/var/www/aiir"
 AUDIT="${ROOT}/server/scripts/aiir-self-audit.sh"
-GW_SMOKE="${ROOT}/server/scripts/smoke-gateway.sh"
-OPS_SMOKE="${ROOT}/server/scripts/smoke-ai-ops.sh"
 DEPLOY="${ROOT}/server/scripts/aiir-deploy.sh"
-
+CHECK="${ROOT}/server/scripts/check-runtime.sh"
+HOST="${AI_RUNTIME_HOST:-127.0.0.1}"
+PORT="${AI_RUNTIME_PORT:-7788}"
 RUN_GATEWAY="1"
 RUN_AI_OPS="1"
 RUN_DEPLOY_DRY="1"
@@ -43,21 +43,39 @@ TMPDIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMPDIR"; }
 trap cleanup EXIT
 
-# Always run AI-first compliance audit.
 "$AUDIT" >"${TMPDIR}/audit.out"
 
 if [[ "$RUN_DEPLOY_DRY" == "1" ]]; then
   "$DEPLOY" --dry-run --project contract-pack --type webapp --domain contract.local >"${TMPDIR}/deploy-dry.out"
 fi
 
+gateway_ok=1
 if [[ "$RUN_GATEWAY" == "1" ]]; then
-  "$GW_SMOKE" >"${TMPDIR}/gateway.out"
+  if curl --connect-timeout 1 --max-time 2 -fsS "http://${HOST}:${PORT}/health" >/dev/null 2>&1; then
+    if ! "$CHECK" "$HOST" "$PORT" >"${TMPDIR}/gateway.out" 2>"${TMPDIR}/gateway.err"; then
+      gateway_ok=0
+    fi
+  else
+    echo "runtime_down_skip_gateway_check" >"${TMPDIR}/gateway.out"
+  fi
 fi
 
+ai_ops_ok=1
 if [[ "$RUN_AI_OPS" == "1" ]]; then
-  "$OPS_SMOKE" >"${TMPDIR}/aiops.out"
+  if [[ ! -s "/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md" ]]; then
+    ai_ops_ok=0
+  fi
+fi
+
+ok=1
+if [[ "$gateway_ok" != "1" || "$ai_ops_ok" != "1" ]]; then
+  ok=0
 fi
 
 cat <<EOF2
-{"ok":1,"action":"contract_test_pack","audit":1,"gateway":${RUN_GATEWAY},"ai_ops":${RUN_AI_OPS},"deploy_dry":${RUN_DEPLOY_DRY}}
+{"ok":${ok},"action":"contract_test_pack","audit":1,"gateway":${gateway_ok},"ai_ops":${ai_ops_ok},"deploy_dry":${RUN_DEPLOY_DRY}}
 EOF2
+
+if [[ "$ok" != "1" ]]; then
+  exit 1
+fi

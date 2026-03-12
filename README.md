@@ -27,9 +27,9 @@ Documentation:
 
 ## Quickstart
 ```bash
-/var/www/aiir/server/scripts/lockdown-perms.sh
+chmod -R o-rwx /var/www/aiir/ai/state /var/www/aiir/server/env
 /var/www/aiir/ai/bootstrap.sh
-/var/www/aiir/server/scripts/smoke-runtime.sh
+/var/www/aiir/server/scripts/aiir verify --skip-contract
 ```
 
 ## Security Baseline
