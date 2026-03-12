@@ -1,6 +1,0 @@
-run_utc,repo_url,repo_name,repo_commit,logic_file_parity,logic_token_parity,visual_parity,overall_parity,native_reuse_percent,note
-2026-03-05T09:48:49Z,https://github.com/angular/angular.git,angular,a6941ad,100.00,100.00,100.00,100.00,100.00,ok
-2026-03-05T10:00:51Z,https://github.com/django/django.git,django,36be97b,100.00,100.00,100.00,100.00,100.00,ok
-2026-03-05T09:48:49Z,https://github.com/nodejs/node.git,node,55363254,100.00,100.00,100.00,100.00,100.00,ok
-2026-03-05T09:48:49Z,https://github.com/facebook/react.git,react,93882bd,100.00,100.00,100.00,100.00,100.00,ok
-2026-03-05T10:00:51Z,https://github.com/hashicorp/terraform.git,terraform,c0b0e1e,100.00,100.00,100.00,100.00,0.00,ok

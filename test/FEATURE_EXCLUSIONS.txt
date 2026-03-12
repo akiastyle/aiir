@@ -1,4 +1,0 @@
-# Feature keys intentionally excluded from AIIR roadmap
-# (kept in matrix for visibility, removed from prioritized backlog)
-jwt_auth
-mtls
