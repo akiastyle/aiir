@@ -3,6 +3,7 @@ set -euo pipefail
 
 ENV_FILE="/var/www/aiir/server/env/ai-runtime.env"
 GATEWAY_ENV_FILE="/var/www/aiir/server/env/ai-gateway.env"
+TUNING_ENV_FILE="/var/www/aiir/server/env/ai-first-tuning.env"
 RUNTIME_BIN="/var/www/aiir/ai/toolchain-native/aiird"
 
 CLI_AI_CORE_DIR="${AI_CORE_DIR-}"
@@ -43,6 +44,10 @@ fi
 if [[ -f "$GATEWAY_ENV_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$GATEWAY_ENV_FILE"
+fi
+if [[ -f "$TUNING_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$TUNING_ENV_FILE"
 fi
 
 if [[ -n "$CLI_AI_CORE_DIR" ]]; then AI_CORE_DIR="$CLI_AI_CORE_DIR"; fi

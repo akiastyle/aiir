@@ -15,6 +15,7 @@ Permanent principle reference:
 
 1. Bootstrap runtime (and optional project):
 ```bash
+/var/www/aiir/server/scripts/aiir tune
 /var/www/aiir/server/scripts/aiir up
 # optional:
 /var/www/aiir/server/scripts/aiir up --project crm-alpha --type webapp --domain crm.local
@@ -115,6 +116,8 @@ Full benchmark outputs:
 - `projects_lib_missing`
 
 ## Notes
+- AI-first tuning profile file:
+  - `/var/www/aiir/server/env/ai-first-tuning.env`
 - Destructive intents are blocked unless `conferma/confirm` is present.
 - Project type mapping is centralized in:
   - `/var/www/aiir/server/scripts/project-type-map.sh`

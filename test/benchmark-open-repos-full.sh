@@ -3,7 +3,8 @@ set -euo pipefail
 
 AIIR_ROOT="${AIIR_ROOT:-/var/www/aiir}"
 TEST_BASE="${AIIR_TEST_BASE:-${AIIR_ROOT}/test}"
-WORK_ROOT="${TEST_BASE}/full-work"
+RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-$$"
+WORK_ROOT="${TEST_BASE}/full-work-${RUN_ID}"
 SRC_ROOT="${WORK_ROOT}/src"
 PKG_ROOT="${WORK_ROOT}/pkg"
 CONV_ROOT="${WORK_ROOT}/conv"
@@ -65,6 +66,10 @@ copy_web_sample() {
 }
 
 mkdir -p "$SRC_ROOT" "$PKG_ROOT" "$CONV_ROOT" "$TEST_BASE"
+cleanup_work() {
+  rm -rf "$WORK_ROOT"
+}
+trap cleanup_work EXIT
 
 if [[ ! -f "$REPO_LIST_FILE" ]]; then
   cat > "$REPO_LIST_FILE" <<'LIST'
@@ -377,8 +382,6 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   run_count="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {c++} END{print c+0}' "$PROFILE_FILE")"
   echo "Totals (run scope): repos=${run_count} clone_sec=${tot_clone} package_sec=${tot_package} ingest_sec=${tot_ingest} parity_sec=${tot_parity} total_sec=${tot_total}"
 } > "$PROFILE_REPORT_FILE"
-
-rm -rf "$WORK_ROOT"
 
 echo "full-benchmark-done: ${LOG_FILE}"
 echo "full-latest-done: ${LATEST_FILE}"

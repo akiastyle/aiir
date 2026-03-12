@@ -14,6 +14,8 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
 - Env file: `/var/www/aiir/server/env/ai-runtime.env`
 - Gateway env file (project/db contracts):
   - `/var/www/aiir/server/env/ai-gateway.env`
+- AI-first tuning env (auto-generated):
+  - `/var/www/aiir/server/env/ai-first-tuning.env`
 - Build script:
   - `/var/www/aiir/server/scripts/build-native-runtime.sh`
 - Native AIIR toolchain:
@@ -175,6 +177,7 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
   - `/var/www/aiir/server/scripts/aiir up`
   - `/var/www/aiir/server/scripts/aiir deploy --project <name> [--domain <domain>] [--type <project-type>] [--strict-web-apply]`
   - `/var/www/aiir/server/scripts/aiir chat "stato"`
+  - `/var/www/aiir/server/scripts/aiir tune`
   - `/var/www/aiir/server/scripts/aiir down`
   - `/var/www/aiir/server/scripts/aiir doctor --strict`
   - `/var/www/aiir/server/scripts/aiir verify`

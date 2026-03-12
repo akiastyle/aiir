@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="/var/www/aiir"
 TEST_DIR="${ROOT}/test"
 PROFILE="full"
+TUNING_ENV_FILE="${ROOT}/server/env/ai-first-tuning.env"
+LOCK_FILE="${AIIR_BENCH_LOCK_FILE:-${ROOT}/ai/state/.bench.lock}"
 GATE_ZERO_NEW=0
 GATE_OVERALL_MIN=""
 GATE_NOTE_OK=0
@@ -71,6 +73,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -f "$TUNING_ENV_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$TUNING_ENV_FILE"
+fi
+
 runner=""
 case "$PROFILE" in
   quick)
@@ -119,10 +126,23 @@ if [[ "$USE_REGRESSION_PACK" == "1" ]]; then
   done < "$PACK_FILE"
 fi
 
-if [[ "${#REPOS[@]}" -gt 0 ]]; then
-  "$runner" "${REPOS[@]}"
+run_runner() {
+  if [[ "${#REPOS[@]}" -gt 0 ]]; then
+    "$runner" "${REPOS[@]}"
+  else
+    "$runner"
+  fi
+}
+
+if command -v flock >/dev/null 2>&1; then
+  mkdir -p "$(dirname "$LOCK_FILE")"
+  exec 9>"$LOCK_FILE"
+  flock -x 9
+  run_runner
+  flock -u 9
+  exec 9>&-
 else
-  "$runner"
+  run_runner
 fi
 
 if [[ "$PROFILE" != "full" ]]; then
