@@ -146,7 +146,6 @@ For end-to-end project bootstrap (project create + DB refs + policy/env + Apache
   - `/var/www/aiir/server/scripts/aiir-doctor.sh`
 - Conversion + parity commands:
   - `/var/www/aiir/server/scripts/aiir-ingest-project.sh <source-dir> <out-dir> [project-id]`
-  - `/var/www/aiir/server/scripts/aiir-convert-project.sh <source-dir> <out-dir> [project-id]` (legacy path)
   - `/var/www/aiir/server/scripts/aiir-oaiir-exec.sh <ingest-out-dir> [runtime-out-dir]`
   - `/var/www/aiir/server/scripts/aiir-parity-check.sh <source-dir> <ingest-out-dir>`
 - Optional bootstrap + project creation in one step:

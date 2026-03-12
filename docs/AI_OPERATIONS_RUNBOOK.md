@@ -70,15 +70,11 @@ Permanent principle reference:
 # execute OAIIR web IR into runnable web output:
 /var/www/aiir/server/scripts/aiir oaiir <out-dir> [runtime-out-dir]
 ```
-Compatibility alias:
-- `/var/www/aiir/server/scripts/aiir convert ...` (legacy alias of `ingest`)
 Policy reference:
 - `/var/www/aiir/docs/AI2AI_MIGRATION_POLICY_V1.md`
 
 7. Benchmarks:
 ```bash
-# quick MB-only
-/var/www/aiir/server/scripts/aiir bench --profile quick
 # full MB+parity (size-aware)
 /var/www/aiir/server/scripts/aiir bench --profile full
 # full fixed regression pack (canary set)

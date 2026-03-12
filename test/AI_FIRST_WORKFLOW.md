@@ -5,12 +5,12 @@ Goal:
 - keep all test operations isolated under `/var/www/aiir/test`
 
 Reusable commands:
-- Run benchmark list from file:
-  - `/var/www/aiir/test/benchmark-open-repos.sh`
-- Run benchmark with explicit repositories:
-  - `/var/www/aiir/test/benchmark-open-repos.sh <repo1.git> <repo2.git> ...`
-- Generate AIIR improvement backlog from open repos:
-  - `/var/www/aiir/test/analyze-improvement-gaps.sh`
+- Run full benchmark list from file:
+  - `/var/www/aiir/test/benchmark-open-repos-full.sh`
+- Run full benchmark with explicit repositories:
+  - `/var/www/aiir/test/benchmark-open-repos-full.sh <repo1.git> <repo2.git> ...`
+- Run fixed canary regression pack:
+  - `/var/www/aiir/test/run-regression-pack.sh`
 - Edit repository source list:
   - `/var/www/aiir/test/REPO_SOURCES.txt`
 - Edit excluded feature keys for backlog prioritization:
@@ -18,9 +18,11 @@ Reusable commands:
 
 Artifacts:
 - CSV benchmark log:
-  - `/var/www/aiir/test/OPEN_REPO_TEST_LOG.csv`
+  - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`
 - Human-readable benchmark report:
-  - `/var/www/aiir/test/OPEN_REPO_TESTS.md`
+  - `/var/www/aiir/test/OPEN_REPO_FULL_REPORT.md`
+- Profiling report:
+  - `/var/www/aiir/test/OPEN_REPO_FULL_PROFILE_REPORT.md`
 - Feature matrix for gap analysis:
   - `/var/www/aiir/test/FEATURE_MATRIX.csv`
 - Improvement backlog report:

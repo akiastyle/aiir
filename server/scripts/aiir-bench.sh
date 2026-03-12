@@ -16,10 +16,9 @@ USE_REGRESSION_PACK=0
 usage() {
   cat >&2 <<'USAGE'
 usage:
-  /var/www/aiir/server/scripts/aiir-bench.sh [--profile quick|full] [--regression-pack] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-no-chunk] [--gate-strict] [repo-url ...]
+  /var/www/aiir/server/scripts/aiir-bench.sh [--profile full] [--regression-pack] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-no-chunk] [--gate-strict] [repo-url ...]
 
 profiles:
-  quick  -> MB benchmark only (OPEN_REPO_TEST_*)
   full   -> MB + parity benchmark (OPEN_REPO_FULL_*)
 
 gates (full profile):
@@ -80,8 +79,6 @@ fi
 
 runner=""
 case "$PROFILE" in
-  quick)
-    runner="${TEST_DIR}/benchmark-open-repos.sh" ;;
   full)
     runner="${TEST_DIR}/benchmark-open-repos-full.sh" ;;
   *)
@@ -105,11 +102,6 @@ if [[ -n "$GATE_OVERALL_MIN" ]]; then
     echo "invalid --gate-overall-min: ${GATE_OVERALL_MIN}" >&2
     exit 1
   fi
-fi
-
-if [[ "$PROFILE" == "quick" && ( "$GATE_ZERO_NEW" == "1" || -n "$GATE_OVERALL_MIN" || "$GATE_NOTE_OK" == "1" || "$GATE_NO_CHUNK" == "1" ) ]]; then
-  echo "gate options are supported only with --profile full" >&2
-  exit 1
 fi
 
 if [[ "$USE_REGRESSION_PACK" == "1" ]]; then
@@ -146,7 +138,8 @@ else
 fi
 
 if [[ "$PROFILE" != "full" ]]; then
-  exit 0
+  echo "unsupported profile: ${PROFILE} (only full is supported in AI-first mode)" >&2
+  exit 1
 fi
 
 if [[ "$GATE_ZERO_NEW" != "1" && -z "$GATE_OVERALL_MIN" && "$GATE_NOTE_OK" != "1" && "$GATE_NO_CHUNK" != "1" ]]; then

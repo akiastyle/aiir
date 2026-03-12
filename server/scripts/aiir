@@ -15,7 +15,7 @@ public commands (human-facing):
   down     stop runtime
 
 internal control-plane commands (AI-managed, not for manual human use):
-  deploy, doctor, verify, optimize, ui, ingest, convert, parity,
+  deploy, doctor, verify, optimize, ui, ingest, parity,
   bench, tune, oaiir, contract, clean, audit, automate
 USAGE
 }
@@ -46,9 +46,6 @@ case "$cmd" in
     shift
     exec "${ROOT}/aiir-ui-scaffold.sh" "$@" ;;
   ingest)
-    shift
-    exec "${ROOT}/aiir-ingest-project.sh" "$@" ;;
-  convert)
     shift
     exec "${ROOT}/aiir-ingest-project.sh" "$@" ;;
   parity)
