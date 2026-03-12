@@ -1,0 +1,11 @@
+# AIIR fixed regression pack (web-oriented, mixed size)
+https://github.com/axios/axios.git
+https://github.com/alpinejs/alpine.git
+https://github.com/pmndrs/zustand.git
+https://github.com/remix-run/react-router.git
+https://github.com/tailwindlabs/tailwindcss.git
+https://github.com/vuejs/core.git
+https://github.com/nestjs/nest.git
+https://github.com/expressjs/express.git
+https://github.com/webpack/webpack.git
+https://github.com/koajs/koa.git

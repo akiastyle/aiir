@@ -11,6 +11,8 @@ LOG_FILE="${TEST_BASE}/OPEN_REPO_FULL_LOG.csv"
 LATEST_FILE="${TEST_BASE}/OPEN_REPO_FULL_LATEST.csv"
 REPORT_FILE="${TEST_BASE}/OPEN_REPO_FULL_REPORT.md"
 ARTIFACT_DELTA_FILE="${TEST_BASE}/OPEN_REPO_FULL_ARTIFACT_DELTA.csv"
+PROFILE_FILE="${TEST_BASE}/OPEN_REPO_FULL_PROFILE.csv"
+PROFILE_REPORT_FILE="${TEST_BASE}/OPEN_REPO_FULL_PROFILE_REPORT.md"
 REPO_LIST_FILE="${TEST_BASE}/REPO_SOURCES.txt"
 CORE_DIR="${AI_CORE_DIR:-${AIIR_ROOT}/ai/core}"
 RUN_TS="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -22,6 +24,7 @@ FULL_ANALYSIS_MAX_MB="${AIIR_FULL_ANALYSIS_MAX_MB:-350}"
 CHUNK_MAX_WEB_FILES="${AIIR_CHUNK_MAX_WEB_FILES:-4000}"
 CHUNK_MAX_WEB_BYTES="${AIIR_CHUNK_MAX_WEB_BYTES:-157286400}"
 CSV_HEADER="run_utc,repo_url,repo_name,repo_commit,original_bytes,original_mb,aiir_pkg_bytes,aiir_pkg_mb,base_overhead_bytes,base_overhead_mb,aiir_net_bytes,aiir_net_mb,reduction_percent,native_reuse_percent,paiir_total,paiir_custom_total,oaiir_total,oaiir_new_total,oaiir_html_ops_total,oaiir_css_ops_total,oaiir_js_ops_total,logic_file_parity,logic_token_parity,visual_parity,overall_parity,chunk_mode,chunk_web_files,chunk_web_bytes,notes"
+PROFILE_HEADER="run_utc,repo_url,repo_name,repo_commit,clone_sec,package_sec,ingest_sec,parity_sec,total_sec,note"
 
 to_mb() {
   awk -v b="$1" 'BEGIN {printf "%.2f", b/1048576}'
@@ -80,6 +83,15 @@ fi
 if [[ ! -f "$LOG_FILE" ]]; then
   echo "$CSV_HEADER" > "$LOG_FILE"
 fi
+if [[ -f "$PROFILE_FILE" ]]; then
+  current_profile_header="$(head -n 1 "$PROFILE_FILE" || true)"
+  if [[ "$current_profile_header" != "$PROFILE_HEADER" ]]; then
+    mv "$PROFILE_FILE" "${PROFILE_FILE%.csv}.legacy-$(date -u +%Y%m%dT%H%M%SZ).csv"
+  fi
+fi
+if [[ ! -f "$PROFILE_FILE" ]]; then
+  echo "$PROFILE_HEADER" > "$PROFILE_FILE"
+fi
 
 repos=()
 if [[ "$#" -gt 0 ]]; then
@@ -110,6 +122,11 @@ if "${AIIR_ROOT}/ai/exchange/build-package.run.sh" "$BASE_EMPTY_SRC" "$BASE_EMPT
 fi
 
 for repo in "${repos[@]}"; do
+  repo_start_ts="$(date +%s)"
+  clone_sec=0
+  package_sec=0
+  ingest_sec=0
+  parity_sec=0
   name="$(basename "$repo" .git)"
   src="${SRC_ROOT}/${name}"
   pkg="${PKG_ROOT}/${name}"
@@ -118,6 +135,7 @@ for repo in "${repos[@]}"; do
 
   clone_ok=0
   clone_note="clone_failed"
+  clone_start_ts="$(date +%s)"
   for attempt in $(seq 1 "$CLONE_RETRIES"); do
     rm -rf "$src"
     {
@@ -137,20 +155,28 @@ for repo in "${repos[@]}"; do
       clone_note="clone_timeout"
     fi
   done
+  clone_sec=$(( $(date +%s) - clone_start_ts ))
 
   if [[ "$clone_ok" != "1" ]]; then
     echo "${RUN_TS},${repo},${name},,0,0,0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,${clone_note}" >> "$LOG_FILE"
+    total_sec=$(( $(date +%s) - repo_start_ts ))
+    echo "${RUN_TS},${repo},${name},,${clone_sec},${package_sec},${ingest_sec},${parity_sec},${total_sec},${clone_note}" >> "$PROFILE_FILE"
     continue
   fi
 
   commit_sha="$(git -C "$src" rev-parse --short HEAD 2>/dev/null || true)"
 
+  package_start_ts="$(date +%s)"
   if ! "${AIIR_ROOT}/ai/exchange/build-package.run.sh" "$src" "$pkg" "$CORE_DIR" >"${WORK_ROOT}/pkg_${name}.log" 2>&1; then
+    package_sec=$(( $(date +%s) - package_start_ts ))
     orig_b="$(du -sb "$src" | awk '{print $1}')"
     orig_mb="$(to_mb "$orig_b")"
     echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},0,0,${BASE_B},${BASE_MB},0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,none,0,0,package_failed" >> "$LOG_FILE"
+    total_sec=$(( $(date +%s) - repo_start_ts ))
+    echo "${RUN_TS},${repo},${name},${commit_sha},${clone_sec},${package_sec},${ingest_sec},${parity_sec},${total_sec},package_failed" >> "$PROFILE_FILE"
     continue
   fi
+  package_sec=$(( $(date +%s) - package_start_ts ))
 
   orig_b="$(du -sb "$src" | awk '{print $1}')"
   pkg_b="$(du -sb "$pkg" | awk '{print $1}')"
@@ -186,11 +212,13 @@ for repo in "${repos[@]}"; do
     IFS=',' read -r chunk_web_files chunk_web_bytes < <(copy_web_sample "$src" "$chunk_src" "$CHUNK_MAX_WEB_FILES" "$CHUNK_MAX_WEB_BYTES" "$chunk_manifest")
     if [[ "$chunk_web_files" -gt 0 ]]; then
       chunk_mode="web_sample"
+      ingest_start_ts="$(date +%s)"
       if command -v timeout >/dev/null 2>&1; then
         timeout "${INGEST_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" ingest "$chunk_src" "$conv" "${name}-chunk" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
       else
         "${AIIR_ROOT}/server/scripts/aiir" ingest "$chunk_src" "$conv" "${name}-chunk" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
       fi
+      ingest_sec=$(( $(date +%s) - ingest_start_ts ))
       if [[ "$note" == "ok" ]]; then
         native_reuse="$(json_num native_reuse_percent "${WORK_ROOT}/ingest_${name}.json")"
         paiir_total="$(json_num paiir_total "${WORK_ROOT}/ingest_${name}.json")"
@@ -208,11 +236,13 @@ for repo in "${repos[@]}"; do
         [[ -n "$oaiir_html_ops" ]] || oaiir_html_ops="0"
         [[ -n "$oaiir_css_ops" ]] || oaiir_css_ops="0"
         [[ -n "$oaiir_js_ops" ]] || oaiir_js_ops="0"
+        parity_start_ts="$(date +%s)"
         if command -v timeout >/dev/null 2>&1; then
           timeout "${PARITY_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" parity "$chunk_src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
         else
           "${AIIR_ROOT}/server/scripts/aiir" parity "$chunk_src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
         fi
+        parity_sec=$(( $(date +%s) - parity_start_ts ))
       fi
       if [[ "$note" == "ok" ]]; then
         logic_file="$(json_num logic_file_parity "${WORK_ROOT}/parity_${name}.json")"
@@ -229,11 +259,13 @@ for repo in "${repos[@]}"; do
       note="analysis_skipped_large_no_web"
     fi
   else
+    ingest_start_ts="$(date +%s)"
     if command -v timeout >/dev/null 2>&1; then
       timeout "${INGEST_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" ingest "$src" "$conv" "$name" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
     else
       "${AIIR_ROOT}/server/scripts/aiir" ingest "$src" "$conv" "$name" >"${WORK_ROOT}/ingest_${name}.json" 2>"${WORK_ROOT}/ingest_${name}.err" || note="ingest_failed"
     fi
+    ingest_sec=$(( $(date +%s) - ingest_start_ts ))
   fi
 
   if [[ "$note" == "ok" ]]; then
@@ -254,11 +286,13 @@ for repo in "${repos[@]}"; do
     [[ -n "$oaiir_css_ops" ]] || oaiir_css_ops="0"
     [[ -n "$oaiir_js_ops" ]] || oaiir_js_ops="0"
 
+    parity_start_ts="$(date +%s)"
     if command -v timeout >/dev/null 2>&1; then
       timeout "${PARITY_TIMEOUT_SEC}s" "${AIIR_ROOT}/server/scripts/aiir" parity "$src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
     else
       "${AIIR_ROOT}/server/scripts/aiir" parity "$src" "$conv" >"${WORK_ROOT}/parity_${name}.json" 2>"${WORK_ROOT}/parity_${name}.err" || note="parity_failed"
     fi
+    parity_sec=$(( $(date +%s) - parity_start_ts ))
   fi
 
   if [[ "$note" == "ok" ]]; then
@@ -273,6 +307,8 @@ for repo in "${repos[@]}"; do
   fi
 
   echo "${RUN_TS},${repo},${name},${commit_sha},${orig_b},${orig_mb},${pkg_b},${pkg_mb},${BASE_B},${BASE_MB},${net_b},${net_mb},${red},${native_reuse},${paiir_total},${paiir_custom},${oaiir_total},${oaiir_new},${oaiir_html_ops},${oaiir_css_ops},${oaiir_js_ops},${logic_file},${logic_token},${visual},${overall},${chunk_mode},${chunk_web_files},${chunk_web_bytes},${note}" >> "$LOG_FILE"
+  total_sec=$(( $(date +%s) - repo_start_ts ))
+  echo "${RUN_TS},${repo},${name},${commit_sha},${clone_sec},${package_sec},${ingest_sec},${parity_sec},${total_sec},${note}" >> "$PROFILE_FILE"
 done
 
 TMP_LATEST="${WORK_ROOT}/latest.csv"
@@ -324,8 +360,28 @@ cp "$TMP_LATEST" "$LATEST_FILE"
   echo "Artifact delta csv: ${ARTIFACT_DELTA_FILE}"
 } > "$REPORT_FILE"
 
+{
+  echo "# Open Repo Full Benchmark Profiling"
+  echo
+  echo "Last run (UTC): \`${RUN_TS}\`"
+  echo
+  echo "| Repo | Commit | Clone s | Package s | Ingest s | Parity s | Total s | Note |"
+  echo "|---|---|---:|---:|---:|---:|---:|---|"
+  awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {printf "| `%s` | `%s` | %s | %s | %s | %s | %s | %s |\n", $2, $4, $5, $6, $7, $8, $9, $10}' "$PROFILE_FILE"
+  echo
+  tot_clone="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {s+=$5} END{print s+0}' "$PROFILE_FILE")"
+  tot_package="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {s+=$6} END{print s+0}' "$PROFILE_FILE")"
+  tot_ingest="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {s+=$7} END{print s+0}' "$PROFILE_FILE")"
+  tot_parity="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {s+=$8} END{print s+0}' "$PROFILE_FILE")"
+  tot_total="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {s+=$9} END{print s+0}' "$PROFILE_FILE")"
+  run_count="$(awk -F, -v ts="$RUN_TS" 'NR>1 && $1==ts {c++} END{print c+0}' "$PROFILE_FILE")"
+  echo "Totals (run scope): repos=${run_count} clone_sec=${tot_clone} package_sec=${tot_package} ingest_sec=${tot_ingest} parity_sec=${tot_parity} total_sec=${tot_total}"
+} > "$PROFILE_REPORT_FILE"
+
 rm -rf "$WORK_ROOT"
 
 echo "full-benchmark-done: ${LOG_FILE}"
 echo "full-latest-done: ${LATEST_FILE}"
 echo "full-report-done: ${REPORT_FILE}"
+echo "full-profile-done: ${PROFILE_FILE}"
+echo "full-profile-report-done: ${PROFILE_REPORT_FILE}"

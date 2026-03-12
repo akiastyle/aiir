@@ -184,7 +184,7 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
   - `/var/www/aiir/server/scripts/aiir convert <source-dir> <out-dir> [project-id]` (legacy alias)
   - `/var/www/aiir/server/scripts/aiir oaiir <ingest-out-dir> [runtime-out-dir]`
   - `/var/www/aiir/server/scripts/aiir parity <source-dir> <ingest-out-dir>`
-  - `/var/www/aiir/server/scripts/aiir bench --profile full [--gate-strict|--gate-zero-new --gate-overall-min 100 --gate-note-ok] [repo-url ...]`
+  - `/var/www/aiir/server/scripts/aiir bench --profile full [--regression-pack] [--gate-strict|--gate-zero-new --gate-overall-min 100 --gate-note-ok] [repo-url ...]`
   - `/var/www/aiir/server/scripts/aiir contract`
   - `/var/www/aiir/server/scripts/aiir clean --safe|--deep`
   - `/var/www/aiir/server/scripts/aiir audit`
@@ -216,11 +216,14 @@ AIIR server is not only a runtime wrapper. It is the operational core for:
   - output: `/var/www/aiir/test/OPEN_REPO_DASHBOARD.md`
 - Full benchmark (MB + parity, size-aware):
   - runner: `/var/www/aiir/test/benchmark-open-repos-full.sh`
+  - fixed canary pack: `/var/www/aiir/test/run-regression-pack.sh`
   - log/latest/report:
     - `/var/www/aiir/test/OPEN_REPO_FULL_LOG.csv`
     - `/var/www/aiir/test/OPEN_REPO_FULL_LATEST.csv`
     - `/var/www/aiir/test/OPEN_REPO_FULL_REPORT.md`
     - `/var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv` (PAIIR/OAIIR delta view)
+    - `/var/www/aiir/test/OPEN_REPO_FULL_PROFILE.csv` (phase timing per repo)
+    - `/var/www/aiir/test/OPEN_REPO_FULL_PROFILE_REPORT.md`
 - AI operations runbook:
   - `/var/www/aiir/docs/AI_OPERATIONS_RUNBOOK.md`
 

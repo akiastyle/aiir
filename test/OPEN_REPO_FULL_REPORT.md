@@ -1,6 +1,6 @@
 # Open Repo Full Benchmark (AIIR MB + Parity)
 
-Last run (UTC): `2026-03-10T22:00:11Z`
+Last run (UTC): `2026-03-12T07:34:00Z`
 
 Base package overhead excluded from AIIR net size: 0.00 MB (2281 bytes)
 Full analysis threshold (ingest+parity): 350 MB source size
@@ -21,7 +21,6 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/colinhacks/zod.git` | `c780507` | 19.87 | 2.81 | 85.84% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/react-hook-form/react-hook-form.git` | `6067c3f` | 8.36 | 2.01 | 75.98% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/reduxjs/reselect.git` | `7d7b336` | 5.52 | 0.51 | 90.79% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
-| `https://github.com/axios/axios.git` | `f7a4ee2` | 2.42 | 0.83 | 65.61% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/expressjs/express.git` | `6c4249f` | 0.89 | 0.54 | 39.11% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/markedjs/marked.git` | `b6efcd8` | 1.58 | 1.00 | 36.23% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/nestjs/nest.git` | `64a911b` | 6.66 | 3.69 | 44.56% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
@@ -56,6 +55,7 @@ Full analysis threshold (ingest+parity): 350 MB source size
 | `https://github.com/remix-run/remix.git` | `3a245b6` | 34.91 | 4.23 | 87.89% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/sveltejs/kit.git` | `a85396c` | 9.52 | 2.52 | 73.51% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/vercel/turbo.git` | `a70d0fc` | 141.13 | 15.49 | 89.02% | 100.00% | 9 (3 custom) | 9 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
+| `https://github.com/axios/axios.git` | `f7a4ee2` | 2.42 | 0.83 | 65.61% | 100.00% | 8 (2 custom) | 8 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 | `https://github.com/koajs/koa.git` | `d3ea8bf` | 0.85 | 0.39 | 54.76% | 100.00% | 7 (1 custom) | 7 (+0) | 100.00% | 100.00% | 100.00% | none | ok |
 
 Artifact delta (latest per repo+commit): paiir_custom_added_total=107 oaiir_new_added_total=0 repos_with_custom_paiir=59/59 repos_with_oaiir_new=0/59 parity_below_100=0/59 ok=59/59 chunked=0 skipped_large=0

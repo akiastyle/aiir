@@ -9,11 +9,12 @@ GATE_OVERALL_MIN=""
 GATE_NOTE_OK=0
 GATE_NO_CHUNK=0
 REPOS=()
+USE_REGRESSION_PACK=0
 
 usage() {
   cat >&2 <<'USAGE'
 usage:
-  /var/www/aiir/server/scripts/aiir-bench.sh [--profile quick|full] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-no-chunk] [--gate-strict] [repo-url ...]
+  /var/www/aiir/server/scripts/aiir-bench.sh [--profile quick|full] [--regression-pack] [--gate-zero-new] [--gate-overall-min N] [--gate-note-ok] [--gate-no-chunk] [--gate-strict] [repo-url ...]
 
 profiles:
   quick  -> MB benchmark only (OPEN_REPO_TEST_*)
@@ -25,6 +26,7 @@ gates (full profile):
   --gate-note-ok       fail if note is not ok or analysis_chunked_large
   --gate-no-chunk      fail if any repo in current run used chunk_mode != none
   --gate-strict        equivalent to --gate-zero-new --gate-overall-min 100 --gate-note-ok
+  --regression-pack    run fixed repository pack from /var/www/aiir/test/REPO_REGRESSION_PACK.txt
 USAGE
 }
 
@@ -52,6 +54,9 @@ while [[ $# -gt 0 ]]; do
       GATE_ZERO_NEW=1
       GATE_OVERALL_MIN="100"
       GATE_NOTE_OK=1
+      shift ;;
+    --regression-pack)
+      USE_REGRESSION_PACK=1
       shift ;;
     --)
       shift
@@ -98,6 +103,20 @@ fi
 if [[ "$PROFILE" == "quick" && ( "$GATE_ZERO_NEW" == "1" || -n "$GATE_OVERALL_MIN" || "$GATE_NOTE_OK" == "1" || "$GATE_NO_CHUNK" == "1" ) ]]; then
   echo "gate options are supported only with --profile full" >&2
   exit 1
+fi
+
+if [[ "$USE_REGRESSION_PACK" == "1" ]]; then
+  PACK_FILE="${TEST_DIR}/REPO_REGRESSION_PACK.txt"
+  if [[ ! -f "$PACK_FILE" ]]; then
+    echo "missing regression pack file: ${PACK_FILE}" >&2
+    exit 1
+  fi
+  while IFS= read -r line; do
+    line="${line#${line%%[![:space:]]*}}"
+    line="${line%${line##*[![:space:]]}}"
+    [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+    REPOS+=("$line")
+  done < "$PACK_FILE"
 fi
 
 if [[ "${#REPOS[@]}" -gt 0 ]]; then

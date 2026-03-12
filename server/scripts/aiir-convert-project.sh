@@ -135,7 +135,7 @@ custom_cmds=()
 eval "$(
   awk '
     BEGIN {
-      sql=0; mig=0; py=0; go=0; js=0; spa=0; ctr=0;
+      sql=0; mig=0; py=0; go=0; js_api=0; spa=0; ctr=0;
     }
     {
       l=tolower($0);
@@ -143,7 +143,10 @@ eval "$(
       if (l ~ /\/migrations?\// || l ~ /\/migration\//) mig=1;
       if (l ~ /\.py$/) py=1;
       if (l ~ /\.go$/) go=1;
-      if (l ~ /\.(js|ts)$/) js=1;
+      # Backend-like JS/TS detection (avoid flagging every frontend repo as api.js custom).
+      if (l ~ /(^|\/)(api|server|backend|routes|controllers)\//) js_api=1;
+      if (l ~ /(^|\/)(server|api)\.(js|ts)$/) js_api=1;
+      if (l ~ /(^|\/)(main|index)\.(js|ts)$/ && l ~ /(server|api|backend)/) js_api=1;
       if (l ~ /vite\.config/ || l ~ /webpack\.config/ || l ~ /next\.config/ || l ~ /angular\.json/ || l ~ /nuxt\.config/ || l ~ /svelte\.config/) spa=1;
       if (l ~ /dockerfile/ || l ~ /docker-compose/ || l ~ /compose\.ya?ml/) ctr=1;
     }
@@ -152,7 +155,7 @@ eval "$(
       printf "HAS_MIG=%d\n", mig;
       printf "HAS_PY=%d\n", py;
       printf "HAS_GO=%d\n", go;
-      printf "HAS_JS=%d\n", js;
+      printf "HAS_JS_API=%d\n", js_api;
       printf "HAS_SPA=%d\n", spa;
       printf "HAS_CTR=%d\n", ctr;
     }
@@ -162,7 +165,7 @@ if [[ "${HAS_SQL:-0}" == "1" ]]; then custom_cmds+=("project.db.sql.exec"); fi
 if [[ "${HAS_MIG:-0}" == "1" ]]; then custom_cmds+=("project.db.migrate"); fi
 if [[ "${HAS_PY:-0}" == "1" ]]; then custom_cmds+=("project.api.python.handle"); fi
 if [[ "${HAS_GO:-0}" == "1" ]]; then custom_cmds+=("project.api.go.handle"); fi
-if [[ "${HAS_JS:-0}" == "1" ]]; then custom_cmds+=("project.api.js.handle"); fi
+if [[ "${HAS_JS_API:-0}" == "1" ]]; then custom_cmds+=("project.api.js.handle"); fi
 if [[ "${HAS_SPA:-0}" == "1" ]]; then custom_cmds+=("project.web.bundle.spa"); fi
 if [[ "${HAS_CTR:-0}" == "1" ]]; then custom_cmds+=("project.ops.container"); fi
 

@@ -73,6 +73,10 @@ Policy reference:
 /var/www/aiir/server/scripts/aiir bench --profile quick
 # full MB+parity (size-aware)
 /var/www/aiir/server/scripts/aiir bench --profile full
+# full fixed regression pack (canary set)
+/var/www/aiir/server/scripts/aiir bench --profile full --regression-pack --gate-strict
+# shortcut script for regression pack
+/var/www/aiir/test/run-regression-pack.sh
 # full with strict quality gates (AI-first hardening)
 /var/www/aiir/server/scripts/aiir bench --profile full --gate-strict
 # also require full analysis only (no chunk mode)
@@ -83,6 +87,8 @@ Full benchmark outputs:
 - `/var/www/aiir/test/OPEN_REPO_FULL_LATEST.csv`
 - `/var/www/aiir/test/OPEN_REPO_FULL_REPORT.md`
 - `/var/www/aiir/test/OPEN_REPO_FULL_ARTIFACT_DELTA.csv`
+- `/var/www/aiir/test/OPEN_REPO_FULL_PROFILE.csv`
+- `/var/www/aiir/test/OPEN_REPO_FULL_PROFILE_REPORT.md`
 
 8. Cleanup generated artifacts:
 ```bash

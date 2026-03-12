@@ -81,29 +81,34 @@ function htmlRebuild(htmlOps) {
 function cssRebuild(cssOps) {
   const bySelector = new Map();
   const atRules = [];
+  const atRuleSeen = new Set();
   let selector = null;
   for (const op of cssOps) {
     if (op.op === 3203 && op.value) {
-      atRules.push(String(op.value));
+      const v = String(op.value).trim();
+      if (v && !atRuleSeen.has(v)) {
+        atRuleSeen.add(v);
+        atRules.push(v);
+      }
       continue;
     }
     if (op.op === 3201) {
       selector = String(op.selector || "").trim();
-      if (selector && !bySelector.has(selector)) bySelector.set(selector, []);
+      if (selector && !bySelector.has(selector)) bySelector.set(selector, new Set());
       continue;
     }
     if (op.op === 3202 && selector) {
       const prop = String(op.prop || "").trim();
       if (!prop) continue;
       const value = String(op.value || "").trim();
-      bySelector.get(selector).push(`${prop}: ${value};`);
+      bySelector.get(selector).add(`${prop}: ${value};`);
     }
   }
   let css = "";
   for (const v of atRules) css += `${v}\n`;
   for (const [sel, decls] of bySelector.entries()) {
     css += `${sel} {\n`;
-    for (const d of decls) css += `  ${d}\n`;
+    for (const d of decls.values()) css += `  ${d}\n`;
     css += "}\n";
   }
   return css;
@@ -111,12 +116,35 @@ function cssRebuild(cssOps) {
 
 function jsRebuild(jsOps) {
   const lines = [];
+  let importsCommented = 0;
+  let exportsRewritten = 0;
+  let deduped = 0;
+  let prev = "";
   for (const op of jsOps) {
     if (op.op === 3300) continue;
     if (!op.value) continue;
-    lines.push(String(op.value));
+    let line = String(op.value).trim();
+    if (!line) continue;
+
+    if (/^import\s+/u.test(line)) {
+      importsCommented += 1;
+      line = `// ${line}`;
+    } else if (/^export\s+default\s+/u.test(line)) {
+      exportsRewritten += 1;
+      line = line.replace(/^export\s+default\s+/u, "const __aiir_default_export__ = ");
+    } else if (/^export\s+/u.test(line)) {
+      exportsRewritten += 1;
+      line = line.replace(/^export\s+/u, "");
+    }
+
+    if (line === prev) {
+      deduped += 1;
+      continue;
+    }
+    prev = line;
+    lines.push(line);
   }
-  return lines.join("\n");
+  return { code: lines.join("\n"), importsCommented, exportsRewritten, deduped };
 }
 
 function injectAssets(html, css, js) {
@@ -155,7 +183,8 @@ function main() {
   const jsOps = readNdjson(jsIr);
   const rebuilt = htmlRebuild(htmlOps);
   const css = cssRebuild(cssOps);
-  const js = jsRebuild(jsOps);
+  const jsData = jsRebuild(jsOps);
+  const js = jsData.code;
 
   const webOut = path.join(runtimeOutDir, "web");
   ensureDir(webOut);
@@ -186,6 +215,9 @@ function main() {
     html_ops: htmlOps.length,
     css_ops: cssOps.length,
     js_ops: jsOps.length,
+    js_imports_commented: jsData.importsCommented,
+    js_exports_rewritten: jsData.exportsRewritten,
+    js_lines_deduped: jsData.deduped,
   };
   fs.writeFileSync(path.join(runtimeOutDir, "manifest.json"), `${JSON.stringify(manifest)}\n`);
   process.stdout.write(`${JSON.stringify(manifest)}\n`);
